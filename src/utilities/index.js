@@ -10,5 +10,5 @@ export * from './validation';
 export * from './constants/headers';
 export * from './NotificationsService/FCMService';
 export * from './NotificationsService/LocalNotificationService';
-export * from './services';
+// export * from './services';
 export * from './permissions/permissions';

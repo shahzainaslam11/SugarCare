@@ -8,35 +8,37 @@ import {
   Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import {useNavigation} from '@react-navigation/native';
 import {family} from '../../../utilities';
 
-const Login = ({navigation}) => {
+const Signup = () => {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleSignup = () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
 
     setLoading(true);
     auth()
-      .signInWithEmailAndPassword(email, password)
+      .createUserWithEmailAndPassword(email, password)
       .then(() => {
         setLoading(false);
-        Alert.alert('Success', 'Logged in successfully!');
-        navigation.replace('Home');
+        Alert.alert('Success', 'Account created successfully!');
+        navigation.replace('LogIn');
       })
       .catch(error => {
         setLoading(false);
-        if (error.code === 'auth/invalid-email') {
-          Alert.alert('Invalid Email', 'The email address is badly formatted.');
-        } else if (error.code === 'auth/user-not-found') {
-          Alert.alert('Error', 'No user found with this email.');
-        } else if (error.code === 'auth/wrong-password') {
-          Alert.alert('Error', 'Incorrect password.');
+        if (error.code === 'auth/email-already-in-use') {
+          Alert.alert('Error', 'Email already in use.');
+        } else if (error.code === 'auth/invalid-email') {
+          Alert.alert('Error', 'Invalid email address.');
+        } else if (error.code === 'auth/weak-password') {
+          Alert.alert('Error', 'Password should be at least 6 characters.');
         } else {
           Alert.alert('Error', error.message);
         }
@@ -45,7 +47,7 @@ const Login = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign Up</Text>
 
       <TextInput
         style={styles.input}
@@ -66,19 +68,15 @@ const Login = ({navigation}) => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={handleLogin}
+        onPress={handleSignup}
         disabled={loading}>
         <Text style={styles.buttonText}>
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Creating Account...' : 'Sign Up'}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.link}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-        <Text style={styles.link}>Forgot Password?</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
+        <Text style={styles.link}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -91,6 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
+    fontFamily: family.inter_light,
   },
   input: {
     borderWidth: 1,
@@ -100,7 +99,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2196F3',
     padding: 15,
     borderRadius: 8,
   },
@@ -113,8 +112,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 15,
     color: '#007BFF',
-    fontFamily: family.inter_bold,
   },
 });
 
-export default Login;
+export default Signup;
