@@ -1,120 +1,179 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
+  ImageBackground,
+  Image,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import {family} from '../../../utilities';
+import CheckBox from '@react-native-community/checkbox';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Formik} from 'formik';
+import {AppButton, AppInput} from '../../../components';
+import {
+  appImages,
+  auth,
+  colors,
+  firebaseErrorMessages,
+  loginFormFields,
+  loginVS,
+  showError,
+  showSuccess,
+} from '../../../utilities';
+import styles from './styles';
+import {useNavigation} from '@react-navigation/native';
 
-const Login = ({navigation}) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function LogIn() {
+  const navigation = useNavigation();
+  const signInWithEmail = async (email, password) => {
+    try {
+      const userCredential = await auth().signInWithEmailAndPassword(
+        email,
+        password,
+      );
+      return {user: userCredential.user};
+    } catch (error) {
+      console.log('Full Firebase error:', error);
+      const errorCode =
+        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
+      console.log('Firebase error code:', errorCode);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
-      return;
+      const friendlyMessage =
+        firebaseErrorMessages[errorCode] ||
+        'Something went wrong. Please try again.';
+      return {error: friendlyMessage};
     }
-
-    setLoading(true);
-    auth()
-      .signInWithEmailAndPassword(email, password)
-      .then(() => {
-        setLoading(false);
-        Alert.alert('Success', 'Logged in successfully!');
-        navigation.replace('Home');
-      })
-      .catch(error => {
-        setLoading(false);
-        if (error.code === 'auth/invalid-email') {
-          Alert.alert('Invalid Email', 'The email address is badly formatted.');
-        } else if (error.code === 'auth/user-not-found') {
-          Alert.alert('Error', 'No user found with this email.');
-        } else if (error.code === 'auth/wrong-password') {
-          Alert.alert('Error', 'Incorrect password.');
-        } else {
-          Alert.alert('Error', error.message);
-        }
-      });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <ImageBackground
+      source={appImages.bgImage}
+      style={styles.container}
+      resizeMode="cover">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        keyboardShouldPersistTaps="handled">
+        <Formik
+          initialValues={loginFormFields}
+          validationSchema={loginVS}
+          onSubmit={async values => {
+            const {user, error} = await signInWithEmail(
+              values.email,
+              values.password,
+            );
+            console.log('error--->', error);
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+            if (user) {
+              showSuccess(`Welcome ${user.email}`);
+            } else {
+              showError(error || 'Login failed');
+            }
+          }}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+          }) => (
+            <View style={styles.inner}>
+              <Text style={styles.title}>Welcome Back!</Text>
+              <Text style={styles.subtitle}>Sign in to track your health</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+              <AppInput
+                title="Your Email Address"
+                placeholder="Enter your email"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                keyboardType="email-address"
+                errorMessage={touched.email && errors.email ? errors.email : ''}
+              />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}>
-        <Text style={styles.buttonText}>
-          {loading ? 'Logging in...' : 'Login'}
-        </Text>
-      </TouchableOpacity>
+              <AppInput
+                title="Password"
+                placeholder="Enter your password"
+                value={values.password}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                secureTextEntry
+                errorMessage={
+                  touched.password && errors.password ? errors.password : ''
+                }
+              />
 
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.link}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
+              <View style={styles.row}>
+                <View style={styles.rememberMe}>
+                  <View style={{transform: [{scale: 0.8}]}}>
+                    <CheckBox
+                      value={values.rememberMe || false}
+                      onValueChange={val => setFieldValue('rememberMe', val)}
+                      style={{marginRight: 10}}
+                      boxType="square"
+                      tintColors={{true: colors.p1, false: colors.g3}}
+                      onCheckColor={colors.white}
+                      onTintColor={colors.white}
+                      onFillColor={colors.p1}
+                      onAnimationType="bounce"
+                      offAnimationType="bounce"
+                      offFillColor={colors.g3}
+                      offCheckColor={colors.white}
+                      offBorderColor={colors.g3}
+                      onBorderColor={colors.p1}
+                      offTintColor={colors.g3}
+                    />
+                  </View>
+                  <Text style={styles.rememberMeText}>Remember Me</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ForgotPassword')}>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-        <Text style={styles.link}>Forgot Password?</Text>
-      </TouchableOpacity>
-    </View>
+              <AppButton
+                title="Sign In"
+                onPress={handleSubmit}
+                containerStyle={styles.signInBtn}
+              />
+              {/* <View style={styles.dividerRow}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>or continue with</Text>
+                <View style={styles.divider} />
+              </View>
+
+              <View style={styles.socialRow}>
+                <TouchableOpacity style={styles.socialBtn}>
+                  <Image
+                    source={{
+                      uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
+                    }}
+                    style={styles.socialIcon}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.socialBtn}>
+                  <Image
+                    source={{
+                      uri: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+                    }}
+                    style={styles.socialIcon}
+                  />
+                </TouchableOpacity>
+              </View> */}
+              <View style={styles.createRow}>
+                <Text style={{color: colors.g1}}>Don’t have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                  <Text style={styles.createText}>Create One</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </Formik>
+      </KeyboardAwareScrollView>
+    </ImageBackground>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {flex: 1, justifyContent: 'center', padding: 20},
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  link: {
-    textAlign: 'center',
-    marginTop: 15,
-    color: '#007BFF',
-    fontFamily: family.inter_bold,
-  },
-});
-
-export default Login;
+}

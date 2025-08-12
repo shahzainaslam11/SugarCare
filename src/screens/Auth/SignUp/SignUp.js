@@ -1,118 +1,146 @@
-import React, {useState} from 'react';
+import React from 'react';
+import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Formik} from 'formik';
+import {AppButton, AppInput} from '../../../components';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import auth from '@react-native-firebase/auth';
+  appImages,
+  auth,
+  colors,
+  firebaseErrorMessages,
+  showError,
+  showSuccess,
+  signUpFormFields,
+  signUpVS,
+} from '../../../utilities';
+import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
-import {family} from '../../../utilities';
 
-const Signup = () => {
+export default function SignUp() {
   const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSignup = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
+  const signUpWithEmail = async (email, password) => {
+    try {
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
+      return {user: userCredential.user};
+    } catch (error) {
+      console.log('Full Firebase error:', error);
+      const errorCode =
+        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
+      console.log('Firebase error code:', errorCode);
+
+      // Specific handling for email-already-in-use
+      if (errorCode === 'auth/email-already-in-use') {
+        return {
+          error:
+            'This email address is already registered. Please try logging in or use another email.',
+        };
+      }
+
+      const friendlyMessage =
+        firebaseErrorMessages[errorCode] ||
+        'Something went wrong. Please try again.';
+      return {error: friendlyMessage};
     }
-
-    setLoading(true);
-    auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        setLoading(false);
-        Alert.alert('Success', 'Account created successfully!');
-        navigation.replace('LogIn');
-      })
-      .catch(error => {
-        setLoading(false);
-        if (error.code === 'auth/email-already-in-use') {
-          Alert.alert('Error', 'Email already in use.');
-        } else if (error.code === 'auth/invalid-email') {
-          Alert.alert('Error', 'Invalid email address.');
-        } else if (error.code === 'auth/weak-password') {
-          Alert.alert('Error', 'Password should be at least 6 characters.');
-        } else {
-          Alert.alert('Error', error.message);
-        }
-      });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
+    <ImageBackground
+      source={appImages.bgImage}
+      style={styles.container}
+      resizeMode="cover">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        keyboardShouldPersistTaps="handled">
+        <Formik
+          initialValues={signUpFormFields}
+          validationSchema={signUpVS}
+          onSubmit={async values => {
+            const {user, error} = await signUpWithEmail(
+              values.email,
+              values.password,
+            );
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+            if (user) {
+              showSuccess('Signup successful! Please login.');
+              navigation.navigate('LogIn'); // Or your desired screen after signup
+            } else if (error) {
+              showError(error);
+            } else {
+              showError('Sign Up failed. Please try again.');
+            }
+          }}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <View style={styles.inner}>
+              <Text style={styles.title}>Create an Account</Text>
+              <Text style={styles.subtitle}>Sign Up to track your health</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+              <AppInput
+                title="Your Email Address"
+                placeholder="Enter your email"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                keyboardType="email-address"
+                errorMessage={touched.email && errors.email ? errors.email : ''}
+              />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSignup}
-        disabled={loading}>
-        <Text style={styles.buttonText}>
-          {loading ? 'Creating Account...' : 'Sign Up'}
-        </Text>
-      </TouchableOpacity>
+              <AppInput
+                title="Password"
+                placeholder="Enter your password"
+                value={values.password}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                secureTextEntry
+                errorMessage={
+                  touched.password && errors.password ? errors.password : ''
+                }
+              />
 
-      <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
-        <Text style={styles.link}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
+              <AppInput
+                title="Confirm Password"
+                placeholder="Confirm your password"
+                value={values.confirmPassword}
+                onChangeText={handleChange('confirmPassword')}
+                onBlur={handleBlur('confirmPassword')}
+                secureTextEntry
+                errorMessage={
+                  touched.confirmPassword && errors.confirmPassword
+                    ? errors.confirmPassword
+                    : ''
+                }
+              />
+
+              <AppButton
+                title="Sign Up"
+                onPress={handleSubmit}
+                containerStyle={styles.signInBtn}
+              />
+
+              <View style={styles.createRow}>
+                <Text style={{color: colors.g1}}>
+                  Already have an account?{' '}
+                </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
+                  <Text style={styles.createText}>Sign In</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </Formik>
+      </KeyboardAwareScrollView>
+    </ImageBackground>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {flex: 1, justifyContent: 'center', padding: 20},
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-    fontFamily: family.inter_light,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: '#2196F3',
-    padding: 15,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  link: {
-    textAlign: 'center',
-    marginTop: 15,
-    color: '#007BFF',
-  },
-});
-
-export default Signup;
+}

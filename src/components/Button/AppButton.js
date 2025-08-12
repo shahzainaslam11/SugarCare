@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
 
 const AppButton = ({
   title,
-  backgroundColor = colors.p2,
+  backgroundColor = colors.p1,
   icon,
   onPress,
   containerStyle,

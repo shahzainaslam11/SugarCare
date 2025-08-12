@@ -20,19 +20,15 @@ export * from './AppHeader/Header';
 
 export * from './AppModal/AppLoader';
 
-
 //TextContainer
 
-export * from './TextContainer/TextContainer';
+// export * from './TextContainer/TextContainer';
 
 //Drawer
 
-
 //Cards
 
-
 //Tabs
-
 
 //DropDown
 export * from './DropDown/DropDown';
@@ -43,10 +39,6 @@ export * from './DateTimePicker/DatePicker';
 
 //VIEWS
 
-
 //PLACEHOLDERS
-export * from './Placeholders/TaskPlaceholder';
-
 
 //HOOKS
-

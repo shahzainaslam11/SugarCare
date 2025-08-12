@@ -1,13 +1,15 @@
 export const appImages = {
-	messi: require('../../assets/images/messi.png'),
+  messi: require('../../assets/images/messi.png'),
+  splashBG: require('../../assets/images/splashBG.png'),
+  splash: require('../../assets/images/SPLASH.png'),
+  bgImage: require('../../assets/images/bgImage.png'),
 };
 
 export const applogos = {
-	// applogo: require('../../assets/logo/app_logo.png'),
-	
+  // applogo: require('../../assets/logo/app_logo.png'),
 };
 
 export const appIcons = {
-	// back_arrow: require('../../assets/icons/back_arrow.png'),
-	
+  splashIconn: require('../../assets/icons/splashIconn.png'),
+  appIcon: require('../../assets/icons/appIcon.png'),
 };

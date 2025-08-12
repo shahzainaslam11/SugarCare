@@ -1,94 +1,115 @@
-import React, {useState} from 'react';
+import React from 'react';
+import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Formik} from 'formik';
+import * as yup from 'yup';
+import {AppButton, AppInput} from '../../../components';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import auth from '@react-native-firebase/auth';
+  appImages,
+  auth,
+  colors,
+  firebaseErrorMessages,
+  showError,
+  showSuccess,
+} from '../../../utilities';
+import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 
-const ForgotPassword = () => {
+const forgotPasswordVS = yup.object().shape({
+  email: yup
+    .string()
+    .email('Please provide a valid email address')
+    .required('Email is required'),
+});
+
+const forgotPasswordInitialValues = {
+  email: '',
+};
+
+export default function ForgotPassword() {
   const navigation = useNavigation();
 
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const sendResetEmail = async email => {
+    try {
+      await auth().sendPasswordResetEmail(email);
+      return {success: true};
+    } catch (error) {
+      console.log('Full Firebase error:', error);
+      const errorCode =
+        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
+      console.log('Firebase error code:', errorCode);
 
-  const handlePasswordReset = () => {
-    if (!email) {
-      Alert.alert('Error', 'Please enter your email');
-      return;
+      const friendlyMessage =
+        firebaseErrorMessages[errorCode] ||
+        'Something went wrong. Please try again.';
+      return {error: friendlyMessage};
     }
-
-    setLoading(true);
-    auth()
-      .sendPasswordResetEmail(email)
-      .then(() => {
-        setLoading(false);
-        Alert.alert('Success', 'Password reset email sent!');
-        navigation.navigate('LogIn');
-      })
-      .catch(error => {
-        setLoading(false);
-        if (error.code === 'auth/invalid-email') {
-          Alert.alert('Error', 'Invalid email address.');
-        } else if (error.code === 'auth/user-not-found') {
-          Alert.alert('Error', 'No account found with this email.');
-        } else {
-          Alert.alert('Error', error.message);
-        }
-      });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Forgot Password</Text>
+    <ImageBackground
+      source={appImages.bgImage}
+      style={styles.container}
+      resizeMode="cover">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        keyboardShouldPersistTaps="handled">
+        <Formik
+          initialValues={forgotPasswordInitialValues}
+          validationSchema={forgotPasswordVS}
+          onSubmit={async values => {
+            const {success, error} = await sendResetEmail(values.email);
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+            if (success) {
+              showSuccess(
+                'Password reset email sent! Please check your inbox.',
+              );
+              navigation.navigate('LogIn');
+            } else {
+              showError(error || 'Failed to send password reset email.');
+            }
+          }}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <View style={styles.inner}>
+              <Text style={styles.title}>Forgot Password</Text>
+              <Text style={styles.subtitle}>
+                Enter your registered email below to reset your password.
+              </Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handlePasswordReset}
-        disabled={loading}>
-        <Text style={styles.buttonText}>
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </Text>
-      </TouchableOpacity>
+              <AppInput
+                title="Your Email Address"
+                placeholder="Enter your email"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                keyboardType="email-address"
+                errorMessage={touched.email && errors.email ? errors.email : ''}
+              />
 
-      <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
-        <Text style={styles.link}>Back to Login</Text>
-      </TouchableOpacity>
-    </View>
+              <AppButton
+                title="Continue"
+                onPress={handleSubmit}
+                containerStyle={styles.signInBtn}
+              />
+
+              <View style={styles.createRow}>
+                <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
+                  <Text style={styles.createText}>Go Back to Login</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </Formik>
+      </KeyboardAwareScrollView>
+    </ImageBackground>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {flex: 1, justifyContent: 'center', padding: 20},
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {backgroundColor: '#FF9800', padding: 15, borderRadius: 8},
-  buttonText: {color: '#fff', textAlign: 'center', fontWeight: 'bold'},
-  link: {textAlign: 'center', marginTop: 15, color: '#007BFF'},
-});
-
-export default ForgotPassword;
+}
