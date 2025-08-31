@@ -1,40 +1,84 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Dimensions} from 'react-native';
 import {colors, HP, size} from '../../../utilities';
+
+const {width} = Dimensions.get('window');
+
+// Responsive style functions
+const getResponsiveInner = screenWidth => ({
+  paddingHorizontal: screenWidth < 400 ? 15 : 25,
+  borderRadius: 20,
+  marginHorizontal: screenWidth < 400 ? 5 : 10,
+  paddingVertical: 20,
+  alignItems: 'stretch',
+});
+
+const getResponsiveTitle = screenWidth => ({
+  fontSize: screenWidth < 400 ? 24 : 28,
+  fontWeight: '700',
+  marginBottom: 5,
+  color: '#000',
+  textAlign: 'center',
+});
+
+const getResponsiveSubtitle = screenWidth => ({
+  fontSize: screenWidth < 400 ? 14 : 15,
+  color: '#777',
+  marginBottom: 20,
+  textAlign: 'center',
+});
+
+const getResponsiveRow = screenWidth => ({
+  flexDirection: screenWidth < 400 ? 'column' : 'row',
+  justifyContent: 'space-between',
+  width: '100%',
+  alignItems: 'center',
+  marginBottom: 25,
+});
+
+const getResponsiveHalf = screenWidth => ({
+  width: screenWidth < 400 ? '100%' : '48%',
+  marginBottom: screenWidth < 400 ? 15 : 0,
+});
+
+const getResponsiveSignInBtn = screenWidth => ({
+  backgroundColor: '#3b82f6',
+  paddingVertical: 15,
+  borderRadius: 15,
+  alignItems: 'center',
+  width: '100%',
+  marginBottom: 25,
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   inner: {
-    paddingHorizontal: 25,
-    borderRadius: 20,
-    marginHorizontal: 10,
-    paddingVertical: 20,
-    alignItems: 'stretch', // makes children take full width
+    // Base styles - responsive styles added via function
   },
   inputWrapper: {
     width: '100%',
     marginBottom: 15,
   },
   title: {
-    fontSize: 28,
+    // Base styles - responsive styles added via function
     fontWeight: '700',
-    marginBottom: 5,
     color: '#000',
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    // Base styles - responsive styles added via function
     color: '#777',
-    marginBottom: 20,
     textAlign: 'center',
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    // Base styles - responsive styles added via function
     width: '100%',
     alignItems: 'center',
-    marginBottom: 25,
   },
   rememberMe: {
     flexDirection: 'row',
@@ -43,16 +87,11 @@ const styles = StyleSheet.create({
   forgotText: {
     color: colors.p1,
     fontWeight: '600',
-    ffontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Medium',
     fontSize: size.medium,
   },
   signInBtn: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 15,
-    borderRadius: 15,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 25,
+    // Base styles - responsive styles added via function
   },
   signInText: {
     color: '#fff',
@@ -91,6 +130,9 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   createText: {
+    color: colors.g1,
+  },
+  linkText: {
     color: colors.p1,
     fontWeight: '600',
   },
@@ -104,5 +146,16 @@ const styles = StyleSheet.create({
     fontSize: size.small,
     fontFamily: 'Inter-Medium',
   },
+  half: {},
 });
-export default styles;
+
+// Export the style functions along with the StyleSheet
+export default {
+  ...styles,
+  getResponsiveInner,
+  getResponsiveTitle,
+  getResponsiveSubtitle,
+  getResponsiveRow,
+  getResponsiveHalf,
+  getResponsiveSignInBtn,
+};

@@ -3,7 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Input} from 'react-native-elements';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import PropTypes from 'prop-types';
-import {colors, family, size, WP} from '../../utilities';
+import {colors, family, HP, size, WP} from '../../utilities';
 
 const AppInput = ({
   title,
@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
     color: colors.g1,
     fontFamily: family.inter_medium,
     fontSize: size.medium,
+    marginBottom: HP('0.5'),
   },
   inputContainer: {
     paddingHorizontal: 0,

@@ -1,14 +1,9 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ImageBackground,
-  Image,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AppButton, AppInput} from '../../../components';
 import {
   appImages,
@@ -25,12 +20,58 @@ import {useNavigation} from '@react-navigation/native';
 
 export default function LogIn() {
   const navigation = useNavigation();
-  const signInWithEmail = async (email, password) => {
+  const [initialValues, setInitialValues] = useState({
+    ...loginFormFields,
+    rememberMe: false,
+  });
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Load Remember Me + credentials on screen mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const remember = await AsyncStorage.getItem('rememberMe');
+        const savedEmail = await AsyncStorage.getItem('savedEmail');
+        const savedPassword = await AsyncStorage.getItem('savedPassword');
+
+        if (remember === 'true') {
+          setInitialValues({
+            email: savedEmail || '',
+            password: savedPassword || '',
+            rememberMe: true,
+          });
+        } else {
+          await auth().signOut();
+          setInitialValues({
+            ...loginFormFields,
+            rememberMe: false,
+          });
+        }
+      } catch (e) {
+        console.log('Error loading saved credentials', e);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  // ✅ Sign in & save/remove credentials
+  const signInWithEmail = async (email, password, rememberMe) => {
     try {
       const userCredential = await auth().signInWithEmailAndPassword(
         email,
         password,
       );
+
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberMe', 'true');
+        await AsyncStorage.setItem('savedEmail', email);
+        await AsyncStorage.setItem('savedPassword', password); // ❗ For security use SecureStore or Keychain
+      } else {
+        await AsyncStorage.setItem('rememberMe', 'false');
+        await AsyncStorage.removeItem('savedEmail');
+        await AsyncStorage.removeItem('savedPassword');
+      }
+
       return {user: userCredential.user};
     } catch (error) {
       console.log('Full Firebase error:', error);
@@ -45,6 +86,8 @@ export default function LogIn() {
     }
   };
 
+  if (loading) return null; // prevent Formik render before credentials are loaded
+
   return (
     <ImageBackground
       source={appImages.bgImage}
@@ -56,17 +99,19 @@ export default function LogIn() {
         enableOnAndroid
         keyboardShouldPersistTaps="handled">
         <Formik
-          initialValues={loginFormFields}
+          initialValues={initialValues}
           validationSchema={loginVS}
+          enableReinitialize
           onSubmit={async values => {
             const {user, error} = await signInWithEmail(
               values.email,
               values.password,
+              values.rememberMe,
             );
-            console.log('error--->', error);
 
             if (user) {
               showSuccess(`Welcome ${user.email}`);
+              // navigation.replace('Home');
             } else {
               showError(error || 'Login failed');
             }
@@ -110,7 +155,7 @@ export default function LogIn() {
                 <View style={styles.rememberMe}>
                   <View style={{transform: [{scale: 0.8}]}}>
                     <CheckBox
-                      value={values.rememberMe || false}
+                      value={values.rememberMe}
                       onValueChange={val => setFieldValue('rememberMe', val)}
                       style={{marginRight: 10}}
                       boxType="square"
@@ -118,13 +163,6 @@ export default function LogIn() {
                       onCheckColor={colors.white}
                       onTintColor={colors.white}
                       onFillColor={colors.p1}
-                      onAnimationType="bounce"
-                      offAnimationType="bounce"
-                      offFillColor={colors.g3}
-                      offCheckColor={colors.white}
-                      offBorderColor={colors.g3}
-                      onBorderColor={colors.p1}
-                      offTintColor={colors.g3}
                     />
                   </View>
                   <Text style={styles.rememberMeText}>Remember Me</Text>

@@ -31,7 +31,7 @@ export * from './AppModal/AppLoader';
 //Tabs
 
 //DropDown
-export * from './DropDown/DropDown';
+export * from './DropDown/CustomDropdown';
 
 //DatePicker
 export * from './DateTimePicker/TimePicker';
