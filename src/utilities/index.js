@@ -1,5 +1,8 @@
 export * from './styling/responsive';
+export * from './styling/flashMessage';
 export * from './assets';
+export * from './config/firebase';
+export * from './config/firebaseErrors';
 export * from './colors';
 export * from './sizes';
 export * from './family';
@@ -10,5 +13,5 @@ export * from './validation';
 export * from './constants/headers';
 export * from './NotificationsService/FCMService';
 export * from './NotificationsService/LocalNotificationService';
-export * from './services';
+// export * from './services';
 export * from './permissions/permissions';

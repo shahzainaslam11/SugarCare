@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 10,
     paddingVertical: 20,
-    alignItems: 'stretch', // makes children take full width
+    alignItems: 'stretch',
   },
   inputWrapper: {
     width: '100%',

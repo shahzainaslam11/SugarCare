@@ -1,8 +1,8 @@
 export const family = {
-	roboto_black: 'Roboto-Black',
-	roboto_bold: 'Roboto-Bold',
-	roboto_medium: 'Roboto-Medium',
-	roboto_regular: 'Roboto-Regular',
-	roboto_ligth: 'Roboto-Light',
-	roboto_thin: 'Roboto-Thin',
+  inter_black: 'Inter-Black',
+  inter_bold: 'Inter-Bold',
+  inter_medium: 'Inter-Medium',
+  inter_regular: 'Inter-Regular',
+  inter_light: 'Inter-Light',
+  inter_thin: 'Inter-Thin',
 };
