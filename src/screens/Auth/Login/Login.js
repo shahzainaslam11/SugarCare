@@ -111,6 +111,10 @@ export default function LogIn() {
 
             if (user) {
               showSuccess(`Welcome ${user.email}`);
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'BottomTabs'}], // defined in MainAppNav
+              });
               // navigation.replace('Home');
             } else {
               showError(error || 'Login failed');

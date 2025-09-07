@@ -1,83 +1,111 @@
-import React from 'react';
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+// TimePicker.js
+import React, {useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {appIcons, colors, family, size, WP} from '../../utilities';
 import moment from 'moment';
-import PropTypes from 'prop-types';
+import {appIcons} from '../../utilities';
+
+// Import your clock icon
+const clockIcon = require('../../assets/icons/clock.png'); // Update with your actual path
 
 const TimePicker = ({
-  selectedTime,
-  showPicker,
-  isVisible,
   title,
-  handleConfirm,
-  onCancel,
-  disabled,
+  selectedTime,
+  onTimeChange,
+  containerStyle,
+  textStyle,
+  titleStyle,
+  disabled = false,
+  width,
 }) => {
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+
+  const showTimePicker = () => {
+    if (!disabled) {
+      setTimePickerVisibility(true);
+    }
+  };
+
+  const hideTimePicker = () => {
+    setTimePickerVisibility(false);
+  };
+
+  const handleConfirm = time => {
+    onTimeChange(time);
+    hideTimePicker();
+  };
+
   return (
-    <View>
-      <Text style={styles.titleStyle}>{title}</Text>
+    <View style={[styles.container, containerStyle, {width: width}]}>
+      {title && <Text style={[styles.titleStyle, titleStyle]}>{title}</Text>}
       <TouchableOpacity
-        style={styles.innerContainer}
-        onPress={showPicker}
+        style={[styles.innerContainer, disabled && styles.disabled]}
+        onPress={showTimePicker}
         disabled={disabled}>
-        <Text style={styles.textStyle}>
-          {moment(selectedTime)?.format('hh:mm A') ||
-            moment(new Date()).format('hh:mm A')}
+        <Text
+          style={[
+            styles.textStyle,
+            textStyle,
+            disabled && styles.disabledText,
+          ]}>
+          {selectedTime
+            ? moment(selectedTime).format('hh:mm A')
+            : 'HH:MM AM/PM'}
         </Text>
         <Image
-          source={appIcons.clockWhite}
-          style={styles.iconStyle}
+          source={appIcons.clock}
+          style={[styles.iconStyle, disabled && styles.disabledIcon]}
           resizeMode="contain"
         />
-        <DateTimePickerModal
-          isVisible={isVisible}
-          mode="time"
-          onConfirm={handleConfirm}
-          onCancel={onCancel}
-        />
       </TouchableOpacity>
+      <DateTimePickerModal
+        isVisible={isTimePickerVisible}
+        mode="time"
+        onConfirm={handleConfirm}
+        onCancel={hideTimePicker}
+      />
     </View>
   );
 };
 
-TimePicker.propTypes = {
-  selectedTime: PropTypes.string || PropTypes.any,
-  showPicker: PropTypes.bool || PropTypes.any,
-  isVisible: PropTypes.bool,
-  title: PropTypes.string,
-  handleConfirm: PropTypes.func,
-  onCancel: PropTypes.func,
-  disabled: PropTypes.bool,
-};
-
 const styles = StyleSheet.create({
-  innerContainer: {
-    alignItems: 'center',
-    padding: WP('4'),
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.white,
-  },
-  textStyle: {
-    fontFamily: family.inter_medium,
-    color: colors.white,
-    alignSelf: 'center',
-    fontSize: size.xxlarge,
+  container: {
+    marginBottom: 20,
   },
   titleStyle: {
-    color: colors.white,
-    fontFamily: family.inter_medium,
-    marginVertical: WP('2'),
-    marginTop: WP('7'),
-    fontSize: size.large,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#495057',
+    marginBottom: 8,
+  },
+  innerContainer: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textStyle: {
+    color: '#212529',
+    fontSize: 16,
   },
   iconStyle: {
-    width: WP('7'),
-    height: WP('7'),
-    position: 'absolute',
-    right: WP('5'),
-    top: WP('3'),
+    width: 20,
+    height: 20,
+    tintColor: '#6c757d',
+  },
+  disabled: {
+    backgroundColor: '#f8f9fa',
+    borderColor: '#e9ecef',
+  },
+  disabledText: {
+    color: '#6c757d',
+  },
+  disabledIcon: {
+    tintColor: '#adb5bd',
   },
 });
 
