@@ -1,87 +1,86 @@
-import React from 'react';
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+// DatePicker.js
+import React, {useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {appIcons, colors, family, WP} from '../../utilities';
 import moment from 'moment';
-import PropTypes from 'prop-types';
+import {appIcons} from '../../utilities';
 
 const DatePicker = ({
-  show,
-  selectedDate,
-  showDatePicker,
-  setDatePickerVisibility,
-  isDatePickerVisible,
-  setSelectedDate,
-  setshow,
   title,
+  selectedDate,
+  onDateChange,
+  containerStyle,
+  textStyle,
+  titleStyle,
 }) => {
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
   const hideDatePicker = () => {
     setDatePickerVisibility(false);
   };
+
   const handleConfirm = date => {
-    setSelectedDate(moment(date).format('MM-DD-YYYY'));
-    setshow(true);
+    onDateChange(date);
     hideDatePicker();
   };
+
   return (
-    <View>
-      <Text style={styles.titleStyle}>{title}</Text>
+    <View style={[styles.container, containerStyle]}>
+      {title && <Text style={[styles.titleStyle, titleStyle]}>{title}</Text>}
       <TouchableOpacity style={styles.innerContainer} onPress={showDatePicker}>
-        <Text style={styles.textStyle}>
-          {show ? selectedDate : <Text>12/12/2022</Text>}
+        <Text style={[styles.textStyle, textStyle]}>
+          {selectedDate
+            ? moment(selectedDate).format('MM/DD/YYYY')
+            : 'MM/DD/YYYY'}
         </Text>
         <Image
-          source={appIcons.clockWhite}
+          source={appIcons.calendar}
           style={styles.iconStyle}
           resizeMode="contain"
         />
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
-        />
       </TouchableOpacity>
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+      />
     </View>
   );
 };
 
-DatePicker.propTypes = {
-  show: PropTypes.bool,
-  selectedDate: PropTypes.string,
-  showDatePicker: PropTypes.bool,
-  setDatePickerVisibility: PropTypes.func,
-  isDatePickerVisible: PropTypes.bool,
-  setSelectedDate: PropTypes.func,
-  setshow: PropTypes.bool,
-  title: PropTypes.string,
-};
-
 const styles = StyleSheet.create({
-  innerContainer: {
-    alignItems: 'center',
-    padding: WP('4'),
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.white,
-  },
-  textStyle: {
-    fontFamily: family.inter_medium,
-    color: colors.g5,
-    alignSelf: 'center',
+  container: {
+    marginBottom: 20,
   },
   titleStyle: {
-    color: colors.white,
-    fontFamily: family.inter_medium,
-    marginVertical: WP('2'),
-    marginTop: WP('7'),
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#495057',
+    marginBottom: 8,
+  },
+  innerContainer: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textStyle: {
+    color: '#212529',
+    fontSize: 16,
   },
   iconStyle: {
-    width: WP('7'),
-    height: WP('7'),
-    position: 'absolute',
-    right: WP('5'),
-    top: WP('3'),
+    width: 20,
+    height: 20,
+    tintColor: '#6c757d',
   },
 });
 

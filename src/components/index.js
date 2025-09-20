@@ -27,6 +27,7 @@ export * from './AppModal/AppLoader';
 //Drawer
 
 //Cards
+export * from './Card/FastingPlans';
 
 //Tabs
 
@@ -37,7 +38,13 @@ export * from './DropDown/CustomDropdown';
 export * from './DateTimePicker/TimePicker';
 export * from './DateTimePicker/DatePicker';
 
-//VIEWS
+//Charts
+
+export * from './Chart/BloodSugarChart';
+
+//Progress
+
+export * from './Progress/HalfCircleProgress';
 
 //PLACEHOLDERS
 

@@ -18,7 +18,7 @@ const Header = ({
       <TouchableOpacity onPress={onPress}>
         {isBack && (
           <Image
-            source={appIcons.back_arrow}
+            source={appIcons.back_Arrow}
             style={styles.iconStyle}
             resizeMode="contain"
           />
@@ -56,13 +56,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.p2,
     paddingHorizontal: WP('3'),
     paddingVertical: WP('3'),
   },
   textStyle: {
-    color: colors.white,
-    fontFamily: family.inter_medium,
+    color: colors.b1,
+    fontFamily: family.inter_bold,
     fontSize: size.h3,
     textAlign: 'center',
     width: '70%',
