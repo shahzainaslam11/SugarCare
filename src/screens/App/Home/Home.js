@@ -138,7 +138,11 @@ export default function Home() {
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AppScreens', {screen: 'SettingsScreen'})
+            }
+            style={styles.iconButton}>
             <Text style={styles.icon}>☰</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Hi Jenna!</Text>

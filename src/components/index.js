@@ -28,6 +28,8 @@ export * from './AppModal/AppLoader';
 
 //Cards
 export * from './Card/FastingPlans';
+export * from './Card/SugarRecordCard';
+export * from './Card/HalfCircle';
 
 //Tabs
 
@@ -41,6 +43,7 @@ export * from './DateTimePicker/DatePicker';
 //Charts
 
 export * from './Chart/BloodSugarChart';
+export * from './Chart/ChartComponent';
 
 //Progress
 

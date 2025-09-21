@@ -3,14 +3,9 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, View, Text, TextInput, SafeAreaView} from 'react-native';
 
 import moment from 'moment';
-import {
-  DatePicker,
-  Header,
-  TimePicker,
-  AppButton,
-} from '../../../../components';
+import {DatePicker, Header, TimePicker, AppButton} from '../../../components';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {WP} from '../../../../utilities';
+import {WP} from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
 
 const CustomFast = () => {

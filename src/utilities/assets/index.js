@@ -24,4 +24,11 @@ export const appIcons = {
   clock: require('../../assets/icons/clock.png'),
   calendar: require('../../assets/icons/calendar.png'),
   back_Arrow: require('../../assets/icons/backArrow.png'),
+  bloodIcon: require('../../assets/icons/bloodIcon.png'),
+  plus: require('../../assets/icons/plus.png'),
+  pause: require('../../assets/icons/pause.png'),
+  edit: require('../../assets/icons/edit.png'),
+  mark: require('../../assets/icons/mark.png'),
+  filter: require('../../assets/icons/filter.png'),
+  download: require('../../assets/icons/download.png'),
 };
