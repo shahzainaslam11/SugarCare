@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import {FloatingAction} from 'react-native-floating-action';
@@ -15,10 +14,12 @@ import {
   BloodSugarChart,
   FastingPlans,
   HalfCircleProgress,
+  MenuModal,
 } from '../../../components';
-import {HP} from '../../../utilities';
+import {appIcons, HP} from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 export default function Home() {
   const navigation = useNavigation();
@@ -31,6 +32,11 @@ export default function Home() {
   const [bloodSugar, setBloodSugar] = useState(120);
   const [daysStreak, setDaysStreak] = useState(5);
   const [timeFilter, setTimeFilter] = useState('Today');
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuVisible(!isMenuVisible);
+  };
 
   const fastingPlans = [
     {
@@ -109,28 +115,31 @@ export default function Home() {
   };
 
   const actions = [
-    {text: 'Chat with SugarBuddy', name: 'chat', position: 1, color: '#4252FF'},
     {
-      text: 'Smart Food Scanner',
-      name: 'scanner',
+      text: 'Chat with SugarBuddy',
+      name: 'Chat',
       position: 2,
       color: '#4252FF',
+      icon: appIcons.aiIcon,
     },
-    {text: 'What to Eat? Ask AI', name: 'ai', position: 3, color: '#4252FF'},
     {
-      text: 'Community Insights',
-      name: 'community',
-      position: 4,
+      text: 'Add Sugar Record',
+      name: 'AddSugar',
+      position: 1,
       color: '#4252FF',
+      icon: appIcons.activeSugar,
     },
   ];
+  const handleOptionSelect = name => {
+    if (name === 'Chat') {
+      navigation.navigate('AppScreens', {screen: 'ChatScreen'});
+    } else if (name === 'AddSugar') {
+      navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
+    }
+  };
 
   const handleAddSugarRecord = () => {
     console.log('Add Sugar Record clicked');
-  };
-
-  const handleOptionSelect = name => {
-    console.log(`${name} selected`);
   };
 
   return (
@@ -139,9 +148,10 @@ export default function Home() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'SettingsScreen'})
-            }
+            // onPress={() =>
+            //   navigation.navigate('AppScreens', {screen: 'SettingsScreen'})
+            // }
+            onPress={toggleMenu}
             style={styles.iconButton}>
             <Text style={styles.icon}>☰</Text>
           </TouchableOpacity>
@@ -227,6 +237,11 @@ export default function Home() {
         onPressItem={handleOptionSelect}
         color="#4252FF"
         floatingIcon={<Text style={styles.plusIcon}>+</Text>}
+      />
+      <MenuModal
+        visible={isMenuVisible}
+        onClose={() => setIsMenuVisible(false)}
+        navigation={navigation}
       />
     </SafeAreaView>
   );

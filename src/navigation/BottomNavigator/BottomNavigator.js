@@ -11,6 +11,7 @@ import Home from '../../screens/App/Home/Home';
 import TrackSugar from '../../screens/App/TrackSugar/TrackSugar';
 import Fasting from '../../screens/App/Fasting/Fasting';
 import Reports from '../../screens/App/Reports/Reports';
+import FoodScan from '../../screens/App/FoodScan';
 
 const Tab = createBottomTabNavigator();
 
@@ -108,6 +109,7 @@ const BottomNavigator = () => {
           headerShown: false,
         }}
       />
+
       <Tab.Screen
         name="Reports"
         component={Reports}
@@ -115,6 +117,16 @@ const BottomNavigator = () => {
           title: 'Reports',
           tabBarIcon: appIcons.inActiveReport,
           activeTabBarIcon: appIcons.activeFasting,
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Scan"
+        component={FoodScan}
+        options={{
+          title: 'Scan',
+          tabBarIcon: appIcons.inActiveScan,
+          activeTabBarIcon: appIcons.activeScan,
           headerShown: false,
         }}
       />

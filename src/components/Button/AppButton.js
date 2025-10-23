@@ -34,7 +34,13 @@ const AppButton = ({
         <ActivityIndicator size={'small'} color={loaderColor} />
       ) : (
         <Fragment>
-          {icon && <Image source={icon} style={styles.iconStyle} />}
+          {icon && (
+            <Image
+              source={icon}
+              style={styles.iconStyle}
+              resizeMode="contain"
+            />
+          )}
           <Text style={[styles.textStyle, titleStyle]}>{title}</Text>
         </Fragment>
       )}
@@ -62,10 +68,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.p2,
     width: '100%',
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 16,
     marginVertical: WP('1.5'),
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.p1,
   },
   textStyle: {
     color: colors.white,
@@ -75,8 +83,7 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS == 'ios' ? size.large : size.normal,
   },
   iconStyle: {
-    width: WP('4'),
-    height: HP('3'),
-    resizeMode: 'contain',
+    width: WP('6'),
+    height: HP('4'),
   },
 });

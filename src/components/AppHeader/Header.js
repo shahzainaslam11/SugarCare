@@ -31,7 +31,7 @@ const Header = ({
       </Text>
       {image ? (
         <TouchableOpacity onPress={onPressRight} style={styles.iconButton}>
-          <Image source={image} style={styles.imgStyle} />
+          <Image source={image} style={styles.imgStyle} resizeMode="contain" />
         </TouchableOpacity>
       ) : (
         <View style={styles.viewStyle} />
@@ -56,7 +56,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: WP('3'),
     paddingVertical: WP('3'),
   },
   textStyle: {
@@ -74,8 +73,8 @@ const styles = StyleSheet.create({
   imgStyle: {
     width: WP('5'),
     height: WP('5'),
-    resizeMode: 'contain',
-    tintColor: colors.white,
+
+    // tintColor: colors.white,
   },
   viewStyle: {
     padding: WP('3'),
