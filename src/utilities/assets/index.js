@@ -3,6 +3,10 @@ export const appImages = {
   splashBG: require('../../assets/images/splashBG.png'),
   splash: require('../../assets/images/SPLASH.png'),
   bgImage: require('../../assets/images/bgImage.png'),
+  settingBG: require('../../assets/images/settingBG.png'),
+  p1: require('../../assets/images/p1.png'),
+  p11: require('../../assets/images/p11.png'),
+  p2: require('../../assets/images/p2.png'),
 };
 
 export const applogos = {
@@ -20,6 +24,8 @@ export const appIcons = {
   activeFasting: require('../../assets/icons/activeFasting.png'),
   inActiveReport: require('../../assets/icons/inActiveReport.png'),
   activeReport: require('../../assets/icons/activeReport.png'),
+  activeScan: require('../../assets/icons/activeScan.png'),
+  inActiveScan: require('../../assets/icons/inActiveScan.png'),
 
   clock: require('../../assets/icons/clock.png'),
   calendar: require('../../assets/icons/calendar.png'),
@@ -31,4 +37,18 @@ export const appIcons = {
   mark: require('../../assets/icons/mark.png'),
   filter: require('../../assets/icons/filter.png'),
   download: require('../../assets/icons/download.png'),
+  history: require('../../assets/icons/history.png'),
+  scanImg: require('../../assets/icons/scanImg.png'),
+  gallery: require('../../assets/icons/gallery.png'),
+  camera: require('../../assets/icons/camera.png'),
+  search: require('../../assets/icons/search.png'),
+  dots: require('../../assets/icons/dots.png'),
+  dummy: require('../../assets/icons/dummy.png'),
+  protien: require('../../assets/icons/protien.png'),
+  carbs: require('../../assets/icons/carbs.png'),
+  fats: require('../../assets/icons/fats.png'),
+  info: require('../../assets/icons/info.png'),
+  bowl: require('../../assets/icons/bowl.png'),
+  logOut: require('../../assets/icons/logOut.png'),
+  aiIcon: require('../../assets/icons/aiIcon.png'),
 };

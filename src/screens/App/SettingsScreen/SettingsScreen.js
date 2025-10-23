@@ -6,49 +6,59 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  ImageBackground,
 } from 'react-native';
-import {appImages, HP, WP} from '../../../utilities';
+import {appIcons, appImages, colors, HP, WP} from '../../../utilities';
+import {useNavigation} from '@react-navigation/native';
+import {AppButton} from '../../../components';
 
 const SettingsScreen = () => {
+  const navigation = useNavigation();
   return (
-    <ScrollView
+    <ImageBackground
+      source={appImages.settingBG}
       style={styles.container}
-      contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
-
-      <View style={styles.profileContainer}>
-        <Image source={appImages.messi} style={styles.avatar} />
-        <Text style={styles.name}>Jenna Ortega</Text>
-        <Text style={styles.email}>jennaortega@gmail.com</Text>
-      </View>
-
-      <View style={styles.contentContainer}>
-        <View style={styles.card}>
-          <SettingsItem title="Edit Profile" />
-          <SettingsItem title="User Preferences" />
+      resizeMode="cover">
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-        <View style={styles.card}>
-          <SettingsItem title="Security" subtitle="Change password" />
+        <View style={styles.profileContainer}>
+          <Image source={appImages.messi} style={styles.avatar} />
+          <Text style={styles.name}>Jenna Ortega</Text>
+          <Text style={styles.email}>jennaortega@gmail.com</Text>
         </View>
 
-        <View style={styles.card}>
-          <SettingsItem title="Contact us" />
-          <SettingsItem title="Help & Support" />
-          <SettingsItem title="Privacy policy" />
-        </View>
+        <View style={styles.contentContainer}>
+          <View style={styles.card}>
+            <SettingsItem title="Edit Profile" />
+            <SettingsItem title="User Preferences" />
+          </View>
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>⟵ Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.card}>
+            <SettingsItem title="Security" subtitle="Change password" />
+          </View>
+
+          <View style={styles.card}>
+            <SettingsItem title="Contact us" />
+            <SettingsItem title="Help & Support" />
+            <SettingsItem title="Privacy policy" />
+          </View>
+
+          <AppButton
+            title="Log Out"
+            icon={appIcons.logOut}
+            backgroundColor={colors.r3}
+          />
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
@@ -65,24 +75,19 @@ const SettingsItem = ({title, subtitle}) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F6FA',
+    paddingTop: HP(4),
   },
   scrollContent: {
     paddingBottom: HP(6),
   },
   header: {
-    backgroundColor: '#4252FF',
-    height: HP(22),
-    borderBottomLeftRadius: 120,
-    borderBottomRightRadius: 120,
-    justifyContent: 'flex-start',
-    paddingTop: HP(6),
-    paddingHorizontal: WP(4),
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: WP(4),
+    paddingTop: HP(2),
   },
   backButton: {
-    position: 'absolute',
-    left: WP(4),
-    top: HP(6),
+    padding: WP(2),
   },
   backIcon: {
     fontSize: WP(6),
@@ -92,11 +97,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: WP(5.5),
     fontWeight: 'bold',
-    alignSelf: 'center',
+    flex: 1,
+    textAlign: 'center',
   },
   profileContainer: {
     alignItems: 'center',
-    marginTop: -HP(7),
+    marginTop: HP(2),
     marginBottom: HP(2),
   },
   avatar: {
