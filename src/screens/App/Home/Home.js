@@ -157,7 +157,11 @@ export default function Home() {
           </TouchableOpacity>
           <Text style={styles.title}>Hi Jenna!</Text>
         </View>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('AppScreens', {screen: 'Notification'})
+          }
+          style={styles.iconButton}>
           <Text style={styles.icon}>🔔</Text>
         </TouchableOpacity>
       </View>

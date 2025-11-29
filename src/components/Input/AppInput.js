@@ -56,12 +56,14 @@ const AppInput = ({
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {},
+  mainContainer: {
+    marginVertical: HP('0.5'),
+  },
   textStyle: {
     color: colors.g1,
     fontFamily: family.inter_medium,
     fontSize: size.medium,
-    marginBottom: HP('0.5'),
+    marginVerticalL: HP('1'),
   },
   inputContainer: {
     paddingHorizontal: 0,
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: WP('2'),
     backgroundColor: colors.white,
-    height: 48, // fixed height for all inputs
+    height: HP(5), // fixed height for all inputs
   },
   inputText: {
     color: colors.black,

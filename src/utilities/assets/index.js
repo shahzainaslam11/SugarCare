@@ -51,4 +51,10 @@ export const appIcons = {
   bowl: require('../../assets/icons/bowl.png'),
   logOut: require('../../assets/icons/logOut.png'),
   aiIcon: require('../../assets/icons/aiIcon.png'),
+  hba1c: require('../../assets/icons/HBA1C.png'),
+  donwArrow: require('../../assets/icons/donwArrow.png'),
+  upArrow: require('../../assets/icons/upArrow.png'),
+  sugar: require('../../assets/icons/sugar.png'),
+  fire: require('../../assets/icons/fire.png'),
+  setting: require('../../assets/icons/Settings.png'),
 };

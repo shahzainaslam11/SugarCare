@@ -1,0 +1,5 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace SugarCare.xcworkspace -scheme SugarCare -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16 Pro" clean build
+
+2025-10-24 12:01:53.964 xcodebuild[99152:2362345] Writing error result bundle to /var/folders/pf/2f1ggjh52p191z6kc0bqnr_r0000gn/T/ResultBundle_2025-24-10_12-01-0053.xcresult
+xcodebuild: error: 'SugarCare.xcworkspace' does not exist.

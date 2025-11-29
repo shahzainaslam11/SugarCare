@@ -1,85 +1,103 @@
+// src/screens/Auth/SignUp/index.js
 import React, {useState} from 'react';
 import {
   View,
-  Dimensions,
   ImageBackground,
   Text,
   TouchableOpacity,
+  Switch,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import {AppButton, AppInput, CustomDropdown} from '../../../components';
 import {
   appImages,
-  auth,
   firebaseErrorMessages,
   showError,
   showSuccess,
-  signUpFormFields,
   signUpVS,
+  colors,
+  firestore,
+  auth,
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
+
+// ✅ Updated Firebase modular imports
+import {createUserWithEmailAndPassword} from '@react-native-firebase/auth';
+import {doc, setDoc, serverTimestamp} from '@react-native-firebase/firestore';
 
 export default function SignUp() {
   const navigation = useNavigation();
-  const [screenWidth, setScreenWidth] = useState(
-    Dimensions.get('window').width,
-  );
+  const {width} = Dimensions.get('window');
+  const isSmall = width < 400;
 
-  // Handle screen rotation/resize
-  Dimensions.addEventListener('change', ({window}) => {
-    setScreenWidth(window.width);
-  });
-
-  // Dropdown states
+  // Dropdown States
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState(null);
+  const [diabetesOpen, setDiabetesOpen] = useState(false);
+  const [diabetesValue, setDiabetesValue] = useState(null);
+  const [usingInsulin, setUsingInsulin] = useState(false);
 
-  const [genderItems, setGenderItems] = useState([
+  const genderItems = [
     {label: 'Male', value: 'male'},
     {label: 'Female', value: 'female'},
-  ]);
+    {label: 'Other', value: 'other'},
+  ];
 
-  const signUpWithEmail = async (email, password, extraData) => {
+  const diabetesItems = [
+    {label: 'Type 1', value: 'type1'},
+    {label: 'Type 2', value: 'type2'},
+    {label: 'Prediabetes', value: 'prediabetes'},
+    {label: 'Gestational', value: 'gestational'},
+    {label: 'None', value: 'none'},
+  ];
+
+  // ✅ Updated signup function
+  const signUpWithEmail = async (email, password, extra) => {
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(
-        email,
-        password,
-      );
+      // Create user
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const {uid} = cred.user;
 
-      const {uid} = userCredential.user;
-
-      // Save extra data in Firestore
-      await firestore().collection('users').doc(uid).set({
+      // Save user info in Firestore
+      await setDoc(doc(firestore, 'users', uid), {
         email,
-        gender: extraData.gender,
-        age: extraData.age,
-        height: extraData.height,
-        weight: extraData.weight,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        name: extra.name,
+        gender: extra.gender,
+        age: Number(extra.age),
+        height: Number(extra.height),
+        weight: Number(extra.weight),
+        diabetesType: extra.diabetesType,
+        cholesterol: Number(extra.cholesterol),
+        usingInsulin: extra.usingInsulin,
+        createdAt: serverTimestamp(),
       });
 
-      return {user: userCredential.user};
-    } catch (error) {
-      console.log('Full Firebase error:', error);
-      const errorCode =
-        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
-      console.log('Firebase error code:', errorCode);
-
-      if (errorCode === 'auth/email-already-in-use') {
-        return {
-          error:
-            'This email address is already registered. Please try logging in or use another email.',
-        };
-      }
-
-      const friendlyMessage =
-        firebaseErrorMessages[errorCode] ||
-        'Something went wrong. Please try again.';
-      return {error: friendlyMessage};
+      return {user: cred.user};
+    } catch (e) {
+      console.log('eeeeee====>', e);
+      const code = e?.code || e?.message?.match(/\[([^\]]+)\]/)?.[1];
+      if (code === 'auth/email-already-in-use')
+        return {error: 'Email already in use.'};
+      return {error: firebaseErrorMessages[code] || 'Something went wrong.'};
     }
+  };
+
+  const initialValues = {
+    email: '',
+    name: '',
+    gender: '',
+    age: '',
+    height: '',
+    weight: '',
+    diabetesType: '',
+    cholesterol: '',
+    usingInsulin: false,
+    password: '',
+    confirmPassword: '',
   };
 
   return (
@@ -87,189 +105,217 @@ export default function SignUp() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid
-        keyboardShouldPersistTaps="handled">
-        <Formik
-          initialValues={signUpFormFields}
-          validationSchema={signUpVS}
-          onSubmit={async values => {
-            const {user, error} = await signUpWithEmail(
-              values.email,
-              values.password,
-              {
-                gender: values.gender,
-                age: values.age,
-                height: values.height,
-                weight: values.weight,
-              },
-            );
+      <View style={{flex: 1}}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled">
+          <Formik
+            initialValues={initialValues}
+            validationSchema={signUpVS}
+            onSubmit={async (v, {setSubmitting}) => {
+              const {user, error} = await signUpWithEmail(v.email, v.password, {
+                name: v.name,
+                gender: v.gender,
+                age: v.age,
+                height: v.height,
+                weight: v.weight,
+                diabetesType: v.diabetesType,
+                cholesterol: v.cholesterol,
+                usingInsulin: v.usingInsulin,
+              });
+              if (user) {
+                showSuccess('Signup successful! Please login.');
+                navigation.navigate('LogIn');
+              } else showError(error || 'Sign up failed.');
+              setSubmitting(false);
+            }}>
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              setFieldValue,
+              isSubmitting,
+            }) => (
+              <View style={styles.inner}>
+                <Text style={styles.title}>Create an Account</Text>
+                <Text style={styles.subtitle}>
+                  Sign up to track your health progress
+                </Text>
 
-            if (user) {
-              showSuccess('Signup successful! Please login.');
-              navigation.navigate('LogIn');
-            } else if (error) {
-              showError(error);
-            } else {
-              showError('Sign Up failed. Please try again.');
-            }
-          }}>
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-          }) => (
-            <View
-              style={[styles.inner, styles.getResponsiveInner(screenWidth)]}>
-              <Text
-                style={[styles.title, styles.getResponsiveTitle(screenWidth)]}>
-                Create an Account
-              </Text>
-              <Text
-                style={[
-                  styles.subtitle,
-                  styles.getResponsiveSubtitle(screenWidth),
-                ]}>
-                Sign Up to track your health
-              </Text>
+                {/* Email */}
+                <AppInput
+                  title="Email Address"
+                  placeholder="Enter your email"
+                  value={values.email}
+                  onChangeText={handleChange('email')}
+                  onBlur={handleBlur('email')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  errorMessage={touched.email && errors.email}
+                />
 
-              {/* Email */}
-              <AppInput
-                title="Your Email Address"
-                placeholder="Enter your email"
-                value={values.email}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                keyboardType="email-address"
-                errorMessage={touched.email && errors.email ? errors.email : ''}
-              />
+                {/* Name */}
+                <AppInput
+                  title="Full Name"
+                  placeholder="Enter your full name"
+                  value={values.name}
+                  onChangeText={handleChange('name')}
+                  onBlur={handleBlur('name')}
+                  errorMessage={touched.name && errors.name}
+                />
 
-              {/* Password */}
-              <AppInput
-                title="Password"
-                placeholder="Enter your password"
-                value={values.password}
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                secureTextEntry
-                errorMessage={
-                  touched.password && errors.password ? errors.password : ''
-                }
-              />
+                {/* Gender + Age */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <CustomDropdown
+                      title="Select Gender"
+                      open={genderOpen}
+                      setOpen={setGenderOpen}
+                      value={genderValue}
+                      setValue={v => {
+                        setGenderValue(v);
+                        setFieldValue('gender', v);
+                      }}
+                      items={genderItems}
+                      placeholder="Select Gender"
+                      errorMessage={touched.gender && errors.gender}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Age"
+                      placeholder="Enter your age"
+                      value={values.age}
+                      onChangeText={handleChange('age')}
+                      onBlur={handleBlur('age')}
+                      keyboardType="numeric"
+                      errorMessage={touched.age && errors.age}
+                    />
+                  </View>
+                </View>
 
-              {/* Confirm Password */}
-              <AppInput
-                title="Confirm Password"
-                placeholder="Confirm your password"
-                value={values.confirmPassword}
-                onChangeText={handleChange('confirmPassword')}
-                onBlur={handleBlur('confirmPassword')}
-                secureTextEntry
-                errorMessage={
-                  touched.confirmPassword && errors.confirmPassword
-                    ? errors.confirmPassword
-                    : ''
-                }
-              />
+                {/* Height + Weight */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Height (cm)"
+                      placeholder="e.g., 170"
+                      value={values.height}
+                      onChangeText={handleChange('height')}
+                      onBlur={handleBlur('height')}
+                      keyboardType="numeric"
+                      errorMessage={touched.height && errors.height}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Weight (kg)"
+                      placeholder="e.g., 70"
+                      value={values.weight}
+                      onChangeText={handleChange('weight')}
+                      onBlur={handleBlur('weight')}
+                      keyboardType="numeric"
+                      errorMessage={touched.weight && errors.weight}
+                    />
+                  </View>
+                </View>
 
-              {/* Row 1: Gender + Age */}
-              <View style={[styles.row, styles.getResponsiveRow(screenWidth)]}>
-                <View
-                  style={[
-                    styles.half,
-                    styles.getResponsiveHalf(screenWidth),
-                    {zIndex: 2000},
-                  ]}>
-                  <CustomDropdown
-                    title="Select Gender"
-                    open={genderOpen}
-                    setOpen={setGenderOpen}
-                    value={genderValue}
-                    setValue={val => {
-                      setGenderValue(val);
-                      setFieldValue('gender', val);
+                {/* Diabetes Type */}
+                <CustomDropdown
+                  title="Your Diabetes Type"
+                  open={diabetesOpen}
+                  setOpen={setDiabetesOpen}
+                  value={diabetesValue}
+                  setValue={v => {
+                    setDiabetesValue(v);
+                    setFieldValue('diabetesType', v);
+                  }}
+                  items={diabetesItems}
+                  placeholder="Select"
+                  errorMessage={touched.diabetesType && errors.diabetesType}
+                />
+
+                {/* Cholesterol */}
+                <AppInput
+                  title="Cholesterol (mg/dL)"
+                  placeholder="e.g., 100"
+                  value={values.cholesterol}
+                  onChangeText={handleChange('cholesterol')}
+                  onBlur={handleBlur('cholesterol')}
+                  keyboardType="numeric"
+                  errorMessage={touched.cholesterol && errors.cholesterol}
+                />
+
+                {/* Using Insulin */}
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.checkboxLabel}>Using Insulin?</Text>
+                  <Switch
+                    value={usingInsulin}
+                    onValueChange={v => {
+                      setUsingInsulin(v);
+                      setFieldValue('usingInsulin', v);
                     }}
-                    items={genderItems}
-                    setItems={setGenderItems}
-                    placeholder="Select Gender"
-                    errorMessage={
-                      touched.gender && errors.gender ? errors.gender : ''
-                    }
+                    trackColor={{false: colors.g2, true: colors.p1}}
+                    thumbColor={usingInsulin ? colors.white : colors.g3}
                   />
                 </View>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Age"
-                    placeholder="Enter your age"
-                    value={values.age}
-                    onChangeText={handleChange('age')}
-                    onBlur={handleBlur('age')}
-                    keyboardType="numeric"
-                    errorMessage={touched.age && errors.age ? errors.age : ''}
-                  />
-                </View>
-              </View>
 
-              {/* Row 2: Height + Weight */}
-              <View style={[styles.row, styles.getResponsiveRow(screenWidth)]}>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Height (cm)"
-                    placeholder="Enter height"
-                    value={values.height}
-                    onChangeText={handleChange('height')}
-                    onBlur={handleBlur('height')}
-                    keyboardType="numeric"
-                    errorMessage={
-                      touched.height && errors.height ? errors.height : ''
-                    }
-                  />
-                </View>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Weight (kg)"
-                    placeholder="Enter weight"
-                    value={values.weight}
-                    onChangeText={handleChange('weight')}
-                    onBlur={handleBlur('weight')}
-                    keyboardType="numeric"
-                    errorMessage={
-                      touched.weight && errors.weight ? errors.weight : ''
-                    }
-                  />
-                </View>
-              </View>
+                {/* Password */}
+                <AppInput
+                  title="Password"
+                  placeholder="Enter your password"
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry
+                  errorMessage={touched.password && errors.password}
+                />
 
-              {/* Submit Button */}
-              <AppButton
-                title="Sign Up"
-                onPress={handleSubmit}
-                containerStyle={[
-                  styles.signInBtn,
-                  styles.getResponsiveSignInBtn(screenWidth),
-                ]}
-              />
+                {/* Confirm Password */}
+                <AppInput
+                  title="Confirm Password"
+                  placeholder="Confirm your password"
+                  value={values.confirmPassword}
+                  onChangeText={handleChange('confirmPassword')}
+                  onBlur={handleBlur('confirmPassword')}
+                  secureTextEntry
+                  errorMessage={
+                    touched.confirmPassword && errors.confirmPassword
+                  }
+                />
 
-              {/* Footer */}
-              <View style={styles.createRow}>
-                <Text style={styles.createText}>Already have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
-                  <Text style={styles.linkText}>Sign In</Text>
+                {/* Submit Button */}
+                <TouchableOpacity
+                  style={[styles.signInBtn, {opacity: isSubmitting ? 0.7 : 1}]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.signInText}>Sign Up</Text>
+                  )}
                 </TouchableOpacity>
+
+                {/* Footer */}
+                <View style={styles.createRow}>
+                  <Text style={styles.createText}>
+                    Already have an account?{' '}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('LogIn')}>
+                    <Text style={styles.linkText}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        </Formik>
-      </KeyboardAwareScrollView>
+            )}
+          </Formik>
+        </KeyboardAwareScrollView>
+      </View>
     </ImageBackground>
   );
 }

@@ -26,7 +26,6 @@ export default function LogIn() {
   });
   const [loading, setLoading] = useState(true);
 
-  // ✅ Load Remember Me + credentials on screen mount
   useEffect(() => {
     (async () => {
       try {
@@ -57,7 +56,7 @@ export default function LogIn() {
   // ✅ Sign in & save/remove credentials
   const signInWithEmail = async (email, password, rememberMe) => {
     try {
-      const userCredential = await auth().signInWithEmailAndPassword(
+      const userCredential = await auth.signInWithEmailAndPassword(
         email,
         password,
       );

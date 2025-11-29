@@ -19,55 +19,83 @@ const SettingsScreen = () => {
       source={appImages.settingBG}
       style={styles.container}
       resizeMode="cover">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Settings</Text>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Profile Section */}
         <View style={styles.profileContainer}>
           <Image source={appImages.messi} style={styles.avatar} />
           <Text style={styles.name}>Jenna Ortega</Text>
           <Text style={styles.email}>jennaortega@gmail.com</Text>
         </View>
 
+        {/* Settings Content */}
         <View style={styles.contentContainer}>
+          {/* Account Section */}
+          <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
-            <SettingsItem title="Edit Profile" />
-            <SettingsItem title="User Preferences" />
+            <SettingsItem
+              onPress={() => navigation.navigate('EditProfile')}
+              title="Edit Profile"
+            />
           </View>
 
+          {/* User Preferences Section */}
+          <Text style={styles.sectionTitle}>User Preferences</Text>
           <View style={styles.card}>
-            <SettingsItem title="Security" subtitle="Change password" />
+            <SettingsItem title="Measurement Units" />
           </View>
 
+          {/* Security Section */}
+          <Text style={styles.sectionTitle}>Security</Text>
           <View style={styles.card}>
-            <SettingsItem title="Contact us" />
-            <SettingsItem title="Help & Support" />
-            <SettingsItem title="Privacy policy" />
+            <SettingsItem title="Change Password" />
           </View>
 
-          <AppButton
-            title="Log Out"
-            icon={appIcons.logOut}
-            backgroundColor={colors.r3}
-          />
+          {/* Notifications Section */}
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <View style={styles.card}>
+            <SettingsItem title="Manage Notifications" />
+          </View>
+
+          {/* Support & Legal Section */}
+          <Text style={styles.sectionTitle}>Support & Legal</Text>
+          <View style={styles.card}>
+            <SettingsItem
+              onPress={() => navigation.navigate('FAQs')}
+              title="FAQs"
+              isLast={false}
+            />
+            <SettingsItem
+              onPress={() => navigation.navigate('PrivacyPolicy')}
+              title="Privacy Policy"
+              isLast={true}
+            />
+          </View>
+
+          {/* Sign Out Button */}
+          <TouchableOpacity style={styles.signOutButton}>
+            <Image source={appIcons.logOut} style={styles.logOutIcon} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ImageBackground>
   );
 };
 
-const SettingsItem = ({title, subtitle}) => (
-  <TouchableOpacity style={styles.item}>
-    <View>
-      <Text style={styles.itemTitle}>{title}</Text>
-      {subtitle && <Text style={styles.itemSubtitle}>{subtitle}</Text>}
-    </View>
+const SettingsItem = ({title, isLast = true, onPress}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[styles.item, isLast && styles.itemLast]}>
+    <Text style={styles.itemTitle}>{title}</Text>
     <Text style={styles.chevron}>›</Text>
   </TouchableOpacity>
 );
@@ -76,9 +104,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: HP(4),
-  },
-  scrollContent: {
-    paddingBottom: HP(6),
   },
   header: {
     flexDirection: 'row',
@@ -100,10 +125,13 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  scrollContent: {
+    paddingBottom: HP(3),
+  },
   profileContainer: {
     alignItems: 'center',
     marginTop: HP(2),
-    marginBottom: HP(2),
+    marginBottom: HP(3),
   },
   avatar: {
     width: 90,
@@ -114,29 +142,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
   },
   name: {
-    fontSize: WP(5),
+    fontSize: WP(5.5),
     fontWeight: 'bold',
     color: '#000',
-    marginTop: HP(1),
+    marginTop: HP(1.5),
   },
   email: {
-    fontSize: WP(4),
-    color: '#777',
-    marginTop: HP(0.5),
+    fontSize: WP(3.8),
+    color: '#666',
+    marginTop: HP(0.3),
   },
   contentContainer: {
-    padding: WP(5),
+    paddingHorizontal: WP(5),
+  },
+  sectionTitle: {
+    fontSize: WP(4),
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: HP(1.2),
+    marginTop: HP(2),
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: HP(1),
-    paddingHorizontal: WP(4),
-    marginBottom: HP(2),
+    backgroundColor: '#ffffff',
+    borderRadius: WP(3),
+    marginBottom: HP(1),
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOffset: {width: 1, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
     elevation: 1,
   },
   item: {
@@ -144,31 +177,43 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: HP(2),
-    borderBottomColor: '#eee',
+    paddingHorizontal: WP(4),
+    borderBottomColor: '#f0f0f0',
     borderBottomWidth: 1,
   },
-  itemTitle: {
-    fontSize: WP(4.2),
-    fontWeight: '500',
-    color: '#000',
+  itemLast: {
+    borderBottomWidth: 0,
   },
-  itemSubtitle: {
-    fontSize: WP(3.5),
-    color: '#999',
-    marginTop: 2,
+  itemTitle: {
+    fontSize: WP(4),
+    fontWeight: '400',
+    color: '#333',
   },
   chevron: {
-    fontSize: WP(5),
+    fontSize: WP(6),
     color: '#ccc',
   },
-  logoutButton: {
-    backgroundColor: '#DB4A39',
-    paddingVertical: HP(2.2),
-    borderRadius: WP(3),
+  signOutButton: {
+    backgroundColor: '#FF3B30',
+    paddingVertical: HP(2),
+    borderRadius: WP(7),
     alignItems: 'center',
-    marginTop: HP(1),
+    justifyContent: 'center',
+    marginTop: HP(3),
+    flexDirection: 'row',
+    shadowColor: '#FF3B30',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  logoutText: {
+  logOutIcon: {
+    width: WP(5),
+    height: WP(5),
+    tintColor: '#fff',
+    marginRight: WP(2),
+  },
+  signOutText: {
     color: '#fff',
     fontSize: WP(4.5),
     fontWeight: '600',

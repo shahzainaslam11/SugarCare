@@ -15,7 +15,7 @@ const CustomDropdown = ({
   setItems,
   placeholder,
   errorMessage,
-  onChangeValue, // <-- NEW (optional, to sync with Formik)
+  onChangeValue,
 }) => {
   return (
     <View style={styles.mainContainer}>
@@ -54,23 +54,21 @@ const CustomDropdown = ({
 
 const styles = StyleSheet.create({
   mainContainer: {
-    // marginBottom: WP('10'),
+    marginVertical: HP('0.5'),
   },
   textStyle: {
     color: colors.g1,
     fontFamily: family.inter_medium,
     fontSize: size.medium,
-    marginBottom: HP('1'),
+    marginVerticalL: HP('1'),
   },
   dropdown: {
     borderWidth: 1,
     borderColor: '#E3E3E3',
     borderRadius: 12,
     backgroundColor: colors.white,
-    height: HP('5'), // 👈 fixed height (same as your inputs)
     minHeight: HP('5'),
-    paddingHorizontal: WP('3'),
-    marginBottom: HP('2.5'),
+    paddingHorizontal: WP('1.5'),
   },
   dropdownContainer: {
     borderWidth: 1,
