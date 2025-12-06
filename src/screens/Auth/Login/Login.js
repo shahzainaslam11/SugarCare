@@ -4,12 +4,12 @@ import CheckBox from '@react-native-community/checkbox';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch, useSelector} from 'react-redux';
+
 import {AppButton, AppInput} from '../../../components';
 import {
   appImages,
-  auth,
   colors,
-  firebaseErrorMessages,
   loginFormFields,
   loginVS,
   showError,
@@ -17,14 +17,18 @@ import {
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
+import {loginUser, clearAuthError} from '../../../redux/slices/authSlice';
 
 export default function LogIn() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {loading, error, user} = useSelector(state => state.auth);
+
   const [initialValues, setInitialValues] = useState({
     ...loginFormFields,
     rememberMe: false,
   });
-  const [loading, setLoading] = useState(true);
+  const [loadingCredentials, setLoadingCredentials] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -40,7 +44,6 @@ export default function LogIn() {
             rememberMe: true,
           });
         } else {
-          await auth().signOut();
           setInitialValues({
             ...loginFormFields,
             rememberMe: false,
@@ -49,43 +52,23 @@ export default function LogIn() {
       } catch (e) {
         console.log('Error loading saved credentials', e);
       }
-      setLoading(false);
+      setLoadingCredentials(false);
     })();
   }, []);
 
-  // ✅ Sign in & save/remove credentials
-  const signInWithEmail = async (email, password, rememberMe) => {
-    try {
-      const userCredential = await auth.signInWithEmailAndPassword(
-        email,
-        password,
-      );
-
-      if (rememberMe) {
-        await AsyncStorage.setItem('rememberMe', 'true');
-        await AsyncStorage.setItem('savedEmail', email);
-        await AsyncStorage.setItem('savedPassword', password); // ❗ For security use SecureStore or Keychain
-      } else {
-        await AsyncStorage.setItem('rememberMe', 'false');
-        await AsyncStorage.removeItem('savedEmail');
-        await AsyncStorage.removeItem('savedPassword');
-      }
-
-      return {user: userCredential.user};
-    } catch (error) {
-      console.log('Full Firebase error:', error);
-      const errorCode =
-        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
-      console.log('Firebase error code:', errorCode);
-
-      const friendlyMessage =
-        firebaseErrorMessages[errorCode] ||
-        'Something went wrong. Please try again.';
-      return {error: friendlyMessage};
+  const handleRememberMe = async (email, password, rememberMe) => {
+    if (rememberMe) {
+      await AsyncStorage.setItem('rememberMe', 'true');
+      await AsyncStorage.setItem('savedEmail', email);
+      await AsyncStorage.setItem('savedPassword', password);
+    } else {
+      await AsyncStorage.setItem('rememberMe', 'false');
+      await AsyncStorage.removeItem('savedEmail');
+      await AsyncStorage.removeItem('savedPassword');
     }
   };
 
-  if (loading) return null; // prevent Formik render before credentials are loaded
+  if (loadingCredentials) return null;
 
   return (
     <ImageBackground
@@ -102,21 +85,29 @@ export default function LogIn() {
           validationSchema={loginVS}
           enableReinitialize
           onSubmit={async values => {
-            const {user, error} = await signInWithEmail(
+            await handleRememberMe(
               values.email,
               values.password,
               values.rememberMe,
             );
 
-            if (user) {
-              showSuccess(`Welcome ${user.email}`);
+            // ✅ Dispatch login and log full API response
+            const res = await dispatch(
+              loginUser({
+                email: values.email,
+                password: values.password,
+              }),
+            );
+            console.log('Login API Response:', JSON.stringify(res));
+
+            if (res.meta.requestStatus === 'fulfilled') {
+              showSuccess(`Welcome ${res.payload?.user?.email || 'User'}`);
               navigation.reset({
                 index: 0,
-                routes: [{name: 'BottomTabs'}], // defined in MainAppNav
+                routes: [{name: 'BottomTabs'}],
               });
-              // navigation.replace('Home');
             } else {
-              showError(error || 'Login failed');
+              showError(res.payload?.message || 'Login failed');
             }
           }}>
           {({
@@ -170,6 +161,7 @@ export default function LogIn() {
                   </View>
                   <Text style={styles.rememberMeText}>Remember Me</Text>
                 </View>
+
                 <TouchableOpacity
                   onPress={() => navigation.navigate('ForgotPassword')}>
                   <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -178,36 +170,17 @@ export default function LogIn() {
 
               <AppButton
                 title="Sign In"
+                loading={loading}
                 onPress={handleSubmit}
                 containerStyle={styles.signInBtn}
               />
-              {/* <View style={styles.dividerRow}>
-                <View style={styles.divider} />
-                <Text style={styles.dividerText}>or continue with</Text>
-                <View style={styles.divider} />
-              </View>
 
-              <View style={styles.socialRow}>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Image
-                    source={{
-                      uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
-                    }}
-                    style={styles.socialIcon}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Image
-                    source={{
-                      uri: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-                    }}
-                    style={styles.socialIcon}
-                  />
-                </TouchableOpacity>
-              </View> */}
               <View style={styles.createRow}>
                 <Text style={{color: colors.g1}}>Don’t have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <TouchableOpacity
+                  onPress={
+                    () => navigation.navigate('Signup') // or Signup flow
+                  }>
                   <Text style={styles.createText}>Create One</Text>
                 </TouchableOpacity>
               </View>

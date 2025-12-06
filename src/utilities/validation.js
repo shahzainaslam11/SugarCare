@@ -78,7 +78,7 @@ export const signUpVS = yup.object().shape({
     .string()
     .required('Diabetes Type Required')
     .oneOf(
-      ['type1', 'type2', 'prediabetes', 'gestational', 'none'],
+      ['Type 1', 'Type 2', 'Prediabetes', 'Gestational', 'None'],
       'Invalid diabetes type',
     ),
 

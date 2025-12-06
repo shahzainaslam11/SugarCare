@@ -1,4 +1,3 @@
-// src/screens/Auth/SignUp/index.js
 import React, {useState} from 'react';
 import {
   View,
@@ -11,30 +10,26 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
-import {AppButton, AppInput, CustomDropdown} from '../../../components';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppInput, CustomDropdown} from '../../../components';
 import {
   appImages,
-  firebaseErrorMessages,
   showError,
   showSuccess,
   signUpVS,
   colors,
-  firestore,
-  auth,
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
-
-// ✅ Updated Firebase modular imports
-import {createUserWithEmailAndPassword} from '@react-native-firebase/auth';
-import {doc, setDoc, serverTimestamp} from '@react-native-firebase/firestore';
+import {registerUser} from '../../../redux/slices/authSlice';
 
 export default function SignUp() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {loading} = useSelector(state => state.auth);
   const {width} = Dimensions.get('window');
   const isSmall = width < 400;
 
-  // Dropdown States
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState(null);
   const [diabetesOpen, setDiabetesOpen] = useState(false);
@@ -48,43 +43,12 @@ export default function SignUp() {
   ];
 
   const diabetesItems = [
-    {label: 'Type 1', value: 'type1'},
-    {label: 'Type 2', value: 'type2'},
-    {label: 'Prediabetes', value: 'prediabetes'},
-    {label: 'Gestational', value: 'gestational'},
-    {label: 'None', value: 'none'},
+    {label: 'Type 1', value: 'Type 1'},
+    {label: 'Type 2', value: 'Type 2'},
+    {label: 'Prediabetes', value: 'Prediabetes'},
+    {label: 'Gestational', value: 'Gestational'},
+    {label: 'None', value: 'None'},
   ];
-
-  // ✅ Updated signup function
-  const signUpWithEmail = async (email, password, extra) => {
-    try {
-      // Create user
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const {uid} = cred.user;
-
-      // Save user info in Firestore
-      await setDoc(doc(firestore, 'users', uid), {
-        email,
-        name: extra.name,
-        gender: extra.gender,
-        age: Number(extra.age),
-        height: Number(extra.height),
-        weight: Number(extra.weight),
-        diabetesType: extra.diabetesType,
-        cholesterol: Number(extra.cholesterol),
-        usingInsulin: extra.usingInsulin,
-        createdAt: serverTimestamp(),
-      });
-
-      return {user: cred.user};
-    } catch (e) {
-      console.log('eeeeee====>', e);
-      const code = e?.code || e?.message?.match(/\[([^\]]+)\]/)?.[1];
-      if (code === 'auth/email-already-in-use')
-        return {error: 'Email already in use.'};
-      return {error: firebaseErrorMessages[code] || 'Something went wrong.'};
-    }
-  };
 
   const initialValues = {
     email: '',
@@ -114,22 +78,52 @@ export default function SignUp() {
           <Formik
             initialValues={initialValues}
             validationSchema={signUpVS}
-            onSubmit={async (v, {setSubmitting}) => {
-              const {user, error} = await signUpWithEmail(v.email, v.password, {
-                name: v.name,
-                gender: v.gender,
-                age: v.age,
-                height: v.height,
-                weight: v.weight,
-                diabetesType: v.diabetesType,
-                cholesterol: v.cholesterol,
-                usingInsulin: v.usingInsulin,
-              });
-              if (user) {
-                showSuccess('Signup successful! Please login.');
-                navigation.navigate('LogIn');
-              } else showError(error || 'Sign up failed.');
-              setSubmitting(false);
+            onSubmit={async (values, {setSubmitting}) => {
+              // Prepare payload matching backend API
+              const payload = {
+                email: values.email,
+                password: values.password,
+                confirm_password: values.confirmPassword,
+                full_name: values.name,
+                gender: values.gender,
+                age: Number(values.age),
+                height_cm: Number(values.height),
+                weight_kg: Number(values.weight),
+                diabetes_type: values.diabetesType,
+                cholesterol_mg_dl: Number(values.cholesterol),
+                using_insulin: values.usingInsulin,
+              };
+
+              try {
+                const res = await dispatch(registerUser(payload));
+
+                // ✅ Log the full API response for debugging
+                console.log('Register API Response:', JSON.stringify(res));
+
+                if (res.meta.requestStatus === 'fulfilled') {
+                  showSuccess('Signup successful! Please login.');
+                  navigation.navigate('LogIn', {email: values.email});
+                } else if (res.payload?.details?.validation_errors) {
+                  // Extract and display backend validation errors
+                  const validationErrors =
+                    res.payload.details.validation_errors;
+                  const messages = validationErrors
+                    .map(
+                      err =>
+                        `${err.field.replace('body.', '')}: ${err.message}`,
+                    )
+                    .join('\n');
+                  showError(messages);
+                } else {
+                  // Fallback message
+                  showError(res.payload?.message || 'Sign up failed.');
+                }
+              } catch (e) {
+                console.log('Unexpected error:', e);
+                showError('Something went wrong. Please try again.');
+              } finally {
+                setSubmitting(false);
+              }
             }}>
             {({
               handleChange,
@@ -159,7 +153,7 @@ export default function SignUp() {
                   errorMessage={touched.email && errors.email}
                 />
 
-                {/* Name */}
+                {/* Full Name */}
                 <AppInput
                   title="Full Name"
                   placeholder="Enter your full name"
@@ -293,8 +287,8 @@ export default function SignUp() {
                 <TouchableOpacity
                   style={[styles.signInBtn, {opacity: isSubmitting ? 0.7 : 1}]}
                   onPress={handleSubmit}
-                  disabled={isSubmitting}>
-                  {isSubmitting ? (
+                  disabled={isSubmitting || loading}>
+                  {isSubmitting || loading ? (
                     <ActivityIndicator color={colors.white} />
                   ) : (
                     <Text style={styles.signInText}>Sign Up</Text>

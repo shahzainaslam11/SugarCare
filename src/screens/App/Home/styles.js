@@ -1,5 +1,6 @@
 import {StyleSheet} from 'react-native';
-import {HP} from '../../../utilities';
+import {family, HP, size, WP} from '../../../utilities';
+import {Fonts} from '../../../assets/fonts';
 
 const styles = StyleSheet.create({
   container: {
@@ -34,12 +35,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  section: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
   subtitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -51,74 +46,66 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#000',
   },
-  noFastText: {
-    textAlign: 'center',
-    marginVertical: 16,
-    color: '#666',
-    fontSize: 14,
-  },
-  trackerContainer: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  timeInfo: {
+
+  // Fasting Plans Styles (KEEPING ORIGINAL STYLE)
+  plansContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 16,
+    marginBottom: HP(2),
+    paddingHorizontal: WP(2),
   },
-  timeItem: {
+
+  planCard: {
+    width: WP(28),
+    borderRadius: WP(4),
+    padding: WP(3.5),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  planHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    flex: 1,
+    marginBottom: HP(1),
   },
-  timeLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  timeValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
+
+  planTitle: {
+    fontSize: size.normal,
+    fontFamily: Fonts.interSemiBold,
     color: '#000',
   },
-  separator: {
-    width: 1,
-    height: '100%',
-    backgroundColor: '#e0e0e0',
-  },
-  separatorLine: {
-    width: '100%',
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 16,
-  },
-  progressWrapper: {
-    alignItems: 'center',
-    marginVertical: 16,
-    justifyContent: 'center',
-  },
-  remaining: {
-    fontSize: 14,
+
+  planHours: {
+    fontSize: size.small,
+    fontFamily: Fonts.interRegular,
     color: '#666',
-    marginBottom: 16,
-    marginTop: 10,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: WP(1.5),
+    paddingVertical: HP(0.3),
+    borderRadius: WP(1),
   },
-  endFastingButton: {
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4252FF',
-    width: '100%',
+
+  planDescription: {
+    fontSize: size.xsmall,
+    fontFamily: Fonts.interRegular,
+    color: '#555',
+    lineHeight: HP(1.8),
   },
-  endFastingText: {
-    color: '#4252FF',
+
+  noFastText: {
     textAlign: 'center',
-    fontWeight: '500',
+    fontSize: size.small,
+    color: '#999',
+    fontFamily: Fonts.interRegular,
+    marginTop: HP(1),
+    marginBottom: HP(2),
   },
+
+  // Button
   button: {
     padding: 12,
     backgroundColor: '#4252FF',

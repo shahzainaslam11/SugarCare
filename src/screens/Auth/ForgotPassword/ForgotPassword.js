@@ -3,48 +3,24 @@ import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import * as yup from 'yup';
-import {AppButton, AppInput} from '../../../components';
-import {
-  appImages,
-  auth,
-  colors,
-  firebaseErrorMessages,
-  showError,
-  showSuccess,
-} from '../../../utilities';
+import {AppInput, AppButton} from '../../../components';
+import {appImages, showError, showSuccess} from '../../../utilities';
 import styles from './styles';
+import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
+import {sendOtp} from '../../../redux/slices/authSlice'; // Changed from forgotPassword to sendOtp
 
 const forgotPasswordVS = yup.object().shape({
   email: yup
     .string()
-    .email('Please provide a valid email address')
+    .email('Enter a valid email')
     .required('Email is required'),
 });
 
-const forgotPasswordInitialValues = {
-  email: '',
-};
-
 export default function ForgotPassword() {
   const navigation = useNavigation();
-
-  const sendResetEmail = async email => {
-    try {
-      await auth().sendPasswordResetEmail(email);
-      return {success: true};
-    } catch (error) {
-      console.log('Full Firebase error:', error);
-      const errorCode =
-        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
-      console.log('Firebase error code:', errorCode);
-
-      const friendlyMessage =
-        firebaseErrorMessages[errorCode] ||
-        'Something went wrong. Please try again.';
-      return {error: friendlyMessage};
-    }
-  };
+  const dispatch = useDispatch();
+  const {loading} = useSelector(state => state.auth);
 
   return (
     <ImageBackground
@@ -52,23 +28,45 @@ export default function ForgotPassword() {
       style={styles.container}
       resizeMode="cover">
       <KeyboardAwareScrollView
-        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid
-        keyboardShouldPersistTaps="handled">
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
         <Formik
-          initialValues={forgotPasswordInitialValues}
+          initialValues={{email: ''}}
           validationSchema={forgotPasswordVS}
           onSubmit={async values => {
-            const {success, error} = await sendResetEmail(values.email);
+            // Call sendOtp with purpose 'reset_pw' as per API documentation
+            const res = await dispatch(
+              sendOtp({
+                email: values.email,
+                purpose: 'reset_pw',
+              }),
+            );
 
-            if (success) {
-              showSuccess(
-                'Password reset email sent! Please check your inbox.',
-              );
-              navigation.navigate('LogIn');
+            // ✅ Log full API response
+            console.log('Send OTP API Response:', JSON.stringify(res));
+
+            if (res.meta.requestStatus === 'fulfilled') {
+              showSuccess(res.payload?.message || 'OTP sent to your email');
+
+              navigation.navigate('VerifyOTP', {
+                email: values.email,
+                purpose: 'reset_pw',
+              });
             } else {
-              showError(error || 'Failed to send password reset email.');
+              // Handle validation errors
+              if (res.payload?.details?.validation_errors) {
+                const validationErrors = res.payload.details.validation_errors;
+                const messages = validationErrors
+                  .map(
+                    err => `${err.field.replace('body.', '')}: ${err.message}`,
+                  )
+                  .join('\n');
+                showError(messages);
+              } else {
+                showError(
+                  res.payload?.message ||
+                    'Failed to send OTP. Please try again.',
+                );
+              }
             }
           }}>
           {({
@@ -82,7 +80,8 @@ export default function ForgotPassword() {
             <View style={styles.inner}>
               <Text style={styles.title}>Forgot Password</Text>
               <Text style={styles.subtitle}>
-                Enter your registered email below to reset your password.
+                Enter your registered email below to receive OTP for password
+                reset.
               </Text>
 
               <AppInput
@@ -96,9 +95,9 @@ export default function ForgotPassword() {
               />
 
               <AppButton
-                title="Continue"
+                title="Send OTP"
                 onPress={handleSubmit}
-                containerStyle={styles.signInBtn}
+                loading={loading}
               />
 
               <View style={styles.createRow}>

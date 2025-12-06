@@ -1,4 +1,4 @@
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,33 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {colors, family, HP, size, WP} from '../../utilities';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  colors,
+  family,
+  HP,
+  size,
+  WP,
+  showSuccess,
+  showError,
+} from '../../utilities';
+import {logoutUser} from '../../redux/slices/authSlice';
 
 const {width} = Dimensions.get('window');
 const DRAWER_WIDTH = WP(80);
 
 const MenuModal = ({visible, onClose, navigation}) => {
+  const dispatch = useDispatch();
+  const {user, accessToken, refreshToken, loading} = useSelector(
+    state => state.auth,
+  );
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const isAnimating = useRef(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -103,10 +120,79 @@ const MenuModal = ({visible, onClose, navigation}) => {
     }, 50);
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: performLogout,
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const performLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      // Check if we have tokens
+      if (!accessToken || !refreshToken) {
+        // If no tokens, just clear local data
+        dispatch({type: 'auth/clearAuthData'});
+        showSuccess('Logged out successfully');
+        navigation.replace('Auth', {screen: 'LogIn'});
+        onClose();
+        return;
+      }
+
+      // Call logout API with tokens
+      const result = await dispatch(
+        logoutUser({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }),
+      );
+
+      console.log('Logout result:', result);
+
+      if (result.meta.requestStatus === 'fulfilled') {
+        showSuccess('Logged out successfully');
+        // Navigate to login screen
+        navigation.replace('Auth', {screen: 'LogIn'});
+      } else {
+        // Even if API fails, clear local data
+        dispatch({type: 'auth/clearAuthData'});
+        showSuccess('Logged out successfully');
+        navigation.replace('Auth', {screen: 'LogIn'});
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear local data even if there's an error
+      dispatch({type: 'auth/clearAuthData'});
+      showSuccess('Logged out successfully');
+      navigation.replace('Auth', {screen: 'LogIn'});
+    } finally {
+      setIsLoggingOut(false);
+      onClose();
+    }
+  };
+
   const handleOverlayPress = () => {
     closeModal();
     setTimeout(() => onClose(), 250);
   };
+
+  // Get user info from Redux store
+  const userName = user?.full_name || user?.name || 'User';
+  const userEmail = user?.email || 'user@example.com';
 
   return (
     <Modal
@@ -146,8 +232,8 @@ const MenuModal = ({visible, onClose, navigation}) => {
                 <Text style={styles.profileIconText}>👤</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>Jenna</Text>
-                <Text style={styles.profileEmail}>jenna341@gmail.com</Text>
+                <Text style={styles.profileName}>{userName}</Text>
+                <Text style={styles.profileEmail}>{userEmail}</Text>
               </View>
               <TouchableOpacity
                 onPress={handleOverlayPress}
@@ -175,6 +261,24 @@ const MenuModal = ({visible, onClose, navigation}) => {
                   <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
               ))}
+
+              {/* Logout Button */}
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                disabled={isLoggingOut}
+                activeOpacity={0.7}>
+                {isLoggingOut ? (
+                  <ActivityIndicator size="small" color={colors.p1} />
+                ) : (
+                  <>
+                    <Text style={styles.logoutIcon}>🚪</Text>
+                    <View style={styles.logoutTextContainer}>
+                      <Text style={styles.logoutText}>Logout</Text>
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
 
             {/* Version Info */}
@@ -298,6 +402,32 @@ const styles = StyleSheet.create({
     fontSize: size.h3,
     color: colors.b1,
     fontFamily: family.inter_medium,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: WP(4),
+    paddingVertical: HP(2),
+    marginTop: HP(3),
+    marginHorizontal: WP(4),
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: `${colors.error}30`,
+  },
+  logoutIcon: {
+    fontSize: size.h4,
+    marginRight: WP(4),
+    width: WP(6),
+    textAlign: 'center',
+  },
+  logoutTextContainer: {
+    flex: 1,
+  },
+  logoutText: {
+    fontSize: size.normal,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
   },
   bottomSection: {
     paddingHorizontal: WP(4),
