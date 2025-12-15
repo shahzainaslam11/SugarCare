@@ -1,161 +1,115 @@
-import {StyleSheet, Dimensions} from 'react-native';
-import {colors, HP, size} from '../../../utilities';
-
-const {width} = Dimensions.get('window');
-
-// Responsive style functions
-const getResponsiveInner = screenWidth => ({
-  paddingHorizontal: screenWidth < 400 ? 15 : 25,
-  borderRadius: 20,
-  marginHorizontal: screenWidth < 400 ? 5 : 10,
-  paddingVertical: 20,
-  alignItems: 'stretch',
-});
-
-const getResponsiveTitle = screenWidth => ({
-  fontSize: screenWidth < 400 ? 24 : 28,
-  fontWeight: '700',
-  marginBottom: 5,
-  color: '#000',
-  textAlign: 'center',
-});
-
-const getResponsiveSubtitle = screenWidth => ({
-  fontSize: screenWidth < 400 ? 14 : 15,
-  color: '#777',
-  marginBottom: 20,
-  textAlign: 'center',
-});
-
-const getResponsiveRow = screenWidth => ({
-  flexDirection: screenWidth < 400 ? 'column' : 'row',
-  justifyContent: 'space-between',
-  width: '100%',
-  alignItems: 'center',
-  marginBottom: 25,
-});
-
-const getResponsiveHalf = screenWidth => ({
-  width: screenWidth < 400 ? '100%' : '48%',
-  marginBottom: screenWidth < 400 ? 15 : 0,
-});
-
-const getResponsiveSignInBtn = screenWidth => ({
-  backgroundColor: '#3b82f6',
-  paddingVertical: 15,
-  borderRadius: 15,
-  alignItems: 'center',
-  width: '100%',
-  marginBottom: 25,
-});
+import {StyleSheet} from 'react-native';
+import {colors, family, HP, size} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    paddingVertical: HP(4),
   },
+
   inner: {
-    // Base styles - responsive styles added via function
+    borderRadius: 20,
+    paddingHorizontal: HP(3),
+    paddingVertical: HP(3),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  inputWrapper: {
-    width: '100%',
-    marginBottom: 15,
-  },
+
   title: {
-    // Base styles - responsive styles added via function
-    fontWeight: '700',
-    color: '#000',
+    fontSize: size.h2,
+    fontFamily: family.inter_bold,
+    color: colors.black,
     textAlign: 'center',
+    marginBottom: HP(0.5),
   },
+
   subtitle: {
-    // Base styles - responsive styles added via function
-    color: '#777',
-    textAlign: 'center',
-  },
-  row: {
-    // Base styles - responsive styles added via function
-    width: '100%',
-    alignItems: 'center',
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  forgotText: {
-    color: colors.p1,
-    fontWeight: '600',
-    fontFamily: 'Inter-Medium',
     fontSize: size.medium,
+    fontFamily: family.inter_regular,
+    color: colors.g1,
+    textAlign: 'center',
+    marginBottom: HP(3),
   },
-  signInBtn: {
-    // Base styles - responsive styles added via function
+
+  inputWrapper: {
+    marginBottom: HP(2),
   },
-  signInText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  dividerRow: {
+
+  row: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  half: {
+    width: '48%',
+  },
+
+  rowSmall: {
+    flexDirection: 'column',
+  },
+
+  halfSmall: {
+    width: '100%',
+    marginBottom: HP(2),
+  },
+
+  checkboxContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginVertical: HP(2),
+    paddingHorizontal: HP(0.5),
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ccc',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#777',
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: 15,
-    justifyContent: 'center',
-  },
-  socialBtn: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  socialIcon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
-  },
-  createText: {
+
+  checkboxLabel: {
+    fontSize: size.medium,
+    fontFamily: family.inter_medium,
     color: colors.g1,
   },
-  linkText: {
-    color: colors.p1,
-    fontWeight: '600',
+
+  signInBtn: {
+    backgroundColor: colors.p1,
+    paddingVertical: HP(2.2),
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: HP(2),
+    shadowColor: colors.p1,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 3,
   },
+
+  signInText: {
+    color: colors.white,
+    fontSize: size.large,
+    fontFamily: family.inter_bold,
+  },
+
   createRow: {
     flexDirection: 'row',
-    marginTop: HP(4),
-    alignSelf: 'center',
+    justifyContent: 'center',
+    marginTop: HP(3),
   },
-  rememberMeText: {
+
+  createText: {
+    fontSize: size.medium,
     color: colors.g1,
-    fontSize: size.small,
-    fontFamily: 'Inter-Medium',
+    fontFamily: family.inter_regular,
   },
-  half: {},
+
+  linkText: {
+    fontSize: size.medium,
+    color: colors.p1,
+    fontFamily: family.inter_bold,
+  },
 });
 
-// Export the style functions along with the StyleSheet
-export default {
-  ...styles,
-  getResponsiveInner,
-  getResponsiveTitle,
-  getResponsiveSubtitle,
-  getResponsiveRow,
-  getResponsiveHalf,
-  getResponsiveSignInBtn,
-};
+export default styles;

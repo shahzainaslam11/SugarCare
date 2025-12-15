@@ -10,6 +10,12 @@ import AddHBA1CTest from '../../screens/App/AddHBA1CTest';
 import Recipe from '../../screens/App/WhatToEat/Recipe';
 import InsightDetails from '../../screens/App/CommunityInsight/InsightDetails';
 import ChatScreen from '../../screens/App/ChatScreen';
+import HbA1cReportScreen from '../../screens/App/HbA1C/HbA1C';
+import NewHbA1cReport from '../../screens/App/AddHBA1CTest/NewHbA1cReport';
+import FAQs from '../../screens/App/SettingsScreen/FAQs';
+import PrivacyPolicy from '../../screens/App/SettingsScreen/PrivacyPolicy';
+import EditProfile from '../../screens/App/SettingsScreen/EditProfile';
+import Notification from '../../screens/App/Notification/Notification';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +33,11 @@ function AppScreens() {
       <Stack.Screen name="Recipe" component={Recipe} />
       <Stack.Screen name="InsightDetails" component={InsightDetails} />
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
+      <Stack.Screen name="NewHbA1cReport" component={NewHbA1cReport} />
+      <Stack.Screen name="FAQs" component={FAQs} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
+      <Stack.Screen name="EditProfile" component={EditProfile} />
+      <Stack.Screen name="Notification" component={Notification} />
     </Stack.Navigator>
   );
 }

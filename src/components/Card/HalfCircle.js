@@ -1,12 +1,21 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import Svg, {Circle} from 'react-native-svg';
 import {appIcons, HP, WP, family, size} from '../../utilities';
 import {Fonts} from '../../assets/fonts';
 
-const HalfCircle = ({onPressEdit}) => {
-  const percentage = 75;
-  const remainingTime = '06:38 hrs';
+const HalfCircle = ({
+  onPressEdit,
+  onEndFasting,
+  startTime,
+  endTime,
+  remainingTime,
+  progressPercentage,
+}) => {
+  const percentage = progressPercentage || 75;
+  const remaining = remainingTime || '06:38 hrs';
+  const start = startTime || '08:00 PM';
+  const end = endTime || '04:00 PM';
 
   const radius = 100;
   const strokeWidth = 12;
@@ -15,16 +24,22 @@ const HalfCircle = ({onPressEdit}) => {
 
   const progressLength = (percentage / 100) * halfCircumference;
 
+  const handleEndFasting = () => {
+    if (onEndFasting) {
+      onEndFasting();
+    }
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.label}>Started</Text>
-          <Text style={styles.value}>08:00 PM</Text>
+          <Text style={styles.value}>{start}</Text>
         </View>
         <View style={{alignItems: 'flex-end'}}>
           <Text style={styles.label}>Ends at</Text>
-          <Text style={styles.value}>04:00 PM</Text>
+          <Text style={styles.value}>{end}</Text>
         </View>
       </View>
 
@@ -65,15 +80,15 @@ const HalfCircle = ({onPressEdit}) => {
         </Svg>
 
         <View style={styles.centerText}>
-          <Text style={styles.percentage}>{percentage}%</Text>
+          <Text style={styles.percentage}>{Math.round(percentage)}%</Text>
           <Text style={styles.remaining}>
-            Remaining: <Text style={styles.remainingTime}>{remainingTime}</Text>
+            Remaining: <Text style={styles.remainingTime}>{remaining}</Text>
           </Text>
         </View>
       </View>
 
       <View style={styles.footerRow}>
-        <TouchableOpacity style={styles.endBtn}>
+        <TouchableOpacity style={styles.endBtn} onPress={handleEndFasting}>
           <Image
             source={appIcons.pause}
             style={styles.icon}
@@ -95,6 +110,7 @@ const HalfCircle = ({onPressEdit}) => {
 };
 
 const styles = StyleSheet.create({
+  // ... keep all your existing HalfCircle styles exactly as they were ...
   card: {
     borderRadius: WP(5),
     backgroundColor: '#fff',

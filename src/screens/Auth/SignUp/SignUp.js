@@ -1,85 +1,67 @@
 import React, {useState} from 'react';
 import {
   View,
-  Dimensions,
   ImageBackground,
   Text,
   TouchableOpacity,
+  Switch,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
-import {AppButton, AppInput, CustomDropdown} from '../../../components';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppInput, CustomDropdown} from '../../../components';
 import {
   appImages,
-  auth,
-  firebaseErrorMessages,
   showError,
   showSuccess,
-  signUpFormFields,
   signUpVS,
+  colors,
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
+import {registerUser} from '../../../redux/slices/authSlice';
 
 export default function SignUp() {
   const navigation = useNavigation();
-  const [screenWidth, setScreenWidth] = useState(
-    Dimensions.get('window').width,
-  );
+  const dispatch = useDispatch();
+  const {loading} = useSelector(state => state.auth);
+  const {width} = Dimensions.get('window');
+  const isSmall = width < 400;
 
-  // Handle screen rotation/resize
-  Dimensions.addEventListener('change', ({window}) => {
-    setScreenWidth(window.width);
-  });
-
-  // Dropdown states
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState(null);
+  const [diabetesOpen, setDiabetesOpen] = useState(false);
+  const [diabetesValue, setDiabetesValue] = useState(null);
+  const [usingInsulin, setUsingInsulin] = useState(false);
 
-  const [genderItems, setGenderItems] = useState([
+  const genderItems = [
     {label: 'Male', value: 'male'},
     {label: 'Female', value: 'female'},
-  ]);
+    {label: 'Other', value: 'other'},
+  ];
 
-  const signUpWithEmail = async (email, password, extraData) => {
-    try {
-      const userCredential = await auth().createUserWithEmailAndPassword(
-        email,
-        password,
-      );
+  const diabetesItems = [
+    {label: 'Type 1', value: 'Type 1'},
+    {label: 'Type 2', value: 'Type 2'},
+    {label: 'Prediabetes', value: 'Prediabetes'},
+    {label: 'Gestational', value: 'Gestational'},
+    {label: 'None', value: 'None'},
+  ];
 
-      const {uid} = userCredential.user;
-
-      // Save extra data in Firestore
-      await firestore().collection('users').doc(uid).set({
-        email,
-        gender: extraData.gender,
-        age: extraData.age,
-        height: extraData.height,
-        weight: extraData.weight,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
-
-      return {user: userCredential.user};
-    } catch (error) {
-      console.log('Full Firebase error:', error);
-      const errorCode =
-        error?.code || error?.message?.match(/\[([^\]]+)\]/)?.[1];
-      console.log('Firebase error code:', errorCode);
-
-      if (errorCode === 'auth/email-already-in-use') {
-        return {
-          error:
-            'This email address is already registered. Please try logging in or use another email.',
-        };
-      }
-
-      const friendlyMessage =
-        firebaseErrorMessages[errorCode] ||
-        'Something went wrong. Please try again.';
-      return {error: friendlyMessage};
-    }
+  const initialValues = {
+    email: '',
+    name: '',
+    gender: '',
+    age: '',
+    height: '',
+    weight: '',
+    diabetesType: '',
+    cholesterol: '',
+    usingInsulin: false,
+    password: '',
+    confirmPassword: '',
   };
 
   return (
@@ -87,189 +69,247 @@ export default function SignUp() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid
-        keyboardShouldPersistTaps="handled">
-        <Formik
-          initialValues={signUpFormFields}
-          validationSchema={signUpVS}
-          onSubmit={async values => {
-            const {user, error} = await signUpWithEmail(
-              values.email,
-              values.password,
-              {
+      <View style={{flex: 1}}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled">
+          <Formik
+            initialValues={initialValues}
+            validationSchema={signUpVS}
+            onSubmit={async (values, {setSubmitting}) => {
+              // Prepare payload matching backend API
+              const payload = {
+                email: values.email,
+                password: values.password,
+                confirm_password: values.confirmPassword,
+                full_name: values.name,
                 gender: values.gender,
-                age: values.age,
-                height: values.height,
-                weight: values.weight,
-              },
-            );
+                age: Number(values.age),
+                height_cm: Number(values.height),
+                weight_kg: Number(values.weight),
+                diabetes_type: values.diabetesType,
+                cholesterol_mg_dl: Number(values.cholesterol),
+                using_insulin: values.usingInsulin,
+              };
 
-            if (user) {
-              showSuccess('Signup successful! Please login.');
-              navigation.navigate('LogIn');
-            } else if (error) {
-              showError(error);
-            } else {
-              showError('Sign Up failed. Please try again.');
-            }
-          }}>
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-          }) => (
-            <View
-              style={[styles.inner, styles.getResponsiveInner(screenWidth)]}>
-              <Text
-                style={[styles.title, styles.getResponsiveTitle(screenWidth)]}>
-                Create an Account
-              </Text>
-              <Text
-                style={[
-                  styles.subtitle,
-                  styles.getResponsiveSubtitle(screenWidth),
-                ]}>
-                Sign Up to track your health
-              </Text>
+              try {
+                const res = await dispatch(registerUser(payload));
 
-              {/* Email */}
-              <AppInput
-                title="Your Email Address"
-                placeholder="Enter your email"
-                value={values.email}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                keyboardType="email-address"
-                errorMessage={touched.email && errors.email ? errors.email : ''}
-              />
+                // ✅ Log the full API response for debugging
+                console.log('Register API Response:', JSON.stringify(res));
 
-              {/* Password */}
-              <AppInput
-                title="Password"
-                placeholder="Enter your password"
-                value={values.password}
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                secureTextEntry
-                errorMessage={
-                  touched.password && errors.password ? errors.password : ''
+                if (res.meta.requestStatus === 'fulfilled') {
+                  showSuccess('Signup successful! Please login.');
+                  navigation.navigate('LogIn', {email: values.email});
+                } else if (res.payload?.details?.validation_errors) {
+                  // Extract and display backend validation errors
+                  const validationErrors =
+                    res.payload.details.validation_errors;
+                  const messages = validationErrors
+                    .map(
+                      err =>
+                        `${err.field.replace('body.', '')}: ${err.message}`,
+                    )
+                    .join('\n');
+                  showError(messages);
+                } else {
+                  // Fallback message
+                  showError(res.payload?.message || 'Sign up failed.');
                 }
-              />
+              } catch (e) {
+                console.log('Unexpected error:', e);
+                showError('Something went wrong. Please try again.');
+              } finally {
+                setSubmitting(false);
+              }
+            }}>
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              setFieldValue,
+              isSubmitting,
+            }) => (
+              <View style={styles.inner}>
+                <Text style={styles.title}>Create an Account</Text>
+                <Text style={styles.subtitle}>
+                  Sign up to track your health progress
+                </Text>
 
-              {/* Confirm Password */}
-              <AppInput
-                title="Confirm Password"
-                placeholder="Confirm your password"
-                value={values.confirmPassword}
-                onChangeText={handleChange('confirmPassword')}
-                onBlur={handleBlur('confirmPassword')}
-                secureTextEntry
-                errorMessage={
-                  touched.confirmPassword && errors.confirmPassword
-                    ? errors.confirmPassword
-                    : ''
-                }
-              />
+                {/* Email */}
+                <AppInput
+                  title="Email Address"
+                  placeholder="Enter your email"
+                  value={values.email}
+                  onChangeText={handleChange('email')}
+                  onBlur={handleBlur('email')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  errorMessage={touched.email && errors.email}
+                />
 
-              {/* Row 1: Gender + Age */}
-              <View style={[styles.row, styles.getResponsiveRow(screenWidth)]}>
-                <View
-                  style={[
-                    styles.half,
-                    styles.getResponsiveHalf(screenWidth),
-                    {zIndex: 2000},
-                  ]}>
-                  <CustomDropdown
-                    title="Select Gender"
-                    open={genderOpen}
-                    setOpen={setGenderOpen}
-                    value={genderValue}
-                    setValue={val => {
-                      setGenderValue(val);
-                      setFieldValue('gender', val);
+                {/* Full Name */}
+                <AppInput
+                  title="Full Name"
+                  placeholder="Enter your full name"
+                  value={values.name}
+                  onChangeText={handleChange('name')}
+                  onBlur={handleBlur('name')}
+                  errorMessage={touched.name && errors.name}
+                />
+
+                {/* Gender + Age */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <CustomDropdown
+                      title="Select Gender"
+                      open={genderOpen}
+                      setOpen={setGenderOpen}
+                      value={genderValue}
+                      setValue={v => {
+                        setGenderValue(v);
+                        setFieldValue('gender', v);
+                      }}
+                      items={genderItems}
+                      placeholder="Select Gender"
+                      errorMessage={touched.gender && errors.gender}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Age"
+                      placeholder="Enter your age"
+                      value={values.age}
+                      onChangeText={handleChange('age')}
+                      onBlur={handleBlur('age')}
+                      keyboardType="numeric"
+                      errorMessage={touched.age && errors.age}
+                    />
+                  </View>
+                </View>
+
+                {/* Height + Weight */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Height (cm)"
+                      placeholder="e.g., 170"
+                      value={values.height}
+                      onChangeText={handleChange('height')}
+                      onBlur={handleBlur('height')}
+                      keyboardType="numeric"
+                      errorMessage={touched.height && errors.height}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Weight (kg)"
+                      placeholder="e.g., 70"
+                      value={values.weight}
+                      onChangeText={handleChange('weight')}
+                      onBlur={handleBlur('weight')}
+                      keyboardType="numeric"
+                      errorMessage={touched.weight && errors.weight}
+                    />
+                  </View>
+                </View>
+
+                {/* Diabetes Type */}
+                <CustomDropdown
+                  title="Your Diabetes Type"
+                  open={diabetesOpen}
+                  setOpen={setDiabetesOpen}
+                  value={diabetesValue}
+                  setValue={v => {
+                    setDiabetesValue(v);
+                    setFieldValue('diabetesType', v);
+                  }}
+                  items={diabetesItems}
+                  placeholder="Select"
+                  errorMessage={touched.diabetesType && errors.diabetesType}
+                />
+
+                {/* Cholesterol */}
+                <AppInput
+                  title="Cholesterol (mg/dL)"
+                  placeholder="e.g., 100"
+                  value={values.cholesterol}
+                  onChangeText={handleChange('cholesterol')}
+                  onBlur={handleBlur('cholesterol')}
+                  keyboardType="numeric"
+                  errorMessage={touched.cholesterol && errors.cholesterol}
+                />
+
+                {/* Using Insulin */}
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.checkboxLabel}>Using Insulin?</Text>
+                  <Switch
+                    value={usingInsulin}
+                    onValueChange={v => {
+                      setUsingInsulin(v);
+                      setFieldValue('usingInsulin', v);
                     }}
-                    items={genderItems}
-                    setItems={setGenderItems}
-                    placeholder="Select Gender"
-                    errorMessage={
-                      touched.gender && errors.gender ? errors.gender : ''
-                    }
+                    trackColor={{false: colors.g2, true: colors.p1}}
+                    thumbColor={usingInsulin ? colors.white : colors.g3}
                   />
                 </View>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Age"
-                    placeholder="Enter your age"
-                    value={values.age}
-                    onChangeText={handleChange('age')}
-                    onBlur={handleBlur('age')}
-                    keyboardType="numeric"
-                    errorMessage={touched.age && errors.age ? errors.age : ''}
-                  />
-                </View>
-              </View>
 
-              {/* Row 2: Height + Weight */}
-              <View style={[styles.row, styles.getResponsiveRow(screenWidth)]}>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Height (cm)"
-                    placeholder="Enter height"
-                    value={values.height}
-                    onChangeText={handleChange('height')}
-                    onBlur={handleBlur('height')}
-                    keyboardType="numeric"
-                    errorMessage={
-                      touched.height && errors.height ? errors.height : ''
-                    }
-                  />
-                </View>
-                <View
-                  style={[styles.half, styles.getResponsiveHalf(screenWidth)]}>
-                  <AppInput
-                    title="Weight (kg)"
-                    placeholder="Enter weight"
-                    value={values.weight}
-                    onChangeText={handleChange('weight')}
-                    onBlur={handleBlur('weight')}
-                    keyboardType="numeric"
-                    errorMessage={
-                      touched.weight && errors.weight ? errors.weight : ''
-                    }
-                  />
-                </View>
-              </View>
+                {/* Password */}
+                <AppInput
+                  title="Password"
+                  placeholder="Enter your password"
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry
+                  errorMessage={touched.password && errors.password}
+                />
 
-              {/* Submit Button */}
-              <AppButton
-                title="Sign Up"
-                onPress={handleSubmit}
-                containerStyle={[
-                  styles.signInBtn,
-                  styles.getResponsiveSignInBtn(screenWidth),
-                ]}
-              />
+                {/* Confirm Password */}
+                <AppInput
+                  title="Confirm Password"
+                  placeholder="Confirm your password"
+                  value={values.confirmPassword}
+                  onChangeText={handleChange('confirmPassword')}
+                  onBlur={handleBlur('confirmPassword')}
+                  secureTextEntry
+                  errorMessage={
+                    touched.confirmPassword && errors.confirmPassword
+                  }
+                />
 
-              {/* Footer */}
-              <View style={styles.createRow}>
-                <Text style={styles.createText}>Already have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
-                  <Text style={styles.linkText}>Sign In</Text>
+                {/* Submit Button */}
+                <TouchableOpacity
+                  style={[styles.signInBtn, {opacity: isSubmitting ? 0.7 : 1}]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting || loading}>
+                  {isSubmitting || loading ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.signInText}>Sign Up</Text>
+                  )}
                 </TouchableOpacity>
+
+                {/* Footer */}
+                <View style={styles.createRow}>
+                  <Text style={styles.createText}>
+                    Already have an account?{' '}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('LogIn')}>
+                    <Text style={styles.linkText}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        </Formik>
-      </KeyboardAwareScrollView>
+            )}
+          </Formik>
+        </KeyboardAwareScrollView>
+      </View>
     </ImageBackground>
   );
 }

@@ -3,20 +3,18 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
-  Image,
   StatusBar,
 } from 'react-native';
 import {FloatingAction} from 'react-native-floating-action';
 import dayjs from 'dayjs';
 import {
-  BloodSugarChart,
+  ChartComponent,
   FastingPlans,
-  HalfCircleProgress,
+  HalfCircle,
   MenuModal,
-} from '../../../components';
-import {appIcons, HP} from '../../../utilities';
+} from '../../../components'; // Updated imports
+import {appIcons} from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -29,9 +27,7 @@ export default function Home() {
   const [fastStart, setFastStart] = useState(dayjs().subtract(10, 'hour'));
   const [fastEnd, setFastEnd] = useState(dayjs().add(6, 'hour'));
   const [remaining, setRemaining] = useState(72);
-  const [bloodSugar, setBloodSugar] = useState(120);
   const [daysStreak, setDaysStreak] = useState(5);
-  const [timeFilter, setTimeFilter] = useState('Today');
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   const toggleMenu = () => {
@@ -130,6 +126,7 @@ export default function Home() {
       icon: appIcons.activeSugar,
     },
   ];
+
   const handleOptionSelect = name => {
     if (name === 'Chat') {
       navigation.navigate('AppScreens', {screen: 'ChatScreen'});
@@ -139,7 +136,11 @@ export default function Home() {
   };
 
   const handleAddSugarRecord = () => {
-    console.log('Add Sugar Record clicked');
+    navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
+  };
+
+  const handleEditFasting = () => {
+    navigation.navigate('AppScreens', {screen: 'FastingSettings'});
   };
 
   return (
@@ -147,17 +148,16 @@ export default function Home() {
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity
-            // onPress={() =>
-            //   navigation.navigate('AppScreens', {screen: 'SettingsScreen'})
-            // }
-            onPress={toggleMenu}
-            style={styles.iconButton}>
+          <TouchableOpacity onPress={toggleMenu} style={styles.iconButton}>
             <Text style={styles.icon}>☰</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Hi Jenna!</Text>
         </View>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('AppScreens', {screen: 'Notification'})
+          }
+          style={styles.iconButton}>
           <Text style={styles.icon}>🔔</Text>
         </TouchableOpacity>
       </View>
@@ -165,71 +165,38 @@ export default function Home() {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
-        <BloodSugarChart
-          bloodSugar={bloodSugar}
-          timeFilter={timeFilter}
-          setTimeFilter={setTimeFilter}
-        />
+        {/* Use ChartComponent instead of BloodSugarChart */}
+        <ChartComponent />
 
         <Text style={styles.subtitle}>Fasting Tracker</Text>
         <Text style={styles.streak}>{daysStreak}-Day Streak, Keep it up!</Text>
 
-        <>
-          {!isFasting ? (
-            <>
-              <FastingPlans
-                fastingPlans={fastingPlans}
-                startFasting={startFasting}
-                isFasting={isFasting}
-                navigation={navigation}
-              />
-              <Text style={styles.noFastText}>While No Active Fast</Text>
-            </>
-          ) : (
-            <View View style={styles.section}>
-              <View style={styles.trackerContainer}>
-                <View style={styles.timeInfo}>
-                  <View style={styles.timeItem}>
-                    <Text style={styles.timeLabel}>Started</Text>
-                    <Text style={styles.timeValue}>
-                      {fastStart?.format('hh:mm A')}
-                    </Text>
-                  </View>
+        {!isFasting ? (
+          <>
+            {/* Use your existing FastingPlans component */}
+            <FastingPlans
+              fastingPlans={fastingPlans}
+              startFasting={startFasting}
+              isFasting={isFasting}
+              navigation={navigation}
+            />
+            <Text style={styles.noFastText}>While No Active Fast</Text>
+          </>
+        ) : (
+          /* Use HalfCircle component when fasting is active */
+          <HalfCircle
+            onPressEdit={handleEditFasting}
+            onEndFasting={endFasting}
+            startTime={fastStart?.format('hh:mm A')}
+            endTime={fastEnd?.format('hh:mm A')}
+            remainingTime={formatTimeRemaining()}
+            progressPercentage={remaining}
+          />
+        )}
 
-                  <View style={styles.separator} />
-
-                  <View style={styles.timeItem}>
-                    <Text style={styles.timeLabel}>Ends at</Text>
-                    <Text style={styles.timeValue}>
-                      {fastEnd?.format('hh:mm A')}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.separatorLine} />
-
-                <View style={styles.progressWrapper}>
-                  <HalfCircleProgress progress={remaining} size={180} />
-                  <Text style={styles.remaining}>
-                    Remaining: {formatTimeRemaining()}
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.endFastingButton}
-                  onPress={endFasting}>
-                  <Text style={styles.endFastingText}>End Fasting</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleAddSugarRecord}>
-            <Text style={styles.buttonText}> + Add Sugar Record</Text>
-          </TouchableOpacity>
-        </>
+        <TouchableOpacity style={styles.button} onPress={handleAddSugarRecord}>
+          <Text style={styles.buttonText}> + Add Sugar Record</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <FloatingAction

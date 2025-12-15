@@ -23,15 +23,20 @@ export const loginVS = yup.object().shape({
 // SignUp form fields
 export const signUpFormFields = {
   email: '',
+  name: '',
+  gender: '',
+  age: '',
+  height: '',
+  weight: '',
+  diabetesType: '',
+  cholesterol: '',
+  usingInsulin: false,
   password: '',
   confirmPassword: '',
-  gender: '', // dropdown
-  age: '', // number
-  height: '', // number (cm/ft)
-  weight: '', // number (kg/lb)
 };
 
 // SignUp validation schema
+
 export const signUpVS = yup.object().shape({
   email: yup
     .string()
@@ -40,14 +45,8 @@ export const signUpVS = yup.object().shape({
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       'Please provide a valid email address',
     ),
-  password: yup
-    .string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password Required'),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref('password')], 'Passwords do not match')
-    .required('Confirm Password Required'),
+
+  name: yup.string().required('Name Required').min(2, 'Name too short'),
 
   gender: yup
     .string()
@@ -74,4 +73,31 @@ export const signUpVS = yup.object().shape({
     .min(2, 'Weight seems too low')
     .max(500, 'Weight seems invalid')
     .required('Weight Required'),
+
+  diabetesType: yup
+    .string()
+    .required('Diabetes Type Required')
+    .oneOf(
+      ['Type 1', 'Type 2', 'Prediabetes', 'Gestational', 'None'],
+      'Invalid diabetes type',
+    ),
+
+  cholesterol: yup
+    .number()
+    .typeError('Cholesterol must be a number')
+    .min(50, 'Cholesterol too low')
+    .max(600, 'Cholesterol too high')
+    .required('Cholesterol Required'),
+
+  usingInsulin: yup.boolean(),
+
+  password: yup
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password Required'),
+
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Passwords do not match')
+    .required('Confirm Password Required'),
 });
