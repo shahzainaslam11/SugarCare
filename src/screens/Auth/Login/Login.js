@@ -98,7 +98,7 @@ export default function LogIn() {
                 password: values.password,
               }),
             );
-            console.log('Login API Response:', JSON.stringify(res));
+            // console.log('Login API Response:', JSON.stringify(res));
 
             if (res.meta.requestStatus === 'fulfilled') {
               showSuccess(`Welcome ${res.payload?.user?.email || 'User'}`);
@@ -107,6 +107,7 @@ export default function LogIn() {
                 routes: [{name: 'BottomTabs'}],
               });
             } else {
+              console.log('Login Error Response:', JSON.stringify(res));
               showError(res.payload?.message || 'Login failed');
             }
           }}>
@@ -172,15 +173,12 @@ export default function LogIn() {
                 title="Sign In"
                 loading={loading}
                 onPress={handleSubmit}
-                containerStyle={styles.signInBtn}
+                // containerStyle={styles.signInBtn}
               />
 
               <View style={styles.createRow}>
-                <Text style={{color: colors.g1}}>Don’t have an account? </Text>
-                <TouchableOpacity
-                  onPress={
-                    () => navigation.navigate('Signup') // or Signup flow
-                  }>
+                <Text style={styles.staticText}>Don’t have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
                   <Text style={styles.createText}>Create One</Text>
                 </TouchableOpacity>
               </View>

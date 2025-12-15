@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,74 @@ import {
   Image,
   StyleSheet,
   ImageBackground,
+  ActivityIndicator,
 } from 'react-native';
-import {appIcons, appImages, colors, HP, WP} from '../../../utilities';
+import {
+  appIcons,
+  appImages,
+  colors,
+  HP,
+  showSuccess,
+  WP,
+} from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
 import {AppButton} from '../../../components';
+import {useDispatch, useSelector} from 'react-redux';
+import {logoutUser} from '../../../redux/slices/authSlice';
 
 const SettingsScreen = () => {
+  const dispatch = useDispatch();
+  const {user, accessToken, refreshToken, loading} = useSelector(
+    state => state.auth,
+  );
+
+  const {data: profile} = useSelector(state => state.profile);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const performLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      // Check if we have tokens
+      if (!accessToken || !refreshToken) {
+        // If no tokens, just clear local data
+        dispatch({type: 'auth/clearAuthData'});
+        showSuccess('Logged out successfully');
+        navigation.replace('Auth', {screen: 'LogIn'});
+        return;
+      }
+
+      // Call logout API with tokens
+      const result = await dispatch(
+        logoutUser({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }),
+      );
+
+      console.log('Logout result:', JSON.stringify(result));
+
+      if (result.meta.requestStatus === 'fulfilled') {
+        showSuccess('Logged out successfully');
+        // Navigate to login screen
+        navigation.replace('Auth', {screen: 'LogIn'});
+      } else {
+        // Even if API fails, clear local data
+        dispatch({type: 'auth/clearAuthData'});
+        showSuccess('Logged out successfully');
+        navigation.replace('Auth', {screen: 'LogIn'});
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear local data even if there's an error
+      dispatch({type: 'auth/clearAuthData'});
+      showSuccess('Logged out successfully');
+      navigation.replace('Auth', {screen: 'LogIn'});
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+  console.log('user0000>', user?.email);
   const navigation = useNavigation();
   return (
     <ImageBackground
@@ -32,8 +94,8 @@ const SettingsScreen = () => {
         {/* Profile Section */}
         <View style={styles.profileContainer}>
           <Image source={appImages.messi} style={styles.avatar} />
-          <Text style={styles.name}>Jenna Ortega</Text>
-          <Text style={styles.email}>jennaortega@gmail.com</Text>
+          <Text style={styles.name}>{profile?.name}</Text>
+          <Text style={styles.email}>{profile?.email}</Text>
         </View>
 
         {/* Settings Content */}
@@ -56,7 +118,18 @@ const SettingsScreen = () => {
           {/* Security Section */}
           <Text style={styles.sectionTitle}>Security</Text>
           <View style={styles.card}>
-            <SettingsItem title="Change Password" />
+            <SettingsItem
+              title="Change Password"
+              onPress={() =>
+                navigation.replace('Auth', {
+                  screen: 'SetPassword',
+                  params: {
+                    email: user?.email || '',
+                    setShow: true,
+                  },
+                })
+              }
+            />
           </View>
 
           {/* Notifications Section */}
@@ -81,10 +154,16 @@ const SettingsScreen = () => {
           </View>
 
           {/* Sign Out Button */}
-          <TouchableOpacity style={styles.signOutButton}>
-            <Image source={appIcons.logOut} style={styles.logOutIcon} />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
+          {isLoggingOut ? (
+            <ActivityIndicator size="small" color={colors.p1} />
+          ) : (
+            <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={performLogout}>
+              <Image source={appIcons.logOut} style={styles.logOutIcon} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </ImageBackground>

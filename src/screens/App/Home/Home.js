@@ -9,6 +9,7 @@ import {
 import {FloatingAction} from 'react-native-floating-action';
 import dayjs from 'dayjs';
 import {
+  AppButton,
   ChartComponent,
   FastingPlans,
   HalfCircle,
@@ -18,9 +19,33 @@ import {appIcons} from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  fetchFastingRecords,
+  fetchSugarRecords,
+} from '../../../redux/slices/homeSlice';
+import {fetchProfile} from '../../../redux/slices/profileSlice';
 
 export default function Home() {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
+  const {accessToken, user} = useSelector(state => state.auth);
+  const {sugarRecords, fastingRecords, loading} = useSelector(
+    state => state.home,
+  );
+  // console.log('sugarRecords--->', JSON.stringify(sugarRecords));
+  // console.log('fastingRecords--->', JSON.stringify(fastingRecords));
+
+  console.log('Token:', accessToken);
+  // console.log('User:', JSON.stringify(user.id));
+
+  useEffect(() => {
+    if (user?.id && accessToken) {
+      dispatch(fetchSugarRecords({user_id: user?.id, token: accessToken}));
+      dispatch(fetchFastingRecords({user_id: user?.id, token: accessToken}));
+      dispatch(fetchProfile({token: accessToken}));
+    }
+  }, [dispatch, user, accessToken]);
 
   const [isFasting, setIsFasting] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -29,6 +54,8 @@ export default function Home() {
   const [remaining, setRemaining] = useState(72);
   const [daysStreak, setDaysStreak] = useState(5);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const {data: profile} = useSelector(state => state.profile);
+  console.log('profile---->', JSON.stringify(profile?.id));
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);
@@ -140,7 +167,7 @@ export default function Home() {
   };
 
   const handleEditFasting = () => {
-    navigation.navigate('AppScreens', {screen: 'FastingSettings'});
+    navigation.navigate('AppScreens', {screen: 'CustomFast'});
   };
 
   return (
@@ -151,7 +178,7 @@ export default function Home() {
           <TouchableOpacity onPress={toggleMenu} style={styles.iconButton}>
             <Text style={styles.icon}>☰</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Hi Jenna!</Text>
+          <Text style={styles.title}>{profile?.name}</Text>
         </View>
         <TouchableOpacity
           onPress={() =>
@@ -166,7 +193,7 @@ export default function Home() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
         {/* Use ChartComponent instead of BloodSugarChart */}
-        <ChartComponent />
+        <ChartComponent loading={loading} sugarData={sugarRecords} />
 
         <Text style={styles.subtitle}>Fasting Tracker</Text>
         <Text style={styles.streak}>{daysStreak}-Day Streak, Keep it up!</Text>
@@ -193,22 +220,26 @@ export default function Home() {
             progressPercentage={remaining}
           />
         )}
-
-        <TouchableOpacity style={styles.button} onPress={handleAddSugarRecord}>
-          <Text style={styles.buttonText}> + Add Sugar Record</Text>
-        </TouchableOpacity>
       </ScrollView>
 
+      <MenuModal
+        updatedName={profile?.name}
+        visible={isMenuVisible}
+        onClose={() => setIsMenuVisible(false)}
+        navigation={navigation}
+      />
+      <View style={styles.buttonContainer}>
+        <AppButton
+          title={'Add Sugar Record'}
+          onPress={handleAddSugarRecord}
+          icon={appIcons.plus}
+        />
+      </View>
       <FloatingAction
         actions={actions}
         onPressItem={handleOptionSelect}
         color="#4252FF"
         floatingIcon={<Text style={styles.plusIcon}>+</Text>}
-      />
-      <MenuModal
-        visible={isMenuVisible}
-        onClose={() => setIsMenuVisible(false)}
-        navigation={navigation}
       />
     </SafeAreaView>
   );

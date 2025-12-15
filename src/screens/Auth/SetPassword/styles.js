@@ -1,4 +1,5 @@
 import {StyleSheet} from 'react-native';
+import {colors, family, HP, size} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
@@ -18,18 +19,19 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: size.h1,
+    fontFamily: family.inter_bold,
     textAlign: 'center',
     color: '#000',
-    marginBottom: 8,
+    marginBottom: HP(1),
   },
   subtitle: {
-    fontSize: 15,
-    color: '#777',
+    fontSize: size.small,
+    fontFamily: family.inter_bold,
     textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 20,
+    marginBottom: HP(3),
+    color: '#777',
+    // lineHeight: 10,
   },
   form: {
     width: '100%',
@@ -47,11 +49,16 @@ const styles = StyleSheet.create({
   backLink: {
     marginTop: 30,
     alignSelf: 'center',
+    color: colors.p1,
+    fontWeight: '600',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
   },
   backText: {
-    color: '#2563eb',
-    fontSize: 16,
+    color: colors.p1,
     fontWeight: '600',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
   },
 });
 

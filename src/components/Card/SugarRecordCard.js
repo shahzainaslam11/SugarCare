@@ -1,11 +1,9 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
-import {appIcons} from '../../utilities';
+import {appIcons, family, size} from '../../utilities';
 
 const SugarRecordCard = ({record}) => {
-  if (!record) {
-    return null; // Return null if no record is provided
-  }
+  if (!record) return null;
 
   const getStatusStyle = value => {
     if (value < 70) return styles.lowStatus;
@@ -30,8 +28,16 @@ const SugarRecordCard = ({record}) => {
           <Text style={styles.statusText}>{getStatusText(record.value)}</Text>
         </View>
       </View>
-      <Text style={styles.recordType}>{record.type}</Text>
-      <Text style={styles.recordTime}>{record.time}</Text>
+
+      {/* Tag */}
+      <Text style={styles.recordTag}>{record.tag}</Text>
+
+      {/* Date & Time */}
+      <Text style={styles.recordTime}>
+        {record.date} {record.time}
+      </Text>
+
+      {/* Notes */}
       {record.notes && <Text style={styles.notes}>Notes: {record.notes}</Text>}
     </View>
   );
@@ -84,10 +90,11 @@ const styles = StyleSheet.create({
   lowStatus: {
     backgroundColor: '#f39c12',
   },
-  recordType: {
+  recordTag: {
     fontSize: 14,
     color: '#666',
     marginBottom: 3,
+    fontWeight: '500',
   },
   recordTime: {
     fontSize: 12,
@@ -95,7 +102,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   notes: {
-    fontSize: 14,
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
     color: '#555',
     fontStyle: 'italic',
   },

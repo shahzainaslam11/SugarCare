@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {colors, HP, size} from '../../../utilities';
+import {colors, family, HP, size} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
@@ -93,6 +93,8 @@ const styles = StyleSheet.create({
   createText: {
     color: colors.p1,
     fontWeight: '600',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
   },
   createRow: {
     flexDirection: 'row',

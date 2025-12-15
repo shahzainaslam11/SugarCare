@@ -10,6 +10,19 @@ export const colors = {
   b7: '#000000CC',
   b8: '#292139',
 
+  // new colors
+
+  primary: '#2ecc71',
+  danger: '#e74c3c',
+  success: '#1abc9c',
+  warning: '#f39c12',
+  info: '#3498db',
+  black: '#34495e',
+  gray: '#95a5a6',
+  white: '#ffffff',
+  lightGrayBackground: '#ecf0f1',
+  mediumGray: '#bdc3c7',
+
   //Primary Colours
   p1: '#4252FF',
   p2: '#2165A2',

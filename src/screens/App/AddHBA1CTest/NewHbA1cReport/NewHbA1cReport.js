@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, Text, TextInput, StyleSheet, Platform} from 'react-native';
+import {View, Text, TextInput, Platform} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   AppButton,
@@ -7,17 +7,63 @@ import {
   Header,
   TimePicker,
 } from '../../../../components';
-import {colors, family, size, WP, HP} from '../../../../utilities';
+import {colors, WP} from '../../../../utilities';
 import {useNavigation} from '@react-navigation/native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import styles from './styles';
+
+// Redux
+import {useDispatch, useSelector} from 'react-redux';
+import {addHbA1cRecord} from '../../../../redux/slices/hba1cSlice';
+import {showError, showSuccess} from '../../../../utilities';
+import moment from 'moment';
 
 const NewHbA1cReport = () => {
   const [date, setDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
+  const [time, setTime] = useState(new Date());
+  const [hbA1cValue, setHbA1cValue] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const [hbA1cValue, setHbA1cValue] = useState('5.5');
-  const [notes, setNotes] = useState('from HCA Healthcare UK Laboratories');
+  const [loading, setLoading] = useState(false);
+
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {user, accessToken} = useSelector(state => state.auth);
+
+  const handleSave = () => {
+    if (!user?.id) {
+      showError('User ID not found!');
+      return;
+    }
+
+    if (!hbA1cValue) {
+      showError('Please enter a valid HbA1c value');
+      return;
+    }
+
+    const payload = {
+      user_id: user.id,
+      date: moment(date).format('YYYY-MM-DD'),
+      time: moment(time).format('HH:mm'),
+      value: parseFloat(hbA1cValue),
+      notes,
+      token: accessToken,
+    };
+
+    setLoading(true);
+
+    dispatch(addHbA1cRecord(payload))
+      .unwrap()
+      .then(res => {
+        showSuccess(res?.message || 'HbA1C record added successfully!');
+        navigation.goBack();
+      })
+      .catch(err => {
+        console.log('err0000>', JSON.stringify(err));
+        showError(err?.message || 'Failed to add HbA1C record');
+      })
+      .finally(() => setLoading(false));
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,8 +85,8 @@ const NewHbA1cReport = () => {
               />
               <TimePicker
                 title="Test Time"
-                selectedTime={startTime}
-                onTimeChange={setStartTime}
+                selectedTime={time}
+                onTimeChange={setTime}
                 containerStyle={[styles.pickerContainer, {marginRight: 0}]}
               />
             </View>
@@ -73,69 +119,11 @@ const NewHbA1cReport = () => {
         </KeyboardAwareScrollView>
 
         <View style={styles.buttonContainer}>
-          <AppButton title="Save" />
+          <AppButton title="Save" loading={loading} onPress={handleSave} />
         </View>
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-    paddingHorizontal: WP(4),
-  },
-  scrollContent: {
-    paddingBottom: HP(4),
-  },
-  formContainer: {
-    borderRadius: 12,
-    paddingVertical: HP(2.5),
-    paddingHorizontal: WP(4),
-    marginTop: HP(2),
-    shadowColor: colors.black,
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dateTimeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: HP(2),
-  },
-  pickerContainer: {
-    flex: 1,
-    marginRight: WP(2),
-    width: '48%',
-  },
-  inputContainer: {
-    marginBottom: HP(2),
-  },
-  label: {
-    fontSize: size.medium,
-    fontFamily: family.inter_bold,
-    color: colors.b1,
-    marginBottom: HP(0.5),
-  },
-  input: {
-    fontSize: size.medium,
-    fontFamily: family.inter_medium,
-    color: colors.b1,
-    borderWidth: 1,
-    borderColor: colors.g14,
-    borderRadius: 10,
-    paddingVertical: HP(1.4),
-    paddingHorizontal: WP(3),
-    backgroundColor: colors.white,
-  },
-  notesInput: {
-    height: HP(15),
-    textAlignVertical: 'top',
-  },
-  buttonContainer: {
-    paddingVertical: HP(2),
-  },
-});
 
 export default NewHbA1cReport;

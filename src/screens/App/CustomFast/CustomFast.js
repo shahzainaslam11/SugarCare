@@ -1,25 +1,42 @@
 // CustomFast.js
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, View, Text, TextInput, SafeAreaView} from 'react-native';
-
+import {View, Text, TextInput, SafeAreaView} from 'react-native';
 import moment from 'moment';
 import {DatePicker, Header, TimePicker, AppButton} from '../../../components';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {WP} from '../../../utilities';
-import {useNavigation} from '@react-navigation/native';
+import {showError, showSuccess, WP} from '../../../utilities';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import styles from './styles';
+
+// Redux
+import {useDispatch, useSelector} from 'react-redux';
+import {addFastingRecord} from '../../../redux/slices/fastingSlice';
 
 const CustomFast = () => {
-  const naigation = useNavigation();
-  const [date, setDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const navigation = useNavigation();
+  const route = useRoute();
+  const dispatch = useDispatch();
+  const {user, accessToken} = useSelector(state => state.auth);
+
+  // Check if this is an ongoing fast passed from Fasting screen
+  const ongoingFast = route.params?.ongoingFast;
+
+  const [date, setDate] = useState(
+    ongoingFast ? new Date(ongoingFast.startTime) : new Date(),
+  );
+  const [startTime, setStartTime] = useState(
+    ongoingFast ? new Date(ongoingFast.startTime) : new Date(),
+  );
+  const [endTime, setEndTime] = useState(
+    ongoingFast ? new Date(ongoingFast.endTime) : new Date(),
+  );
   const [fastingDuration, setFastingDuration] = useState({
-    hours: 0,
+    hours: ongoingFast?.durationHours || 0,
     minutes: 0,
   });
   const [eatingWindow, setEatingWindow] = useState({hours: 0, minutes: 0});
-  const [notes, setNotes] = useState('224.4 mg/dL before fasting');
-  const [progress, setProgress] = useState(26);
+  const [notes, setNotes] = useState(ongoingFast?.notes || '');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     calculateDurations();
@@ -29,18 +46,15 @@ const CustomFast = () => {
     const startMoment = moment(startTime);
     let endMoment = moment(endTime);
 
-    // Handle case where end time is the next day
     if (endMoment.isBefore(startMoment)) {
       endMoment = endMoment.add(1, 'day');
     }
 
-    // Calculate fasting duration
     const durationMinutes = endMoment.diff(startMoment, 'minutes');
     const fastingHours = Math.floor(durationMinutes / 60);
     const fastingMinutes = durationMinutes % 60;
     setFastingDuration({hours: fastingHours, minutes: fastingMinutes});
 
-    // Calculate eating window (24 hours - fasting duration)
     const totalMinutesInDay = 24 * 60;
     const eatingMinutes = totalMinutesInDay - durationMinutes;
     const eatingHours = Math.floor(eatingMinutes / 60);
@@ -49,56 +63,78 @@ const CustomFast = () => {
   };
 
   const handleSave = () => {
-    console.log('Save pressed');
-  };
+    if (!user?.id) {
+      showError('User ID not found!');
+      return;
+    }
 
-  const handleDateChange = newDate => {
-    setDate(newDate);
-  };
+    setLoading(true);
+    const durationString = `${fastingDuration.hours}:${fastingDuration.minutes
+      .toString()
+      .padStart(2, '0')}`;
+    const payload = {
+      user_id: user.id,
+      date: moment(date).format('YYYY-MM-DD'),
+      start_time: moment(startTime).format('HH:mm'),
+      end_time: moment(endTime).format('HH:mm'),
+      duration_hours: durationString,
+      notes: notes || '',
+      token: accessToken,
+      // If editing ongoing fast, include its ID to update instead of creating new
+      ...(ongoingFast?.id && {id: ongoingFast.id}),
+    };
 
-  const handleStartTimeChange = newTime => {
-    setStartTime(newTime);
-  };
+    console.log('📤 PAYLOAD FASTING RECORD:', JSON.stringify(payload));
 
-  const handleEndTimeChange = newTime => {
-    setEndTime(newTime);
+    dispatch(addFastingRecord(payload))
+      .unwrap()
+      .then(res => {
+        console.log('🎉 Record Added/Updated Successfully', res);
+        showSuccess(res?.message || 'Fasting record saved successfully!');
+        navigation.goBack();
+      })
+      .catch(err => {
+        console.log('❌ Failed to Save Fasting Record:', JSON.stringify(err));
+        showError(
+          err?.message ||
+            err?.error ||
+            'Failed to save fasting record, please try again!',
+        );
+      })
+      .finally(() => setLoading(false));
   };
 
   const formatDuration = (hours, minutes) => {
     if (hours === 0 && minutes === 0) return '0 hrs';
-
-    let result = '';
-    if (hours > 0) result += `${hours} hr${hours !== 1 ? 's' : ''}`;
-    if (minutes > 0) {
-      if (hours > 0) result += ' ';
-      result += `${minutes} min${minutes !== 1 ? 's' : ''}`;
-    }
-    return result;
+    return `${hours > 0 ? `${hours} hrs` : ''} ${
+      minutes > 0 ? `${minutes} mins` : ''
+    }`;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="New Fast" onPress={() => naigation.goBack()} />
+      <Header
+        title={ongoingFast ? 'Update Fast' : 'New Fast'}
+        onPress={() => navigation.goBack()}
+      />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         enableOnAndroid
         keyboardShouldPersistTaps="handled">
-        {/* Date Picker */}
         <DatePicker
           title="Date"
           selectedDate={date}
-          onDateChange={handleDateChange}
+          onDateChange={setDate}
           containerStyle={styles.pickerContainer}
         />
 
-        {/* Time Pickers */}
         <View style={styles.timeContainer}>
           <TimePicker
             title="Start Time"
             selectedTime={startTime}
-            onTimeChange={handleStartTimeChange}
+            onTimeChange={setStartTime}
             containerStyle={styles.pickerContainer}
             width={WP('42')}
           />
@@ -106,7 +142,7 @@ const CustomFast = () => {
           <TimePicker
             title="End Time"
             selectedTime={endTime}
-            onTimeChange={handleEndTimeChange}
+            onTimeChange={setEndTime}
             containerStyle={styles.pickerContainer}
             width={WP('42')}
           />
@@ -123,10 +159,10 @@ const CustomFast = () => {
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            You'll fast for{' '}
+            You’ll fast for{' '}
             {formatDuration(fastingDuration.hours, fastingDuration.minutes)} and
             have {formatDuration(eatingWindow.hours, eatingWindow.minutes)} for
-            eating
+            eating.
           </Text>
         </View>
 
@@ -145,96 +181,14 @@ const CustomFast = () => {
 
       <View style={styles.buttonContainer}>
         <AppButton
-          title="Save"
+          title={ongoingFast ? 'Update Fast' : 'Save'}
           onPress={handleSave}
-          containerStyle={styles.saveButton}
-          textStyle={styles.saveButtonText}
+          loading={loading}
+          disabled={loading}
         />
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: WP('6'),
-    paddingTop: WP('2'),
-    paddingBottom: WP('10'),
-  },
-  pickerContainer: {
-    marginBottom: WP('4'),
-  },
-  inputGroup: {
-    marginBottom: WP('4'),
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#495057',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#212529',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  durationText: {
-    fontSize: 16,
-    color: '#212529',
-  },
-  notesInput: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: WP('4'),
-  },
-  timeInput: {
-    flex: 1,
-    // marginRight: WP('2'),
-  },
-  infoBox: {
-    backgroundColor: '#e7f5ff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: WP('4'),
-  },
-  infoText: {
-    color: '#0a58ca',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  buttonContainer: {
-    paddingHorizontal: WP('6'),
-    paddingBottom: WP('4'),
-    backgroundColor: '#f8f9fa',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
-  },
-  saveButton: {
-    backgroundColor: '#0d6efd',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
 
 export default CustomFast;

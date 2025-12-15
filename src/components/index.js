@@ -31,6 +31,8 @@ export * from './AppModal/MenuModal';
 export * from './Card/FastingPlans';
 export * from './Card/SugarRecordCard';
 export * from './Card/HalfCircle';
+export * from './Card/FastingRecordCard';
+export * from './Card/NutritionCard';
 
 //Tabs
 

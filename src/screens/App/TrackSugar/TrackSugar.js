@@ -1,67 +1,108 @@
-import React from 'react';
+import React, {useEffect, useCallback} from 'react';
 import {View, Text, ScrollView} from 'react-native';
 import {
   AppButton,
   ChartComponent,
-  HalfCircle,
   SugarRecordCard,
+  SmallLoader,
 } from '../../../components';
 import {styles} from './styles';
-import {appIcons} from '../../../utilities';
+import {appIcons, showError} from '../../../utilities';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchSugarRecords} from '../../../redux/slices/sugarForecastSlice';
+import {SafeAreaView} from 'react-native-safe-area-context';
+
+const RANGE_MAP = {
+  Today: 'Today',
+  '1W': 'OneWeek',
+  '1M': 'OneMonth',
+  'All Time': 'AllTime',
+};
 
 const TrackSugar = () => {
-  const records = [
-    {
-      value: 124.4,
-      type: 'Fasting',
-      time: '04:48 AM | 17 Aug 2025',
-      notes: 'During Fasting in Morning...',
-    },
-    {
-      value: 200.5,
-      type: 'Meal',
-      time: '01:15 PM | 17 Aug 2025',
-      notes: 'After lunch meal',
-    },
-    {
-      value: 40.3,
-      type: 'Low',
-      time: '06:30 PM | 17 Aug 2025',
-    },
-  ];
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {recordsByRange, graphData, loading, error} = useSelector(
+    state => state.sugarForecast,
+  );
+  const {accessToken, user} = useSelector(state => state.auth);
+
+  const [activeRange, setActiveRange] = React.useState('Today');
+  const apiRange = RANGE_MAP[activeRange];
+
+  const records = recordsByRange?.[apiRange] || [];
+  const chart = graphData?.[apiRange] || {};
+
+  // Fetch records function
+  const loadSugarRecords = useCallback(() => {
+    if (user?.id && accessToken) {
+      dispatch(
+        fetchSugarRecords({
+          user_id: user.id,
+          time_range: apiRange,
+          token: accessToken,
+        }),
+      );
+    }
+  }, [user, accessToken, apiRange, dispatch]);
+
+  // Refresh whenever screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadSugarRecords();
+    }, [loadSugarRecords]),
+  );
+
+  useEffect(() => {
+    if (error) showError(error);
+  }, [error]);
+
+  const handleAddSugarRecord = () => {
+    navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
+  };
+
+  // Full screen loader while fetching data
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
         <Text style={styles.forecastTitle}>Blood Sugar Forecast</Text>
-        <Text style={styles.readingText}>120 mg/dL</Text>
+        <Text style={styles.readingText}>
+          {records[0]?.value ?? '--'} mg/dL
+        </Text>
+        <Text style={styles.trendText}>
+          Next 3 hours {records[0]?.trend ?? '--'}
+        </Text>
+        {loading && <SmallLoader />}
 
-        <Text style={styles.trendText}>Next 3 hours +15%</Text>
-
-        <ChartComponent />
-        <HalfCircle />
+        {/* Chart */}
+        <ChartComponent
+          activeRange={activeRange}
+          onChangeRange={setActiveRange}
+          chart={chart}
+        />
         <View style={styles.recordsContainer}>
           <Text style={styles.sectionTitle}>Recent Records</Text>
 
-          {records.map((record, index) => (
-            <SugarRecordCard key={index} record={record} />
-          ))}
+          {!records.length && <SugarRecordCard empty />}
 
-          <SugarRecordCard />
+          {records.map((record, index) => (
+            <SugarRecordCard key={record.id || index} record={record} />
+          ))}
         </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
         <AppButton
           title="Add New Record"
-          onPress={() => console.log('Add record pressed')}
-          style={styles.addButton}
+          onPress={handleAddSugarRecord}
           icon={appIcons.plus}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
