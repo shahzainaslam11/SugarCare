@@ -93,11 +93,23 @@ const styles = StyleSheet.create({
   createText: {
     color: colors.p1,
     fontWeight: '600',
+    // ⭐ CORRECTION: Fix typo 'ffontFamily' to 'fontFamily'
+    fontFamily: 'Inter-Medium',
+    fontSize: size.medium,
+    // Optional: Ensure text itself does not wrap (usually default, but good check)
+    // textAlign: 'center',
   },
   createRow: {
     flexDirection: 'row',
     marginTop: HP(4),
     alignSelf: 'center',
+    justifyContent: 'center',
+  },
+
+  staticText: {
+    color: colors.g1,
+    fontSize: size.medium,
+    fontFamily: 'Inter-Medium',
   },
   rememberMeText: {
     color: colors.g1,

@@ -16,6 +16,7 @@ import FAQs from '../../screens/App/SettingsScreen/FAQs';
 import PrivacyPolicy from '../../screens/App/SettingsScreen/PrivacyPolicy';
 import EditProfile from '../../screens/App/SettingsScreen/EditProfile';
 import Notification from '../../screens/App/Notification/Notification';
+import AIForecast from '../../screens/App/AIForecast/AIForecast';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,7 @@ function AppScreens() {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="Notification" component={Notification} />
+      <Stack.Screen name="AIForecast" component={AIForecast} />
     </Stack.Navigator>
   );
 }

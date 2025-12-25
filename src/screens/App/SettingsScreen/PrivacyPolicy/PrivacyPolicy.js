@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   emailLink: {
     fontSize: size.small,
     fontFamily: family.inter_medium,
-    color: colors.primary || '#007AFF',
+    color: colors.p1 || '#007AFF',
     textDecorationLine: 'underline',
   },
 });

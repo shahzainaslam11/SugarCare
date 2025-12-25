@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {colors, HP, WP} from '../../../utilities';
+import {colors, family, HP, size, WP} from '../../../utilities';
 
 export const styles = StyleSheet.create({
   container: {
@@ -22,15 +22,30 @@ export const styles = StyleSheet.create({
     marginBottom: HP(2.5),
   },
   timeText: {
-    fontSize: WP(4),
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
     color: '#666',
     marginBottom: HP(0.6),
   },
-  forecastTitle: {
-    fontSize: WP(4.5),
-    fontWeight: '600',
+  noFastText: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: '#666',
     marginBottom: HP(0.6),
-    marginTop: HP(1),
+  },
+  emptyText: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: '#666',
+    marginBottom: HP(0.6),
+    alignSelf: 'center',
+    marginVertical: HP(5),
+  },
+
+  forecastTitle: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    marginBottom: HP(2),
   },
   readingText: {
     fontSize: WP(6),
@@ -104,6 +119,7 @@ export const styles = StyleSheet.create({
   },
   recordsContainer: {
     marginBottom: HP(3.8),
+    marginTop: HP(1),
   },
   sectionTitle: {
     fontSize: WP(5),

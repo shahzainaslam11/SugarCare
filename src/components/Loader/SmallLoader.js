@@ -1,31 +1,37 @@
 import React from 'react';
-import {View, StyleSheet, ActivityIndicator} from 'react-native';
-import {WP, HP, colors} from '../../utilities';
-import {hasNotch} from 'react-native-device-info';
+import {View, StyleSheet, ActivityIndicator, Modal} from 'react-native';
+import {colors, HP, WP} from '../../utilities';
 import PropTypes from 'prop-types';
 
-export const SmallLoader = ({height, width = '80%'}) => {
-	return (
-		<View style={[styles.alert, {height, width: width}]}>
-			<ActivityIndicator size={'small'} color={colors.p1} animating />
-		</View>
-	);
+export const SmallLoader = ({visible = true, size = 'large'}) => {
+  return (
+    <Modal transparent animationType="fade" visible={visible}>
+      <View style={styles.overlay}>
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size={size} color={colors.p1} animating />
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 SmallLoader.propTypes = {
-	height: PropTypes.string,
-	width: PropTypes.string,
+  visible: PropTypes.bool,
+  size: PropTypes.string,
 };
 
 const styles = StyleSheet.create({
-	alert: {
-		backgroundColor: colors.white,
-		justifyContent: 'center',
-		alignItems: 'center',
-		height: hasNotch() ? HP('12') : HP('15'),
-		width: WP('80%'),
-		flex: 1,
-		marginHorizontal: WP('0'),
-		borderRadius: 5,
-	},
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)', // semi-transparent background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderContainer: {
+    backgroundColor: colors.white,
+    padding: HP('3'),
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

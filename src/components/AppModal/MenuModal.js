@@ -27,7 +27,7 @@ import {logoutUser} from '../../redux/slices/authSlice';
 const {width} = Dimensions.get('window');
 const DRAWER_WIDTH = WP(80);
 
-const MenuModal = ({visible, onClose, navigation}) => {
+const MenuModal = ({updatedName, visible, onClose, navigation}) => {
   const dispatch = useDispatch();
   const {user, accessToken, refreshToken, loading} = useSelector(
     state => state.auth,
@@ -88,6 +88,11 @@ const MenuModal = ({visible, onClose, navigation}) => {
       icon: '📊',
     },
     {
+      id: 'AIForecast',
+      title: 'AI Risk Foecasting',
+      icon: '📊',
+    },
+    {
       id: 'settings',
       title: 'App Settings',
       icon: '⚙️',
@@ -113,6 +118,9 @@ const MenuModal = ({visible, onClose, navigation}) => {
           break;
         case 'settings':
           navigation.navigate('AppScreens', {screen: 'SettingsScreen'});
+          break;
+        case 'AIForecast':
+          navigation.navigate('AppScreens', {screen: 'AIForecast'});
           break;
         default:
           break;
@@ -161,7 +169,7 @@ const MenuModal = ({visible, onClose, navigation}) => {
         }),
       );
 
-      console.log('Logout result:', result);
+      console.log('Logout result:', JSON.stringify(result));
 
       if (result.meta.requestStatus === 'fulfilled') {
         showSuccess('Logged out successfully');
@@ -191,104 +199,106 @@ const MenuModal = ({visible, onClose, navigation}) => {
   };
 
   // Get user info from Redux store
-  const userName = user?.full_name || user?.name || 'User';
+  const userName = updatedName || 'User';
   const userEmail = user?.email || 'user@example.com';
 
   return (
-    <Modal
-      visible={visible}
-      animationType="none"
-      transparent={true}
-      statusBarTranslucent={true}
-      onRequestClose={handleOverlayPress}>
-      <View style={styles.container}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
+    <SafeAreaView>
+      <Modal
+        visible={visible}
+        animationType="none"
+        transparent={true}
+        statusBarTranslucent={true}
+        onRequestClose={handleOverlayPress}>
+        <View style={styles.container}>
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor="transparent"
+            translucent={true}
+          />
 
-        {/* Overlay */}
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={handleOverlayPress}
-        />
+          {/* Overlay */}
+          <TouchableOpacity
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={handleOverlayPress}
+          />
 
-        {/* Drawer Content */}
-        <Animated.View
-          style={[
-            styles.drawerContainer,
-            {
-              transform: [{translateX: slideAnim}],
-            },
-          ]}>
-          <SafeAreaView
-            style={styles.safeArea}
-            edges={['right', 'top', 'bottom']}>
-            {/* Profile Header */}
-            <View style={styles.profileHeader}>
-              <View style={styles.profileIcon}>
-                <Text style={styles.profileIconText}>👤</Text>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{userName}</Text>
-                <Text style={styles.profileEmail}>{userEmail}</Text>
-              </View>
-              <TouchableOpacity
-                onPress={handleOverlayPress}
-                style={styles.closeButton}
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <Text style={styles.closeIcon}>×</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Menu Items */}
-            <View style={styles.menuItemsContainer}>
-              {menuItems.map((item, index) => (
+          {/* Drawer Content */}
+          <Animated.View
+            style={[
+              styles.drawerContainer,
+              {
+                transform: [{translateX: slideAnim}],
+              },
+            ]}>
+            <SafeAreaView
+              style={styles.safeArea}
+              edges={['right', 'top', 'bottom']}>
+              {/* Profile Header */}
+              <View style={styles.profileHeader}>
+                <View style={styles.profileIcon}>
+                  <Text style={styles.profileIconText}>👤</Text>
+                </View>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{userName}</Text>
+                  <Text style={styles.profileEmail}>{userEmail}</Text>
+                </View>
                 <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.menuItem,
-                    index === menuItems.length - 1 && styles.lastMenuItem,
-                  ]}
-                  onPress={() => handleMenuItemPress(item.id)}
-                  activeOpacity={0.7}>
-                  <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                  <View style={styles.menuItemTextContainer}>
-                    <Text style={styles.menuItemTitle}>{item.title}</Text>
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
+                  onPress={handleOverlayPress}
+                  style={styles.closeButton}
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  <Text style={styles.closeIcon}>×</Text>
                 </TouchableOpacity>
-              ))}
+              </View>
 
-              {/* Logout Button */}
-              <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
-                disabled={isLoggingOut}
-                activeOpacity={0.7}>
-                {isLoggingOut ? (
-                  <ActivityIndicator size="small" color={colors.p1} />
-                ) : (
-                  <>
-                    <Text style={styles.logoutIcon}>🚪</Text>
-                    <View style={styles.logoutTextContainer}>
-                      <Text style={styles.logoutText}>Logout</Text>
+              {/* Menu Items */}
+              <View style={styles.menuItemsContainer}>
+                {menuItems.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.menuItem,
+                      index === menuItems.length - 1 && styles.lastMenuItem,
+                    ]}
+                    onPress={() => handleMenuItemPress(item.id)}
+                    activeOpacity={0.7}>
+                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
+                    <View style={styles.menuItemTextContainer}>
+                      <Text style={styles.menuItemTitle}>{item.title}</Text>
                     </View>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                    <Text style={styles.chevron}>›</Text>
+                  </TouchableOpacity>
+                ))}
 
-            {/* Version Info */}
-            <View style={styles.bottomSection}>
-              <Text style={styles.versionText}>Version: 0.0.0</Text>
-            </View>
-          </SafeAreaView>
-        </Animated.View>
-      </View>
-    </Modal>
+                {/* Logout Button */}
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                  disabled={isLoggingOut}
+                  activeOpacity={0.7}>
+                  {isLoggingOut ? (
+                    <ActivityIndicator size="small" color={colors.p1} />
+                  ) : (
+                    <>
+                      <Text style={styles.logoutIcon}>🚪</Text>
+                      <View style={styles.logoutTextContainer}>
+                        <Text style={styles.logoutText}>Logout</Text>
+                      </View>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Version Info */}
+              <View style={styles.bottomSection}>
+                <Text style={styles.versionText}>Version: 0.0.0</Text>
+              </View>
+            </SafeAreaView>
+          </Animated.View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 };
 
@@ -319,6 +329,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    marginTop: HP(10),
   },
   profileHeader: {
     flexDirection: 'row',

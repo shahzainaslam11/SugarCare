@@ -4,14 +4,11 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 const HbA1cReportScreen = () => {
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>HbA1c Test Reports</Text>
       </View>
 
-      {/* Report Cards */}
       <View style={styles.reportsContainer}>
-        {/* Report 1 */}
         <View style={styles.card}>
           <Text style={styles.value}>2.5% HbA1c</Text>
           <Text style={styles.status}>Normal</Text>
@@ -21,7 +18,6 @@ const HbA1cReportScreen = () => {
           </Text>
         </View>
 
-        {/* Report 2 */}
         <View style={styles.card}>
           <Text style={styles.value}>6.2% HbA1c</Text>
           <Text style={styles.status}>Prediabetes</Text>
@@ -31,7 +27,6 @@ const HbA1cReportScreen = () => {
           </Text>
         </View>
 
-        {/* Report 3 */}
         <View style={styles.card}>
           <Text style={styles.value}>7.1% HbA1c</Text>
           <Text style={styles.status}>Type 1</Text>
@@ -42,7 +37,6 @@ const HbA1cReportScreen = () => {
         </View>
       </View>
 
-      {/* Add Record Button */}
       <TouchableOpacity style={styles.addButton}>
         <Text style={styles.addButtonText}>Add Record</Text>
       </TouchableOpacity>

@@ -1,39 +1,43 @@
-import React from 'react';
-import {View, Text, Image, StyleSheet, FlatList} from 'react-native';
+import React, {useEffect} from 'react';
+import {View, Text, Image, FlatList} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {appIcons, colors, family, HP, size, WP} from '../../../utilities';
+import {appIcons, colors, WP} from '../../../utilities';
 import {AppButton, Header} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
+import styles from './styles';
+
+// Redux
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchHbA1cRecords} from '../../../redux/slices/hba1cSlice';
+import {showError} from '../../../utilities';
 
 const AddHBA1CTest = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {user, accessToken} = useSelector(state => state.auth);
+  const {records, loading, error} = useSelector(state => state.hba1c);
 
-  const reportsData = [
-    {
-      id: '1',
-      value: '2.5% HbA1c',
-      status: 'Normal',
-      date: '04:48 AM | 17 Aug 2025',
-      notes: 'from HCA Healthcare UK Laboratories',
-      statusStyle: styles.normalStatus,
-    },
-    {
-      id: '2',
-      value: '6.2% HbA1c',
-      status: 'Prediabetes',
-      date: '10:30 AM | 20 Sep 2025',
-      notes: 'suggests further monitoring required',
-      statusStyle: styles.prediabetesStatus,
-    },
-    {
-      id: '3',
-      value: '7.1% HbA1c',
-      status: 'Type 1',
-      date: '03:15 PM | 05 Nov 2025',
-      notes: 'consider lifestyle changes and medic...',
-      statusStyle: styles.type1Status,
-    },
-  ];
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchHbA1cRecords({user_id: user.id, token: accessToken}))
+        .unwrap()
+        .catch(err => showError(err?.message || 'Failed to fetch records'));
+    }
+  }, [user?.id]);
+
+  const getStatusStyle = status => {
+    switch (status) {
+      case 'Normal':
+        return styles.normalStatus;
+      case 'Prediabetes':
+        return styles.prediabetesStatus;
+      case 'Type 1':
+      case 'Type 2':
+        return styles.type1Status;
+      default:
+        return styles.normalStatus;
+    }
+  };
 
   const renderItem = ({item}) => (
     <View style={styles.card}>
@@ -44,16 +48,18 @@ const AddHBA1CTest = () => {
             style={styles.icon}
             resizeMode="contain"
           />
-          <Text style={styles.valueText}>{item.value}</Text>
+          <Text style={styles.valueText}>{item.value}% HbA1c</Text>
         </View>
-        <View style={[styles.statusContainer, item.statusStyle]}>
+        <View style={[styles.statusContainer, getStatusStyle(item.status)]}>
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
       </View>
 
       <View style={styles.divider} />
 
-      <Text style={styles.dateText}>{item.date}</Text>
+      <Text style={styles.dateText}>
+        {item.time} | {item.date}
+      </Text>
       <Text style={styles.notesText}>
         <Text style={styles.notesLabel}>Notes: </Text>
         {item.notes}
@@ -66,101 +72,27 @@ const AddHBA1CTest = () => {
       <Header title="HbA1c Test Reports" onPress={() => navigation.goBack()} />
 
       <FlatList
-        data={reportsData}
+        data={records}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          !loading && (
+            <Text style={{textAlign: 'center', marginTop: 20}}>
+              No HbA1c records found.
+            </Text>
+          )
+        }
       />
 
       <AppButton
         onPress={() => navigation.navigate('NewHbA1cReport')}
         title="Add Record"
+        loading={loading}
       />
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgColor,
-    paddingHorizontal: WP(4),
-  },
-  listContainer: {
-    paddingVertical: HP(1.5),
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginBottom: HP(1.5),
-    paddingVertical: HP(2),
-    paddingHorizontal: WP(4),
-    borderWidth: 1,
-    borderColor: colors.g14,
-    shadowColor: colors.black,
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  valueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  icon: {
-    width: WP(7),
-    height: HP(3.5),
-    marginRight: WP(2),
-  },
-  valueText: {
-    fontFamily: family.inter_bold,
-    fontSize: size.large,
-    color: colors.black,
-  },
-  statusContainer: {
-    paddingHorizontal: WP(3),
-    paddingVertical: HP(0.5),
-    borderRadius: 14,
-  },
-  statusText: {
-    fontFamily: family.inter_medium,
-    fontSize: size.xsmall,
-    color: colors.white,
-  },
-  normalStatus: {
-    backgroundColor: colors.gr1,
-  },
-  prediabetesStatus: {
-    backgroundColor: colors.bw1,
-  },
-  type1Status: {
-    backgroundColor: colors.r1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.g15,
-    marginVertical: HP(1),
-  },
-  dateText: {
-    fontFamily: family.inter_regular,
-    fontSize: size.small,
-    color: colors.g3,
-    marginBottom: HP(0.5),
-  },
-  notesText: {
-    fontFamily: family.inter_medium,
-    fontSize: size.normal,
-    color: colors.g2,
-  },
-  notesLabel: {
-    fontFamily: family.inter_bold,
-    color: colors.black,
-  },
-});
 
 export default AddHBA1CTest;

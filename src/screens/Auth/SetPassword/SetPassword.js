@@ -28,7 +28,7 @@ export default function SetNewPassword() {
   const {loading} = useSelector(state => state.auth);
 
   // Get email from route params (passed from VerifyOTP screen)
-  const {email} = route.params || {};
+  const {email, setShow} = route.params || {};
 
   return (
     <ImageBackground
@@ -134,24 +134,25 @@ export default function SetNewPassword() {
                   title="Reset Password"
                   onPress={handleSubmit}
                   loading={loading || isSubmitting}
-                  style={styles.confirmBtn}
-                  textStyle={styles.confirmBtnText}
+                  // style={styles.confirmBtn}
+                  // textStyle={styles.confirmBtnText}
                   disabled={!email}
                 />
+                {setShow ? null : (
+                  <View style={styles.actionsRow}>
+                    <TouchableOpacity
+                      onPress={() => navigation.goBack()}
+                      style={styles.backLink}>
+                      <Text style={styles.backText}>← Go Back</Text>
+                    </TouchableOpacity>
 
-                <View style={styles.actionsRow}>
-                  <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={styles.backLink}>
-                    <Text style={styles.backText}>← Go Back</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => navigation.replace('LogIn')}
-                    style={styles.backLink}>
-                    <Text style={styles.backText}>Back to Login</Text>
-                  </TouchableOpacity>
-                </View>
+                    <TouchableOpacity
+                      onPress={() => navigation.replace('LogIn')}
+                      style={styles.backLink}>
+                      <Text style={styles.backText}>Back to Login</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             )}
           </Formik>

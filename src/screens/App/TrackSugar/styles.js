@@ -6,7 +6,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     paddingHorizontal: WP(4),
-    paddingTop: HP(2),
   },
   contentContainer: {
     paddingTop: HP(3),

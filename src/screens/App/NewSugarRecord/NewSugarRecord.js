@@ -9,33 +9,77 @@ import {
 } from 'react-native';
 import {TimePicker, DatePicker, Header} from '../../../components';
 import {styles} from './styles';
-import {appIcons, WP} from '../../../utilities';
+import {appIcons, WP, showSuccess, showError} from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useDispatch, useSelector} from 'react-redux';
+import {addSugarRecord} from '../../../redux/slices/sugarForecastSlice';
+import dayjs from 'dayjs';
 
 const NewSugarRecord = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {accessToken, user} = useSelector(state => state.auth);
+  const {loading} = useSelector(state => state.sugarForecast);
+
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
-  const [bloodSugarValue, setBloodSugarValue] = useState('100');
-  const [selectedTag, setSelectedTag] = useState('Fasting');
-  const [notes, setNotes] = useState('Checked Before Fasting');
+  const [bloodSugarValue, setBloodSugarValue] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const handleDateChange = newDate => {
-    setDate(newDate);
-  };
-
-  const handleStartTimeChange = newTime => {
-    setStartTime(newTime);
-  };
+  const handleDateChange = newDate => setDate(newDate);
+  const handleStartTimeChange = newTime => setStartTime(newTime);
 
   const tags = ['Fasting', 'Meal', 'Bedtime'];
 
+  const handleSave = async () => {
+    if (!bloodSugarValue || !selectedTag) {
+      return showError('Please enter value and select a tag.');
+    }
+
+    const payload = {
+      user_id: user?.id,
+      value: Number(bloodSugarValue),
+      tag: selectedTag,
+      date: dayjs(date).format('YYYY-MM-DD'),
+      time: dayjs(startTime).format('HH:mm'),
+      notes,
+    };
+
+    console.log('Sending payload to API:', JSON.stringify(payload)); // 👈 show payload in console
+
+    try {
+      const resultAction = await dispatch(
+        addSugarRecord({payload, token: accessToken}),
+      );
+
+      if (addSugarRecord.fulfilled.match(resultAction)) {
+        console.log('API Response:', resultAction.payload); // 👈 show API response
+        showSuccess(
+          resultAction.payload?.message || 'Record added successfully',
+        );
+        navigation.goBack();
+      } else {
+        console.log(
+          'API Error Response:',
+          JSON.stringify(resultAction.payload),
+        ); // 👈 show error response
+        showError(resultAction.payload?.message || 'Failed to add record');
+      }
+    } catch (err) {
+      console.log('Exception:', err); // 👈 show any unexpected errors
+      showError(err.message || 'Something went wrong');
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header title="New Sugar Record" onPress={() => navigation.goBack()} />
 
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        {/* Date + Time pickers */}
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.pickersRow}>
           <DatePicker
             title="Date"
@@ -44,7 +88,7 @@ const NewSugarRecord = () => {
             containerStyle={styles.pickerContainer}
           />
           <TimePicker
-            title="Start Time"
+            title="Time"
             selectedTime={startTime}
             onTimeChange={handleStartTimeChange}
             containerStyle={styles.pickerContainer}
@@ -52,7 +96,6 @@ const NewSugarRecord = () => {
           />
         </View>
 
-        {/* Blood Sugar Input */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Blood Sugar Value</Text>
           <View style={styles.bloodSugarContainer}>
@@ -62,15 +105,13 @@ const NewSugarRecord = () => {
               onChangeText={setBloodSugarValue}
               keyboardType="numeric"
               maxLength={3}
+              placeholder="0"
             />
             <Text style={styles.unitText}>mg/dL</Text>
           </View>
-          <Text style={styles.unitNote}>
-            1️⃣ Unit can be changed in settings
-          </Text>
+          <Text style={styles.unitNote}>ⓘ Unit can be changed in settings</Text>
         </View>
 
-        {/* Tags */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Tag</Text>
           <View style={styles.tagsContainer}>
@@ -103,9 +144,6 @@ const NewSugarRecord = () => {
           </View>
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Notes */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Notes</Text>
           <TextInput
@@ -113,21 +151,25 @@ const NewSugarRecord = () => {
             value={notes}
             onChangeText={setNotes}
             multiline
-            numberOfLines={3}
+            numberOfLines={4}
             textAlignVertical="top"
             maxLength={100}
           />
-          <Text style={styles.notesCounter}>{notes.length}/100</Text>
         </View>
+        <Text style={styles.notesCounter}>{notes.length}/100</Text>
       </ScrollView>
 
-      {/* Save Button */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={loading}>
+          <Text style={styles.saveButtonText}>
+            {loading ? 'Saving...' : 'Save'}
+          </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

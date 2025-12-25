@@ -1,4 +1,3 @@
-// DatePicker.js
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -24,19 +23,23 @@ const DatePicker = ({
   };
 
   const handleConfirm = date => {
+    // The date passed here is a native Date object.
     onDateChange(date);
     hideDatePicker();
   };
+
+  // Ensure selectedDate is a valid Date object for moment formatting and the modal
+  const dateValue = selectedDate ? new Date(selectedDate) : null;
+  const displayDate = dateValue
+    ? moment(dateValue).format('MM/DD/YYYY')
+    : 'MM/DD/YYYY';
+  const modalDate = dateValue || new Date();
 
   return (
     <View style={[styles.container, containerStyle]}>
       {title && <Text style={[styles.titleStyle, titleStyle]}>{title}</Text>}
       <TouchableOpacity style={styles.innerContainer} onPress={showDatePicker}>
-        <Text style={[styles.textStyle, textStyle]}>
-          {selectedDate
-            ? moment(selectedDate).format('MM/DD/YYYY')
-            : 'MM/DD/YYYY'}
-        </Text>
+        <Text style={[styles.textStyle, textStyle]}>{displayDate}</Text>
         <Image
           source={appIcons.calendar}
           style={styles.iconStyle}
@@ -46,6 +49,7 @@ const DatePicker = ({
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
+        date={modalDate} // Set the initial date of the modal to the selected date
         onConfirm={handleConfirm}
         onCancel={hideDatePicker}
       />
@@ -84,4 +88,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export {DatePicker};
+export {DatePicker}; // Changed to default export

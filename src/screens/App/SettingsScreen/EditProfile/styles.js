@@ -57,6 +57,13 @@ const styles = StyleSheet.create({
     fontFamily: family.inter_medium,
     color: colors.black,
   },
+  removeBtn: {},
+  removeText: {
+    color: colors.p1,
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    marginTop: HP(1),
+  },
 });
 
 export default styles;

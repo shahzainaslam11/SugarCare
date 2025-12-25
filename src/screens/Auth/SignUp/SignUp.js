@@ -11,7 +11,7 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppInput, CustomDropdown} from '../../../components';
+import {AppButton, AppInput, CustomDropdown} from '../../../components';
 import {
   appImages,
   showError,
@@ -283,18 +283,13 @@ export default function SignUp() {
                   }
                 />
 
-                {/* Submit Button */}
-                <TouchableOpacity
-                  style={[styles.signInBtn, {opacity: isSubmitting ? 0.7 : 1}]}
+                <AppButton
+                  title="Sign Up"
+                  loading={loading}
                   onPress={handleSubmit}
-                  disabled={isSubmitting || loading}>
-                  {isSubmitting || loading ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <Text style={styles.signInText}>Sign Up</Text>
-                  )}
-                </TouchableOpacity>
-
+                  disabled={isSubmitting || loading}
+                  // containerStyle={styles.signInBtn}
+                />
                 {/* Footer */}
                 <View style={styles.createRow}>
                   <Text style={styles.createText}>

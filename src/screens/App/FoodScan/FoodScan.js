@@ -3,148 +3,185 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   StatusBar,
   Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
-import {appIcons, colors} from '../../../utilities';
+import {useNavigation} from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import ImageResizer from 'react-native-image-resizer';
+
+import {appIcons, colors, showError, showSuccess} from '../../../utilities';
 import {AppButton, Header} from '../../../components';
 import styles from './styles';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
 
-const FoodScanScreen = () => {
+// Redux
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  analyzeFoodImage,
+  clearFoodResult,
+  clearFoodError,
+} from '../../../redux/slices/foodRecognitionSlice';
+
+const FoodScanScreen = ({route}) => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const [capturedImage, setCapturedImage] = useState(null);
+  const [scanning, setScanning] = useState(false);
+  const [processingImage, setProcessingImage] = useState(false);
+
+  const {accessToken, user} = useSelector(state => state.auth);
+
+  // If image comes from server, set it
+  React.useEffect(() => {
+    if (route?.params?.serverImage) {
+      setCapturedImage({
+        uri: route.params.serverImage,
+        type: 'image/jpeg',
+        name: `server_image_${Date.now()}.jpg`,
+      });
+    }
+  }, [route?.params?.serverImage]);
+
+  const imageOptions = {
+    mediaType: 'photo',
+    quality: 0.8,
+    includeExtra: true, // includes EXIF data
+  };
 
   const handleTakePhoto = () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 0.8,
-      saveToPhotos: true,
-      cameraType: 'back',
-      includeBase64: false,
-    };
-
-    launchCamera(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled camera');
-        Alert.alert('Info', 'Camera cancelled');
-      } else if (response.error) {
-        console.log('Camera Error: ', response.error);
-        Alert.alert('Error', 'Failed to take photo: ' + response.error);
-      } else if (response.assets && response.assets.length > 0) {
-        const image = response.assets[0];
-        console.log('Photo taken:', image);
-        setCapturedImage(image.uri);
-
-        Alert.alert(
-          'Success',
-          'Photo captured successfully!\nYou can now scan this food item.',
-          [
-            {
-              text: 'Scan Food',
-              onPress: () => handleScanFood(image.uri),
-            },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-          ],
-        );
-      }
-    });
+    launchCamera({...imageOptions, saveToPhotos: true}, handleImageResponse);
   };
 
   const handlePickFromGallery = () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 0.8,
-      selectionLimit: 1,
-      includeBase64: false,
-    };
-
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled gallery');
-        Alert.alert('Info', 'Gallery selection cancelled');
-      } else if (response.error) {
-        console.log('Gallery Error: ', response.error);
-        Alert.alert('Error', 'Failed to pick image: ' + response.error);
-      } else if (response.assets && response.assets.length > 0) {
-        const image = response.assets[0];
-        console.log('Image selected:', image);
-        setCapturedImage(image.uri);
-
-        Alert.alert(
-          'Success',
-          'Image selected successfully!\nYou can now scan this food item.',
-          [
-            {
-              text: 'Scan Food',
-              onPress: () => handleScanFood(image.uri),
-            },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-          ],
-        );
-      }
-    });
-  };
-
-  const handleScanFood = imageUri => {
-    console.log('Scanning food from image:', imageUri);
-    // Add your food scanning logic here
-    // This could be an API call to your food recognition service
-
-    Alert.alert(
-      'Scanning Food',
-      'Analyzing food image for nutrition details...',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Simulate scanning process
-            setTimeout(() => {
-              Alert.alert(
-                'Scan Complete',
-                'Food analysis completed!\n\nFood: Pizza\nCalories: 285 cal\nCarbs: 36g\nProtein: 12g\nFat: 10g',
-              );
-            }, 2000);
-          },
-        },
-      ],
+    launchImageLibrary(
+      {...imageOptions, selectionLimit: 1},
+      handleImageResponse,
     );
   };
 
-  const handleHistoryPress = () => {
-    console.log('History button pressed');
-    Alert.alert('History', 'History feature will be implemented here');
+  // ✅ Fix rotation before setting capturedImage
+  const handleImageResponse = async response => {
+    if (!response) return;
+    if (response.didCancel) return;
+    if (response.errorCode || response.errorMessage) {
+      Alert.alert(
+        'Image Error',
+        response.errorMessage || 'Failed to pick image',
+      );
+      return;
+    }
+
+    const asset = response?.assets?.[0];
+    if (!asset?.uri) {
+      Alert.alert('Error', 'Invalid image selected. Try another image.');
+      return;
+    }
+
+    try {
+      setProcessingImage(true);
+
+      // Rotate and resize image properly
+      const resized = await ImageResizer.createResizedImage(
+        asset.uri,
+        1080, // width
+        1080, // height
+        'JPEG',
+        100,
+        0, // rotation handled automatically by EXIF
+      );
+
+      setCapturedImage({
+        uri: resized.uri,
+        type: asset.type || 'image/jpeg',
+        name: asset.fileName || `food_${Date.now()}.jpg`,
+      });
+    } catch (err) {
+      console.log('Image processing error:', err);
+      // fallback to original image if resizing fails
+      setCapturedImage({
+        uri: asset.uri,
+        type: asset.type || 'image/jpeg',
+        name: asset.fileName || `food_${Date.now()}.jpg`,
+      });
+    } finally {
+      setProcessingImage(false);
+    }
   };
 
   const clearImage = () => {
     setCapturedImage(null);
+    dispatch(clearFoodResult());
+    dispatch(clearFoodError());
+  };
+
+  const handleScanFood = async () => {
+    if (!capturedImage?.uri) {
+      showError('No image to scan');
+      return;
+    }
+    if (!user?.id || !accessToken) {
+      showError('User not found');
+      return;
+    }
+
+    setScanning(true);
+
+    const file = {
+      uri: capturedImage.uri,
+      type: capturedImage.type,
+      name: capturedImage.name,
+    };
+
+    try {
+      const analysisResult = await dispatch(
+        analyzeFoodImage({file, user_id: user.id, token: accessToken}),
+      ).unwrap();
+
+      console.log('analysisResult---?', JSON.stringify(analysisResult));
+
+      // ✅ Show success or error message
+      if (analysisResult?.status === 'success') {
+        showSuccess(
+          analysisResult.message || 'Food analysis completed successfully',
+        );
+      } else {
+        showError(analysisResult.message || 'Food analysis failed');
+      }
+
+      navigation.navigate('AppScreens', {
+        screen: 'ScanResult',
+        params: {scanData: analysisResult},
+      });
+    } catch (error) {
+      console.log('Scan Error:', error);
+      showError('Scan failed. Please try again.');
+    } finally {
+      setScanning(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
-
       <Header
         title="Smart Food Scanner"
         isBack={false}
-        onPressRight={handleHistoryPress}
+        onPressRight={() =>
+          Alert.alert('History', 'History feature will be implemented here')
+        }
       />
 
       <View style={styles.content}>
-        {/* Show captured/selected image or default scanner image */}
-        {capturedImage ? (
+        {processingImage ? (
+          <ActivityIndicator size="large" color={colors.p1} />
+        ) : capturedImage ? (
           <View style={styles.imagePreviewContainer}>
             <Image
-              source={{uri: capturedImage}}
+              source={{uri: capturedImage.uri}}
               style={styles.capturedImage}
               resizeMode="cover"
             />
@@ -163,20 +200,16 @@ const FoodScanScreen = () => {
         )}
 
         <Text style={styles.title}>Food Scan</Text>
-
         <Text style={styles.subtitle}>
-          Scan your meal to get nutrition details and{'\n'}predicted impact on
-          blood sugar
+          Scan your meal to get nutrition details and{'\n'}
+          predicted impact on blood sugar
         </Text>
 
         <View style={styles.buttonContainer}>
           <AppButton
-            title="Take a new Photo"
+            title="Take a Photo"
             icon={appIcons.camera}
-            // onPress={handleTakePhoto}
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'ScanResult'})
-            }
+            onPress={handleTakePhoto}
           />
           <AppButton
             title="Pick from Gallery"
@@ -187,13 +220,17 @@ const FoodScanScreen = () => {
           />
         </View>
 
-        {/* Show scan button if image is captured/selected */}
-        {capturedImage && (
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={() => handleScanFood(capturedImage)}>
+        {capturedImage && !scanning && (
+          <TouchableOpacity style={styles.scanButton} onPress={handleScanFood}>
             <Text style={styles.scanButtonText}>Scan This Food</Text>
           </TouchableOpacity>
+        )}
+
+        {scanning && (
+          <View style={{marginTop: 20, alignItems: 'center'}}>
+            <ActivityIndicator size="large" color={colors.p1} />
+            <Text style={{marginTop: 8}}>Analyzing Food...</Text>
+          </View>
         )}
       </View>
     </SafeAreaView>

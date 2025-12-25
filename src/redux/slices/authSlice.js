@@ -110,8 +110,8 @@ const authSlice = createSlice({
     refreshToken: null,
     loading: false,
     error: null,
-    otpSent: false, 
-    otpVerified: false, 
+    otpSent: false,
+    otpVerified: false,
   },
   reducers: {
     clearAuthError: state => {
@@ -142,7 +142,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
         state.accessToken = action.payload.access_token;
         state.refreshToken = action.payload.refresh_token;
         state.error = null;
@@ -159,7 +159,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
         state.accessToken = action.payload.access_token;
         state.refreshToken = action.payload.refresh_token;
         state.error = null;

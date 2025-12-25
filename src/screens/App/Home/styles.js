@@ -123,6 +123,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
+  buttonContainer: {
+    paddingHorizontal: WP(6),
+    bottom: 0,
+    position: 'absolute',
+    left: WP(14),
+    right: WP(14),
+  },
 });
 
 export default styles;

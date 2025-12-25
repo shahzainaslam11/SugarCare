@@ -1,143 +1,158 @@
-import {StyleSheet} from 'react-native';
-import {colors, HP, WP} from '../../../utilities';
+import {StyleSheet, Platform} from 'react-native';
+
+import {family, HP, size, WP} from '../../../utilities';
+import {Fonts} from '../../../assets/fonts';
+
+const SPACING_HORIZONTAL = WP('4');
+const BLUE = '#4A4CFF';
+const GRAY_TEXT = '#8C8C8C';
+const LIGHT_GRAY_BG = '#F0F0F0';
+const BORDER_COLOR = '#E0E0E0';
+const BLACK = '#333333';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-    paddingHorizontal: WP(4),
-    paddingTop: HP(4),
+    backgroundColor: '#FFFFFF',
   },
+
   contentContainer: {
-    paddingTop: HP(2),
-    paddingBottom: HP(4),
+    paddingHorizontal: SPACING_HORIZONTAL,
+    paddingVertical: 15,
   },
-  section: {
-    marginBottom: HP(3),
-  },
+
   sectionTitle: {
-    fontSize: WP(5),
-    fontWeight: 'bold',
-    marginBottom: HP(2),
-    color: colors.black,
+    // Used for Date, Time, Blood Sugar Value
+    fontSize: size.medium,
+    fonrtfamily: family.inter_medium,
+    color: BLACK,
+    marginBottom: 8,
+    fontWeight: '500',
   },
   sectionLabel: {
-    fontSize: WP(4),
+    // Used for 'Tag' and 'Notes'
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.black,
-    marginBottom: HP(1),
+    color: BLACK,
+    marginBottom: 10,
   },
+  // --- Date/Time Pickers Row ---
   pickersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: HP(2),
+    marginBottom: 20,
   },
   pickerContainer: {
-    flex: 1,
-    marginHorizontal: WP(1),
+    width: '48%',
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.grayLight,
-    marginVertical: HP(2),
-  },
-  // ✅ Blood Sugar Input
+  // --- Blood Sugar Input ---
   bloodSugarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: HP(1),
-    borderBottomWidth: 2,
-    borderBottomColor: colors.p1,
-    paddingBottom: HP(0.5),
+    justifyContent: 'space-between',
+    // backgroundColor: LIGHT_GRAY_BG,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    height: WP('14'), // Dynamic height using WP for better responsiveness
   },
   bloodSugarInput: {
-    fontSize: WP(8),
+    flex: 1,
+    fontSize: size.medium,
     fontWeight: 'bold',
-    color: colors.black,
-    minWidth: WP(20),
-    textAlign: 'center',
-    marginRight: WP(2),
+    color: BLACK,
+    paddingVertical: 0,
+    textAlign: 'left',
   },
   unitText: {
-    fontSize: WP(4),
-    color: colors.gray,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
+    color: BLACK,
+    paddingLeft: 10,
   },
   unitNote: {
-    fontSize: WP(3.5),
-    color: colors.gray,
-    fontStyle: 'italic',
-    marginTop: HP(0.5),
+    fontSize: size.small,
+    fontFamily: family.inter_regular,
+    color: GRAY_TEXT,
+    marginVertical: HP(0.5),
   },
-  // ✅ Tags
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: HP(1),
+    gap: WP(3),
+    marginVertical: HP(1),
   },
   tagButton: {
-    backgroundColor: colors.grayLight,
-    paddingVertical: HP(1.5),
-    paddingHorizontal: WP(3),
-    borderRadius: WP(2),
-    marginRight: WP(2),
-    marginBottom: HP(1),
-    borderWidth: 1,
-    borderColor: colors.grayLight,
+    backgroundColor: LIGHT_GRAY_BG,
+    borderRadius: 8,
+    paddingHorizontal: WP(4),
+    paddingVertical: WP(2),
   },
   tagButtonSelected: {
-    backgroundColor: colors.p1,
-    borderColor: colors.p1,
+    backgroundColor: BLUE,
   },
   tagContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconStyle: {
+    width: WP(3),
+    height: HP(2),
+    tintColor: '#FFFFFF',
+    marginRight: WP(1),
+  },
   tagText: {
-    fontSize: WP(4),
-    color: colors.gray,
-    fontWeight: '600',
+    fontSize: size.medium,
+    fontFamily: family.inter_medium,
+    color: BLACK,
   },
   tagTextSelected: {
-    color: colors.white,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: size.medium,
+    fontFamily: family.inter_medium,
   },
-  // ✅ Notes
+  // --- Notes ---
   notesInput: {
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    fontSize: 16,
+    color: BLACK,
     borderWidth: 1,
-    borderColor: colors.grayLight,
-    borderRadius: WP(2),
-    padding: WP(3),
-    minHeight: HP(10),
-    fontSize: WP(4),
-    textAlignVertical: 'top',
-    marginBottom: HP(1),
+    borderColor: BORDER_COLOR,
+    height: HP('13'),
   },
   notesCounter: {
-    fontSize: WP(3.5),
-    color: colors.gray,
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: GRAY_TEXT,
     textAlign: 'right',
+    marginTop: HP(0.5),
   },
-  // ✅ Save Button
   buttonContainer: {
-    paddingHorizontal: WP(6),
-    paddingBottom: HP(3),
-    backgroundColor: colors.white,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: SPACING_HORIZONTAL,
+    paddingVertical: WP('5'),
+    backgroundColor: '#FFFFFF',
+    shadowColor: BLACK,
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
   },
   saveButton: {
-    backgroundColor: colors.p1,
-    paddingVertical: HP(2),
-    borderRadius: WP(3),
+    backgroundColor: BLUE,
+    borderRadius: 20,
+    paddingVertical: 16,
     alignItems: 'center',
   },
   saveButtonText: {
-    color: colors.white,
-    fontSize: WP(4.5),
-    fontWeight: 'bold',
-  },
-  iconStyle: {
-    width: WP(5),
-    height: HP(3),
-    marginRight: WP(1),
+    color: '#FFFFFF',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
   },
 });

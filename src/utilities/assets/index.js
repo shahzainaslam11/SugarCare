@@ -57,4 +57,8 @@ export const appIcons = {
   sugar: require('../../assets/icons/sugar.png'),
   fire: require('../../assets/icons/fire.png'),
   setting: require('../../assets/icons/Settings.png'),
+  fastIcon: require('../../assets/icons/fastIcon.png'),
+  send: require('../../assets/icons/send.png'),
+  robo: require('../../assets/icons/robo.png'),
+  User: require('../../assets/icons/User.png'),
 };
