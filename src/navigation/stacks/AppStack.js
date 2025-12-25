@@ -17,6 +17,7 @@ import PrivacyPolicy from '../../screens/App/SettingsScreen/PrivacyPolicy';
 import EditProfile from '../../screens/App/SettingsScreen/EditProfile';
 import Notification from '../../screens/App/Notification/Notification';
 import AIForecast from '../../screens/App/AIForecast/AIForecast';
+import PredictSugarAlert from '../../screens/App/PredictSugarAlert';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ function AppScreens() {
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="Notification" component={Notification} />
       <Stack.Screen name="AIForecast" component={AIForecast} />
+      <Stack.Screen name="PredictSugarAlert" component={PredictSugarAlert} />
     </Stack.Navigator>
   );
 }
