@@ -1,178 +1,44 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Image,
 } from 'react-native';
-import {FloatingAction} from 'react-native-floating-action';
-import dayjs from 'dayjs';
-import {
-  AppButton,
-  ChartComponent,
-  FastingPlans,
-  HalfCircle,
-  MenuModal,
-} from '../../../components'; // Updated imports
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {ChartComponent, MenuModal} from '../../../components';
+import {fetchSugarRecords} from '../../../redux/slices/homeSlice';
+import {fetchProfile} from '../../../redux/slices/profileSlice';
 import {appIcons} from '../../../utilities';
 import styles from './styles';
-import {useNavigation} from '@react-navigation/native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch, useSelector} from 'react-redux';
-import {
-  fetchFastingRecords,
-  fetchSugarRecords,
-} from '../../../redux/slices/homeSlice';
-import {fetchProfile} from '../../../redux/slices/profileSlice';
 
 export default function Home() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const {accessToken, user} = useSelector(state => state.auth);
-  const {sugarRecords, fastingRecords, loading} = useSelector(
-    state => state.home,
-  );
-  // console.log('sugarRecords--->', JSON.stringify(sugarRecords));
-  // console.log('fastingRecords--->', JSON.stringify(fastingRecords));
-
-  console.log('Token:', accessToken);
-  // console.log('User:', JSON.stringify(user.id));
-
-  useEffect(() => {
-    if (user?.id && accessToken) {
-      dispatch(fetchSugarRecords({user_id: user?.id, token: accessToken}));
-      dispatch(fetchFastingRecords({user_id: user?.id, token: accessToken}));
-      dispatch(fetchProfile({token: accessToken}));
-    }
-  }, [dispatch, user, accessToken]);
-
-  const [isFasting, setIsFasting] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [fastStart, setFastStart] = useState(dayjs().subtract(10, 'hour'));
-  const [fastEnd, setFastEnd] = useState(dayjs().add(6, 'hour'));
-  const [remaining, setRemaining] = useState(72);
-  const [daysStreak, setDaysStreak] = useState(5);
+  const {sugarRecords, loading} = useSelector(state => state.home);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const {data: profile} = useSelector(state => state.profile);
+
   console.log('profile---->', JSON.stringify(profile?.id));
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);
   };
-
-  const fastingPlans = [
-    {
-      id: '16:8',
-      title: '16:8',
-      description: 'Improves Insulin Sensitivity',
-      hours: 16,
-      bgColor: '#FEF9E5',
-      bordercolor: '#E2D3A3',
-    },
-    {
-      id: '18:6',
-      title: '18:6',
-      description: 'Boosts Metabolism',
-      hours: 18,
-      bgColor: '#E5E8FF',
-      bordercolor: '#A3A9E2',
-    },
-    {
-      id: 'custom',
-      title: 'Custom Plan',
-      description: 'Personalized Duration',
-      hours: 16,
-      bgColor: '#FFE5F4',
-      bordercolor: '#E2A3C6',
-    },
-  ];
-
   useEffect(() => {
-    if (isFasting && fastEnd) {
-      const interval = setInterval(() => {
-        const now = dayjs();
-        if (now.isAfter(fastEnd)) {
-          setIsFasting(false);
-          setSelectedPlan(null);
-          return;
-        }
-
-        const total = fastEnd.diff(fastStart, 'second');
-        const left = fastEnd.diff(now, 'second');
-        setRemaining((left / total) * 100);
-      }, 1000);
-      return () => clearInterval(interval);
+    if (user?.id && accessToken) {
+      dispatch(fetchSugarRecords({user_id: user?.id, token: accessToken}));
+      dispatch(fetchProfile({token: accessToken}));
     }
-  }, [isFasting, fastStart, fastEnd]);
-
-  const startFasting = plan => {
-    setSelectedPlan(plan);
-    const startTime = dayjs();
-    const endTime = startTime.add(plan.hours, 'hour');
-    setFastStart(startTime);
-    setFastEnd(endTime);
-    setIsFasting(true);
-
-    const total = endTime.diff(startTime, 'second');
-    const left = endTime.diff(startTime, 'second');
-    setRemaining((left / total) * 100);
-  };
-
-  const endFasting = () => {
-    setIsFasting(false);
-    setSelectedPlan(null);
-  };
-
-  const formatTimeRemaining = () => {
-    if (!fastEnd) return '00:00 hrs';
-
-    const now = dayjs();
-    const diff = fastEnd.diff(now, 'minute');
-    const hours = Math.floor(diff / 60);
-    const minutes = diff % 60;
-
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')} hrs`;
-  };
-
-  const actions = [
-    {
-      text: 'Chat with SugarBuddy',
-      name: 'Chat',
-      position: 2,
-      color: '#4252FF',
-      icon: appIcons.aiIcon,
-    },
-    {
-      text: 'Add Sugar Record',
-      name: 'AddSugar',
-      position: 1,
-      color: '#4252FF',
-      icon: appIcons.activeSugar,
-    },
-  ];
-
-  const handleOptionSelect = name => {
-    if (name === 'Chat') {
-      navigation.navigate('AppScreens', {screen: 'ChatScreen'});
-    } else if (name === 'AddSugar') {
-      navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
-    }
-  };
-
-  const handleAddSugarRecord = () => {
-    navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
-  };
-
-  const handleEditFasting = () => {
-    navigation.navigate('AppScreens', {screen: 'CustomFast'});
-  };
+  }, [dispatch, user, accessToken]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={toggleMenu} style={styles.iconButton}>
@@ -188,59 +54,137 @@ export default function Home() {
           <Text style={styles.icon}>🔔</Text>
         </TouchableOpacity>
       </View>
-
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
-        {/* Use ChartComponent instead of BloodSugarChart */}
         <ChartComponent loading={loading} sugarData={sugarRecords} />
 
-        <Text style={styles.subtitle}>Fasting Tracker</Text>
-        <Text style={styles.streak}>{daysStreak}-Day Streak, Keep it up!</Text>
-
-        {!isFasting ? (
-          <>
-            {/* Use your existing FastingPlans component */}
-            <FastingPlans
-              fastingPlans={fastingPlans}
-              startFasting={startFasting}
-              isFasting={isFasting}
-              navigation={navigation}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Image
+              source={appIcons.trackSugar}
+              style={styles.actionIcon}
+              resizeMode="contain"
             />
-            <Text style={styles.noFastText}>While No Active Fast</Text>
-          </>
-        ) : (
-          /* Use HalfCircle component when fasting is active */
-          <HalfCircle
-            onPressEdit={handleEditFasting}
-            onEndFasting={endFasting}
-            startTime={fastStart?.format('hh:mm A')}
-            endTime={fastEnd?.format('hh:mm A')}
-            remainingTime={formatTimeRemaining()}
-            progressPercentage={remaining}
-          />
-        )}
-      </ScrollView>
+            <Text style={styles.actionText}>Add Sugar</Text>
+          </TouchableOpacity>
 
-      <MenuModal
-        updatedName={profile?.name}
-        visible={isMenuVisible}
-        onClose={() => setIsMenuVisible(false)}
-        navigation={navigation}
-      />
-      <View style={styles.buttonContainer}>
-        <AppButton
-          title={'Add Sugar Record'}
-          onPress={handleAddSugarRecord}
-          icon={appIcons.plus}
+          <TouchableOpacity style={styles.actionButton}>
+            <Image
+              source={appIcons.activeScan}
+              style={styles.actionIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.actionText}>Scan Food</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton}>
+            <Image
+              source={appIcons.aiIcon}
+              style={styles.actionIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.actionText}>Ask AI</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.spikeCard}>
+          <View style={styles.spikeHeader}>
+            <Text style={styles.spikeTitle}>Blood Sugar Spike Expected</Text>
+            <Image
+              source={appIcons.spike}
+              style={styles.spikeIcon}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.spikeDescription}>
+            Based on your recent activity, your sugar may spike in next 2hrs
+          </Text>
+          <TouchableOpacity style={styles.seeSuggestionsButton}>
+            <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
+            <Image
+              source={appIcons.forwardArrow}
+              style={styles.arrowIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* AI Risk Forecasting */}
+        <View style={styles.riskCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>AI Risk Forecasting</Text>
+            <Image
+              source={appIcons.aistars}
+              style={styles.sparklesIcon}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.lastChecked}>Last Checked: 1 month ago</Text>
+          <View style={styles.riskLevelContainer}>
+            <Text style={styles.riskLabel}>Risk Status</Text>
+            <View style={styles.safeBadge}>
+              <Text style={styles.safeText}>Safe</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.seeDetailButton}>
+            <Text style={styles.seeDetailText}>See in detail</Text>
+            <Image
+              source={appIcons.forwardArrow}
+              style={styles.arrowIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Suggested Meal */}
+        <View style={styles.mealCard}>
+          <View style={styles.mealHeader}>
+            <Text style={styles.mealTitle}>Suggested Meal</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.mealContent}>
+            <Image
+              source={appIcons.bowl}
+              style={styles.mealImage}
+              resizeMode="contain"
+            />
+            <View style={styles.mealDetails}>
+              <Text style={styles.mealName}>
+                Quinoa Salad with Chickpeas and Avocado
+              </Text>
+              <Text style={styles.mealDesc}>
+                Rich in omega-3 and low glycemic index suitable for your current
+                levels.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.nutritionRow}>
+            <View style={styles.nutritionBadge}>
+              <Text style={[styles.nutritionText, {color: '#E55C13FF'}]}>
+                8g Carbs
+              </Text>
+            </View>
+            <View style={styles.nutritionBadgeProtein}>
+              <Text style={styles.nutritionText}>27g Protein</Text>
+            </View>
+            <View style={styles.nutritionBadgeFiber}>
+              <Text style={[styles.nutritionText, {color: '#027A48'}]}>
+                10g Fiber
+              </Text>
+            </View>
+          </View>
+        </View>
+        <MenuModal
+          updatedName={profile?.name}
+          visible={isMenuVisible}
+          onClose={() => setIsMenuVisible(false)}
+          navigation={navigation}
         />
-      </View>
-      <FloatingAction
-        actions={actions}
-        onPressItem={handleOptionSelect}
-        color="#4252FF"
-        floatingIcon={<Text style={styles.plusIcon}>+</Text>}
-      />
+      </ScrollView>
     </SafeAreaView>
   );
 }

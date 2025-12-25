@@ -61,4 +61,17 @@ export const appIcons = {
   send: require('../../assets/icons/send.png'),
   robo: require('../../assets/icons/robo.png'),
   User: require('../../assets/icons/User.png'),
+  //Ai Forcast
+  kidney: require('../../assets/icons/kidney.png'),
+  heart: require('../../assets/icons/heart.png'),
+  nerve: require('../../assets/icons/nerve.png'),
+  eye: require('../../assets/icons/eye.png'),
+  tip: require('../../assets/icons/tip.png'),
+  arrowDown: require('../../assets/icons/arrowDown.png'),
+  arrowUp: require('../../assets/icons/arrowUp.png'),
+
+  aistars: require('../../assets/icons/aistars.png'),
+  trackSugar: require('../../assets/icons/trackSugar.png'),
+  spike: require('../../assets/icons/spike.png'),
+  forwardArrow: require('../../assets/icons/forwardArrow.png'),
 };

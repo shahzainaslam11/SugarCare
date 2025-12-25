@@ -93,6 +93,11 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
       icon: '📊',
     },
     {
+      id: 'PredictSugarAlert',
+      title: 'Predict Sugar Alert',
+      icon: '📊',
+    },
+    {
       id: 'settings',
       title: 'App Settings',
       icon: '⚙️',
@@ -121,6 +126,9 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
           break;
         case 'AIForecast':
           navigation.navigate('AppScreens', {screen: 'AIForecast'});
+          break;
+        case 'PredictSugarAlert':
+          navigation.navigate('AppScreens', {screen: 'PredictSugarAlert'});
           break;
         default:
           break;
@@ -329,7 +337,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginTop: HP(10),
+    marginTop: HP(4),
   },
   profileHeader: {
     flexDirection: 'row',
