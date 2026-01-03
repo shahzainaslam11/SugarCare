@@ -10,7 +10,6 @@ import AddHBA1CTest from '../../screens/App/AddHBA1CTest';
 import Recipe from '../../screens/App/WhatToEat/Recipe';
 import InsightDetails from '../../screens/App/CommunityInsight/InsightDetails';
 import ChatScreen from '../../screens/App/ChatScreen';
-import HbA1cReportScreen from '../../screens/App/HbA1C/HbA1C';
 import NewHbA1cReport from '../../screens/App/AddHBA1CTest/NewHbA1cReport';
 import FAQs from '../../screens/App/SettingsScreen/FAQs';
 import PrivacyPolicy from '../../screens/App/SettingsScreen/PrivacyPolicy';
@@ -18,6 +17,7 @@ import EditProfile from '../../screens/App/SettingsScreen/EditProfile';
 import Notification from '../../screens/App/Notification/Notification';
 import AIForecast from '../../screens/App/AIForecast/AIForecast';
 import PredictSugarAlert from '../../screens/App/PredictSugarAlert';
+import PredictInputs from '../../screens/App/PredictSugarAlert/PredictInputs';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +42,7 @@ function AppScreens() {
       <Stack.Screen name="Notification" component={Notification} />
       <Stack.Screen name="AIForecast" component={AIForecast} />
       <Stack.Screen name="PredictSugarAlert" component={PredictSugarAlert} />
+      <Stack.Screen name="PredictInputs" component={PredictInputs} />
     </Stack.Navigator>
   );
 }

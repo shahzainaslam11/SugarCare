@@ -9,17 +9,12 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {
-  LineChart,
-  AreaChart,
-  Grid,
-  YAxis,
-  XAxis,
-} from 'react-native-svg-charts';
+import {AreaChart, Grid, YAxis} from 'react-native-svg-charts';
 import {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import * as shape from 'd3-shape';
 import {appIcons} from '../../../utilities';
-import {Header} from '../../../components';
+import {AppButton, Header} from '../../../components';
+import styles from './styles';
 
 export default function PredictiveSugarAlert() {
   const navigation = useNavigation();
@@ -97,15 +92,11 @@ export default function PredictiveSugarAlert() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Header
+        title="Predictive Sugar Alert"
+        onPress={() => navigation.goBack()}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Header
-          title="Predictive Sugar Alert"
-          onPress={() => navigation.goBack()}
-        />
-
-        {/* Header */}
-
-        {/* Main Card */}
         <View style={styles.alertCard}>
           <View style={styles.alertHeader}>
             <Text style={styles.alertTitle}>Glucose Spike Expected</Text>
@@ -121,6 +112,8 @@ export default function PredictiveSugarAlert() {
             </View>
 
             <View style={styles.dottedLineContainer}>
+              <View style={styles.dottedLine} />
+
               <Text style={styles.timeLabel}>In 2hrs</Text>
               <View style={styles.dottedLine} />
             </View>
@@ -131,7 +124,6 @@ export default function PredictiveSugarAlert() {
             </View>
           </View>
 
-          {/* Perfect Matching Chart */}
           <View style={styles.chartContainer}>
             <YAxis
               data={data}
@@ -175,204 +167,19 @@ export default function PredictiveSugarAlert() {
           </Text>
 
           <TouchableOpacity style={styles.remindButton}>
-            <Image source={appIcons.bell} style={styles.bellIcon} />
+            <Image
+              source={appIcons.bellIcon}
+              style={styles.bellIcon}
+              resizeMode="contain"
+            />
             <Text style={styles.remindText}>Remind me in 30 mins</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Done Button */}
       <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.doneButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.doneText}>Done</Text>
-        </TouchableOpacity>
+        <AppButton title="Done" onPress={() => navigation.goBack()} />
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  backIcon: {
-    width: 24,
-    height: 24,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-
-  alertCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  alertTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#d32f2f',
-  },
-  confidenceBadge: {
-    backgroundColor: '#e0f2fe',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  confidenceText: {
-    color: '#0369a1',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  readingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  readingBox: {
-    backgroundColor: '#f1f5f9',
-    padding: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    minWidth: 100,
-  },
-  readingLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  readingValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  readingValuePredicted: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F38484FF',
-  },
-  dottedLineContainer: {
-    alignItems: 'center',
-  },
-  dottedLine: {
-    width: 60,
-    borderBottomWidth: 2,
-    borderStyle: 'dotted',
-    borderColor: '#ccc',
-    marginTop: 8,
-  },
-  timeLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-
-  chartContainer: {
-    flexDirection: 'row',
-    height: 220,
-    marginBottom: 20,
-  },
-
-  description: {
-    fontSize: 14,
-    color: '#444',
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-
-  suggestionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 100,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  suggestionHeader: {
-    backgroundColor: '#e0f2fe',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 12,
-  },
-  suggestionTitle: {
-    color: '#0369a1',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  suggestionText: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  remindButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingVertical: 14,
-    borderRadius: 30,
-  },
-  bellIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  remindText: {
-    color: '#2563eb',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-  },
-  doneButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  doneText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-});

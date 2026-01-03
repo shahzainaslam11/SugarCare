@@ -10,6 +10,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -21,6 +22,7 @@ import {
   WP,
   showSuccess,
   showError,
+  appIcons,
 } from '../../utilities';
 import {logoutUser} from '../../redux/slices/authSlice';
 
@@ -75,32 +77,32 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
     {
       id: 'whatToEat',
       title: 'What to Eat?',
-      icon: '🍽️',
+      icon: appIcons.eat,
     },
     {
       id: 'community',
       title: 'Community Insights',
-      icon: '👥',
+      icon: appIcons.communityInsights,
     },
     {
       id: 'hba1c',
       title: 'Add HBA1C Test Record',
-      icon: '📊',
+      icon: appIcons.User,
     },
     {
       id: 'AIForecast',
       title: 'AI Risk Foecasting',
-      icon: '📊',
+      icon: appIcons.aiRisk,
     },
     {
-      id: 'PredictSugarAlert',
+      id: 'PredictInputs',
       title: 'Predict Sugar Alert',
-      icon: '📊',
+      icon: appIcons.aiRisk,
     },
     {
       id: 'settings',
       title: 'App Settings',
-      icon: '⚙️',
+      icon: appIcons.setting,
     },
   ];
 
@@ -127,8 +129,8 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
         case 'AIForecast':
           navigation.navigate('AppScreens', {screen: 'AIForecast'});
           break;
-        case 'PredictSugarAlert':
-          navigation.navigate('AppScreens', {screen: 'PredictSugarAlert'});
+        case 'PredictInputs':
+          navigation.navigate('AppScreens', {screen: 'PredictInputs'});
           break;
         default:
           break;
@@ -243,7 +245,6 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
             <SafeAreaView
               style={styles.safeArea}
               edges={['right', 'top', 'bottom']}>
-              {/* Profile Header */}
               <View style={styles.profileHeader}>
                 <View style={styles.profileIcon}>
                   <Text style={styles.profileIconText}>👤</Text>
@@ -252,12 +253,12 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
                   <Text style={styles.profileName}>{userName}</Text>
                   <Text style={styles.profileEmail}>{userEmail}</Text>
                 </View>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={handleOverlayPress}
                   style={styles.closeButton}
                   hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                   <Text style={styles.closeIcon}>×</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               {/* Menu Items */}
@@ -271,7 +272,12 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
                     ]}
                     onPress={() => handleMenuItemPress(item.id)}
                     activeOpacity={0.7}>
-                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
+                    <Image
+                      source={item?.icon}
+                      style={styles.menuItemIcon}
+                      resizeMode="contain"
+                    />
+                    {/* <Text style={styles.menuItemIcon}>{item.icon}</Text> */}
                     <View style={styles.menuItemTextContainer}>
                       <Text style={styles.menuItemTitle}>{item.title}</Text>
                     </View>
@@ -404,10 +410,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   menuItemIcon: {
-    fontSize: size.h4,
-    marginRight: WP(4),
     width: WP(6),
-    textAlign: 'center',
+    height: WP(6),
+    marginRight: WP(4),
+    tintColor: '#787575',
   },
   menuItemTextContainer: {
     flex: 1,

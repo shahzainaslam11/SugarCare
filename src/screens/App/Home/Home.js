@@ -11,11 +11,17 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {ChartComponent, MenuModal} from '../../../components';
-import {fetchSugarRecords} from '../../../redux/slices/homeSlice';
 import {fetchProfile} from '../../../redux/slices/profileSlice';
 import {appIcons} from '../../../utilities';
 import styles from './styles';
+import {fetchSugarRecords} from '../../../redux/slices/sugarForecastSlice';
 
+const RANGE_MAP = {
+  Today: 'Today',
+  '1W': 'OneWeek',
+  '1M': 'OneMonth',
+  'All Time': 'AllTime',
+};
 export default function Home() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -23,6 +29,15 @@ export default function Home() {
   const {sugarRecords, loading} = useSelector(state => state.home);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const {data: profile} = useSelector(state => state.profile);
+  const [activeRange, setActiveRange] = useState('Today');
+
+  const {
+    graphData: sugarGraphData,
+    stats: sugarStats,
+    loading: sugarLoading,
+    error: sugarError,
+  } = useSelector(state => state.sugarForecast);
+  const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
   console.log('profile---->', JSON.stringify(profile?.id));
 
@@ -31,10 +46,17 @@ export default function Home() {
   };
   useEffect(() => {
     if (user?.id && accessToken) {
-      dispatch(fetchSugarRecords({user_id: user?.id, token: accessToken}));
+      dispatch(
+        fetchSugarRecords({
+          user_id: user.id,
+          time_range: RANGE_MAP[activeRange],
+          token: accessToken,
+        }),
+      );
+
       dispatch(fetchProfile({token: accessToken}));
     }
-  }, [dispatch, user, accessToken]);
+  }, [dispatch, user, accessToken, activeRange]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,10 +79,18 @@ export default function Home() {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
-        <ChartComponent loading={loading} sugarData={sugarRecords} />
+        <ChartComponent
+          activeRange={activeRange}
+          onChangeRange={setActiveRange}
+          chart={chartData}
+        />
 
         <View style={styles.actionButtonsRow}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AppScreens', {screen: 'NewSugarRecord'})
+            }
+            style={styles.actionButton}>
             <Image
               source={appIcons.trackSugar}
               style={styles.actionIcon}
@@ -69,7 +99,9 @@ export default function Home() {
             <Text style={styles.actionText}>Add Sugar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Scan')}
+            style={styles.actionButton}>
             <Image
               source={appIcons.activeScan}
               style={styles.actionIcon}
@@ -78,7 +110,11 @@ export default function Home() {
             <Text style={styles.actionText}>Scan Food</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AppScreens', {screen: 'ChatScreen'})
+            }
+            style={styles.actionButton}>
             <Image
               source={appIcons.aiIcon}
               style={styles.actionIcon}
@@ -100,7 +136,11 @@ export default function Home() {
           <Text style={styles.spikeDescription}>
             Based on your recent activity, your sugar may spike in next 2hrs
           </Text>
-          <TouchableOpacity style={styles.seeSuggestionsButton}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AppScreens', {screen: 'PredictSugarAlert'})
+            }
+            style={styles.seeSuggestionsButton}>
             <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
             <Image
               source={appIcons.forwardArrow}
@@ -127,7 +167,11 @@ export default function Home() {
               <Text style={styles.safeText}>Safe</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.seeDetailButton}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AppScreens', {screen: 'AIForecast'})
+            }
+            style={styles.seeDetailButton}>
             <Text style={styles.seeDetailText}>See in detail</Text>
             <Image
               source={appIcons.forwardArrow}
@@ -141,7 +185,10 @@ export default function Home() {
         <View style={styles.mealCard}>
           <View style={styles.mealHeader}>
             <Text style={styles.mealTitle}>Suggested Meal</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('AppScreens', {screen: 'WhatToEat'})
+              }>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>

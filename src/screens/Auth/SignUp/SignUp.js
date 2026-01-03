@@ -59,6 +59,7 @@ export default function SignUp() {
     weight: '',
     diabetesType: '',
     cholesterol: '',
+    hba1c: '',
     usingInsulin: false,
     password: '',
     confirmPassword: '',
@@ -91,6 +92,7 @@ export default function SignUp() {
                 weight_kg: Number(values.weight),
                 diabetes_type: values.diabetesType,
                 cholesterol_mg_dl: Number(values.cholesterol),
+                hba1c_percent: Number(values.hba1c),
                 using_insulin: values.usingInsulin,
               };
 
@@ -103,6 +105,9 @@ export default function SignUp() {
                 if (res.meta.requestStatus === 'fulfilled') {
                   showSuccess('Signup successful! Please login.');
                   navigation.navigate('LogIn', {email: values.email});
+                } else if (res.payload?.error) {
+                  // Show the exact backend error message from the "error" field
+                  showError(res.payload.error);
                 } else if (res.payload?.details?.validation_errors) {
                   // Extract and display backend validation errors
                   const validationErrors =
@@ -114,9 +119,12 @@ export default function SignUp() {
                     )
                     .join('\n');
                   showError(messages);
+                } else if (res.payload?.message) {
+                  // Use the general message field
+                  showError(res.payload.message);
                 } else {
                   // Fallback message
-                  showError(res.payload?.message || 'Sign up failed.');
+                  showError('Sign up failed. Please try again.');
                 }
               } catch (e) {
                 console.log('Unexpected error:', e);
@@ -218,6 +226,31 @@ export default function SignUp() {
                     />
                   </View>
                 </View>
+                {/* Cholesterol + HbA1c Row */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="Cholesterol (mg/dL)"
+                      placeholder="e.g., 100"
+                      value={values.cholesterol}
+                      onChangeText={handleChange('cholesterol')}
+                      onBlur={handleBlur('cholesterol')}
+                      keyboardType="numeric"
+                      errorMessage={touched.cholesterol && errors.cholesterol}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <AppInput
+                      title="HbA1c (%)"
+                      placeholder="e.g., 5.7"
+                      value={values.hba1c}
+                      onChangeText={handleChange('hba1c')}
+                      onBlur={handleBlur('hba1c')}
+                      keyboardType="numeric"
+                      errorMessage={touched.hba1c && errors.hba1c}
+                    />
+                  </View>
+                </View>
 
                 {/* Diabetes Type */}
                 <CustomDropdown
@@ -232,17 +265,6 @@ export default function SignUp() {
                   items={diabetesItems}
                   placeholder="Select"
                   errorMessage={touched.diabetesType && errors.diabetesType}
-                />
-
-                {/* Cholesterol */}
-                <AppInput
-                  title="Cholesterol (mg/dL)"
-                  placeholder="e.g., 100"
-                  value={values.cholesterol}
-                  onChangeText={handleChange('cholesterol')}
-                  onBlur={handleBlur('cholesterol')}
-                  keyboardType="numeric"
-                  errorMessage={touched.cholesterol && errors.cholesterol}
                 />
 
                 {/* Using Insulin */}

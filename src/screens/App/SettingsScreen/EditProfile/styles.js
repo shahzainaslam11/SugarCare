@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   cameraBtn: {
     position: 'absolute',
     bottom: 0,
-    right: WP(32),
+    right: WP(37),
     backgroundColor: colors.p1,
     padding: WP(1.5),
     borderRadius: WP(5),
@@ -47,9 +47,9 @@ const styles = StyleSheet.create({
     marginRight: WP(2),
   },
   saveBtn: {
-    marginBottom: HP(3),
+    marginBottom: HP(1),
     alignSelf: 'center',
-    width: '80%',
+    width: '90%',
   },
   insulinText: {
     flex: 1,
@@ -63,6 +63,19 @@ const styles = StyleSheet.create({
     fontSize: size.small,
     fontFamily: family.inter_medium,
     marginTop: HP(1),
+  },
+  removeBadge: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.p1,
+  },
+  removeBadgeText: {
+    color: colors.p1,
+    fontSize: size.xsmall,
+    fontFamily: family.inter_medium,
   },
 });
 

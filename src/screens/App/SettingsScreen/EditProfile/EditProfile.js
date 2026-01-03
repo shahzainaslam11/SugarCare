@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  ScrollView,
   Switch,
   ActivityIndicator,
   Alert,
@@ -24,7 +23,7 @@ import {
   showSuccess,
   showError,
 } from '../../../../utilities';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import styles from './styles';
@@ -35,176 +34,189 @@ import {
   uploadProfileImage,
   deleteProfileImage,
 } from '../../../../redux/slices/profileSlice';
-
 import ImageResizer from 'react-native-image-resizer';
 
 const EditProfile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+
   const {data: profile, loading} = useSelector(state => state.profile);
   const {accessToken} = useSelector(state => state.auth);
 
-  // FIX: Correct image URL
-  const imageUrl = profile?.profile_image ?? null;
-  const imageIsPresent = !!imageUrl;
+  /* ---------------- IMAGE STATE ---------------- */
+  const [localImage, setLocalImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
+  const serverImageUrl = profile?.profile_image
+    ? `${profile.profile_image}?t=${profile.updated_at}`
+    : null;
+
+  const imageSource = localImage
+    ? {uri: localImage}
+    : serverImageUrl
+    ? {uri: serverImageUrl}
+    : appImages.messi;
+  console.log('imageSource', imageSource);
+
+  /* ---------------- FORM STATE ---------------- */
   const [name, setName] = useState('');
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState('');
-  const [genderItems] = useState([
-    {label: 'Male', value: 'male'},
-    {label: 'Female', value: 'female'},
-    {label: 'Other', value: 'other'},
-  ]);
   const [age, setAge] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [diabetesType, setDiabetesType] = useState('');
   const [diabetesOpen, setDiabetesOpen] = useState(false);
-  const [diabetesItems] = useState([
+  const [cholesterol, setCholesterol] = useState('');
+  const [usingInsulin, setUsingInsulin] = useState(false);
+
+  const genderItems = [
+    {label: 'Male', value: 'male'},
+    {label: 'Female', value: 'female'},
+    {label: 'Other', value: 'other'},
+  ];
+
+  const diabetesItems = [
     {label: 'Type 1', value: 'type1'},
     {label: 'Type 2', value: 'type2'},
     {label: 'Prediabetes', value: 'prediabetes'},
     {label: 'Gestational', value: 'gestational'},
     {label: 'None', value: 'none'},
-  ]);
-  const [cholesterol, setCholesterol] = useState('');
-  const [usingInsulin, setUsingInsulin] = useState(false);
+  ];
 
-  const getProfileData = useCallback(() => {
-    if (accessToken) {
-      dispatch(fetchProfile({token: accessToken}))
-        .unwrap()
-        .then(profileData => {
-          setName(profileData.name || '');
-          setGenderValue(profileData.gender || '');
-          setAge(profileData.age?.toString() || '');
-          setHeight(profileData.height_cm?.toString() || '');
-          setWeight(profileData.weight_kg?.toString() || '');
-          setDiabetesType(profileData.diabetes_type || '');
-          setCholesterol(profileData.cholesterol_mg_dl?.toString() || '');
-          setUsingInsulin(profileData.using_insulin || false);
-        })
-        .catch(err => {
-          showError(err?.message || 'Failed to fetch profile');
-        });
-    }
+  /* ---------------- FETCH PROFILE ---------------- */
+  const loadProfile = useCallback(() => {
+    if (!accessToken) return;
+
+    dispatch(fetchProfile({token: accessToken}))
+      .unwrap()
+      .then(data => {
+        console.log('data---->', JSON.stringify(data));
+        setLocalImage(null);
+        setName(data.name || '');
+        setGenderValue(data.gender || '');
+        setAge(data.age?.toString() || '');
+        setHeight(data.height_cm?.toString() || '');
+        setWeight(data.weight_kg?.toString() || '');
+        setDiabetesType(data.diabetes_type || '');
+        setCholesterol(data.cholesterol_mg_dl?.toString() || '');
+        setUsingInsulin(!!data.using_insulin);
+      })
+      .catch(err => showError(err?.message || 'Failed to load profile'));
   }, [accessToken, dispatch]);
 
-  useEffect(() => {
-    getProfileData();
-  }, [getProfileData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile]),
+  );
 
+  /* ---------------- IMAGE PICKER ---------------- */
   const pickImage = () => {
-    Alert.alert(
-      'Change Photo',
-      'Choose an option',
-      [
-        {text: 'Camera', onPress: openCamera},
-        {text: 'Gallery', onPress: openLibrary},
-        {text: 'Cancel', style: 'cancel'},
-      ],
-      {cancelable: true},
-    );
+    Alert.alert('Change Profile Photo', 'Select source', [
+      {text: 'Camera', onPress: openCamera},
+      {text: 'Gallery', onPress: openLibrary},
+      {text: 'Cancel', style: 'cancel'},
+    ]);
   };
 
-  const openCamera = () => {
-    launchCamera({mediaType: 'photo', quality: 0.9}, handleImageResponse);
-  };
+  const openCamera = () =>
+    launchCamera({mediaType: 'photo', quality: 0.9}, handleImage);
 
-  const openLibrary = () => {
-    launchImageLibrary({mediaType: 'photo', quality: 0.9}, handleImageResponse);
-  };
+  const openLibrary = () =>
+    launchImageLibrary({mediaType: 'photo', quality: 0.9}, handleImage);
 
-  // ⭐ FIX: Correct image orientation before upload
-  const handleImageResponse = async response => {
-    if (response.didCancel) return;
-    if (response.errorCode) {
-      Alert.alert('Error', response.errorMessage);
-      return;
-    }
+  const handleImage = async response => {
+    if (response.didCancel || response.errorCode) return;
 
-    if (response.assets?.[0]) {
-      const asset = response.assets[0];
+    const asset = response.assets?.[0];
+    if (!asset?.uri) return;
 
-      try {
-        // FIX: Resize + Correct Orientation
-        const fixedImage = await ImageResizer.createResizedImage(
-          asset.uri,
-          800,
-          800,
-          'JPEG',
-          90,
-          0, // <-- this auto-fixes rotation!
-          undefined,
-          false,
-          {mode: 'contain'},
-        );
+    try {
+      const resized = await ImageResizer.createResizedImage(
+        asset.uri,
+        800,
+        800,
+        'JPEG',
+        90,
+      );
 
-        const file = {
-          uri:
-            Platform.OS === 'ios'
-              ? fixedImage.uri.replace('file://', '')
-              : fixedImage.uri,
-          type: asset.type || 'image/jpeg',
-          name: asset.fileName || `img_${Date.now()}.jpg`,
-        };
+      setLocalImage(resized.uri);
+      setUploadingImage(true);
 
-        dispatch(uploadProfileImage({token: accessToken, file}))
-          .unwrap()
-          .then(res => {
-            showSuccess(res?.message || 'Profile image updated');
-            getProfileData();
-          })
-          .catch(err => {
-            showError(err?.message || 'Failed to upload image');
-          });
-      } catch (err) {
-        showError('Image processing failed');
-      }
+      const file = {
+        uri:
+          Platform.OS === 'ios'
+            ? resized.uri.replace('file://', '')
+            : resized.uri,
+        type: asset.type || 'image/jpeg',
+        name: `profile_${Date.now()}.jpg`,
+      };
+
+      dispatch(uploadProfileImage({token: accessToken, file}))
+        .unwrap()
+        .then(() => {
+          showSuccess('Profile image updated');
+          setUploadingImage(false);
+          loadProfile();
+        })
+        .catch(err => {
+          setUploadingImage(false);
+          setLocalImage(null);
+          showError(err?.message || 'Upload failed');
+        });
+    } catch {
+      showError('Image processing failed');
     }
   };
 
   const removeImage = () => {
-    dispatch(deleteProfileImage({token: accessToken}))
-      .unwrap()
-      .then(() => {
-        showSuccess('Profile image removed');
-        getProfileData();
-      })
-      .catch(err => {
-        showError(err?.message || 'Failed to delete image');
-      });
+    Alert.alert('Remove Photo', 'Are you sure?', [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          dispatch(deleteProfileImage({token: accessToken}))
+            .unwrap()
+            .then(() => {
+              showSuccess('Profile image removed');
+              loadProfile();
+            })
+            .catch(err => showError(err?.message || 'Failed to remove image'));
+        },
+      },
+    ]);
   };
 
+  /* ---------------- SAVE ---------------- */
   const saveProfile = () => {
-    const payload = {
-      name,
-      dob: profile?.dob || '',
-      age: Number(age),
-      height_cm: Number(height),
-      weight_kg: Number(weight),
-      gender: genderValue,
-      diabetes_type: diabetesType,
-      cholesterol_mg_dl: Number(cholesterol),
-      using_insulin: usingInsulin,
-      city: profile?.city || '',
-    };
-
-    dispatch(updateProfile({token: accessToken, payload}))
+    dispatch(
+      updateProfile({
+        token: accessToken,
+        payload: {
+          name,
+          age: Number(age),
+          height_cm: Number(height),
+          weight_kg: Number(weight),
+          gender: genderValue,
+          diabetes_type: diabetesType,
+          cholesterol_mg_dl: Number(cholesterol),
+          using_insulin: usingInsulin,
+        },
+      }),
+    )
       .unwrap()
       .then(() => {
-        showSuccess('Profile updated successfully');
+        showSuccess('Profile updated');
         navigation.goBack();
       })
-      .catch(err => {
-        showError(err?.message || 'Failed to update profile');
-      });
+      .catch(err => showError(err?.message || 'Update failed'));
   };
 
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={styles.loaderScreen}>
         <ActivityIndicator size="large" color={colors.p1} />
       </View>
     );
@@ -214,120 +226,109 @@ const EditProfile = () => {
     <SafeAreaView style={styles.container}>
       <Header title="Edit Profile" onPress={() => navigation.goBack()} />
 
-      <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.avatarContainer}>
-          <Image
-            source={imageUrl ? {uri: imageUrl} : appImages.messi}
-            style={styles.avatar}
-            resizeMode="cover"
-          />
+          <Image source={imageSource} style={styles.avatar} />
 
           <TouchableOpacity style={styles.cameraBtn} onPress={pickImage}>
             <Image source={appIcons.camera} style={styles.cameraIcon} />
           </TouchableOpacity>
 
-          {imageIsPresent && (
-            <TouchableOpacity style={styles.removeBtn} onPress={removeImage}>
-              <Text style={styles.removeText}>Remove</Text>
+          {profile?.profile_image && (
+            <TouchableOpacity style={styles.removeBadge} onPress={removeImage}>
+              <Text style={styles.removeBadgeText}>Remove</Text>
             </TouchableOpacity>
+          )}
+
+          {uploadingImage && (
+            <View style={styles.loaderOverlay}>
+              <ActivityIndicator color={colors.white} />
+            </View>
           )}
         </View>
 
-        <AppInput
-          title="Name"
-          placeholder="Enter name"
-          value={name}
-          onChangeText={setName}
-        />
+        <View style={styles.scrollContent}>
+          <AppInput title="Name" value={name} onChangeText={setName} />
+          <AppInput title="Email" value={profile?.email} editable={false} />
 
-        <AppInput title="Email" value={profile?.email} editable={false} />
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <CustomDropdown
+                title="Gender"
+                open={genderOpen}
+                setOpen={setGenderOpen}
+                value={genderValue}
+                setValue={setGenderValue}
+                items={genderItems}
+              />
+            </View>
 
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <CustomDropdown
-              title="Select Gender"
-              open={genderOpen}
-              setOpen={setGenderOpen}
-              value={genderValue}
-              setValue={setGenderValue}
-              items={genderItems}
-            />
+            <View style={styles.half}>
+              <AppInput
+                title="Age"
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+              />
+            </View>
           </View>
 
-          <View style={styles.half}>
-            <AppInput
-              title="Age"
-              placeholder="Age"
-              keyboardType="numeric"
-              value={age}
-              onChangeText={setAge}
-            />
-          </View>
-        </View>
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <AppInput
+                title="Height (cm)"
+                keyboardType="numeric"
+                value={height}
+                onChangeText={setHeight}
+              />
+            </View>
 
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <AppInput
-              title="Height (cm)"
-              placeholder="Height"
-              keyboardType="numeric"
-              value={height}
-              onChangeText={setHeight}
-            />
+            <View style={styles.half}>
+              <AppInput
+                title="Weight (kg)"
+                keyboardType="numeric"
+                value={weight}
+                onChangeText={setWeight}
+              />
+            </View>
           </View>
 
-          <View style={styles.half}>
-            <AppInput
-              title="Weight (kg)"
-              placeholder="Weight"
-              keyboardType="numeric"
-              value={weight}
-              onChangeText={setWeight}
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <CustomDropdown
+                title="Diabetes Type"
+                open={diabetesOpen}
+                setOpen={setDiabetesOpen}
+                value={diabetesType}
+                setValue={setDiabetesType}
+                items={diabetesItems}
+              />
+            </View>
+
+            <View style={styles.half}>
+              <AppInput
+                title="Cholesterol"
+                keyboardType="numeric"
+                value={cholesterol}
+                onChangeText={setCholesterol}
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.insulinText}>Using Insulin</Text>
+            <Switch
+              value={usingInsulin}
+              onValueChange={setUsingInsulin}
+              trackColor={{false: colors.g2, true: colors.p1}}
             />
           </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <CustomDropdown
-              title="Diabetes Type"
-              open={diabetesOpen}
-              setOpen={setDiabetesOpen}
-              value={diabetesType}
-              setValue={setDiabetesType}
-              items={diabetesItems}
-            />
-          </View>
-
-          <View style={styles.half}>
-            <AppInput
-              title="Cholesterol (mg/dL)"
-              placeholder="mg/dL"
-              keyboardType="numeric"
-              value={cholesterol}
-              onChangeText={setCholesterol}
-            />
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.insulinText}>Using Insulin</Text>
-          <Switch
-            value={usingInsulin}
-            onValueChange={setUsingInsulin}
-            trackColor={{false: colors.g2, true: colors.p1}}
-            thumbColor={usingInsulin ? colors.white : colors.g3}
-          />
         </View>
       </KeyboardAwareScrollView>
 
-      <AppButton
-        title="Save"
-        containerStyle={styles.saveBtn}
-        onPress={saveProfile}
-      />
+      <View style={styles.saveBtn}>
+        <AppButton title="Save" onPress={saveProfile} />
+      </View>
     </SafeAreaView>
   );
 };

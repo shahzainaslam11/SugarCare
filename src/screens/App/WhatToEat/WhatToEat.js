@@ -1,121 +1,120 @@
+import React, {useState} from 'react';
 import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
-  Image,
   TouchableOpacity,
+  Image,
+  Modal,
 } from 'react-native';
-import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header} from '../../../components'; // Adjust the import path as needed
+import {Header, AppInput} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
-import {appImages, colors, family, HP, size, WP} from '../../../utilities';
+import {Formik} from 'formik';
+import * as Yup from 'yup';
+import {appImages, family, HP, size, WP} from '../../../utilities';
+import styles from './styles';
 
 const WhatToEat = () => {
   const navigation = useNavigation();
 
-  // State to manage the active meal type
   const [activeMealType, setActiveMealType] = useState('Breakfast');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [personalizedMeal, setPersonalizedMeal] = useState(null);
 
-  // Meal data based on meal type
-  const mealData = {
-    Breakfast: {
-      suggested: {
-        name: 'Oatmeal with Berries',
-        description:
-          'A warm bowl of oatmeal topped with fresh berries, providing a balanced start to your day.',
-        image: appImages.p1, // Replace with actual image URL or local asset
-      },
-      alternatives: [
-        {
-          name: 'Greek Yogurt with Honey',
-          image: appImages.p2,
-        }, // Replace with actual image
-        {name: 'Avocado Toast', image: appImages.p1}, // Replace with actual image
-        {
-          name: 'Scrambled Eggs with Spinach',
-          image: appImages.p2,
-        }, // Replace with actual image
-      ],
-    },
-    Lunch: {
-      suggested: {
-        name: 'Oatmeal with Berries',
-        description:
-          'A warm bowl of oatmeal topped with fresh berries, providing a balanced start to your day.',
-        image: appImages.p2, // Replace with actual image URL or local asset
-      },
-      alternatives: [
-        {
-          name: 'Quinoa Salad with Chickpeas and Avocado',
-          image: appImages.p11,
-        }, // Replace with actual image
-        {
-          name: 'Mediterranean Wrap with Hummus and Veggies',
-          image: appImages.p2,
-        }, // Replace with actual image
-        {
-          name: 'Spinach and Feta Stuffed Sweet Potatoes',
-          image: appImages.p2,
-        }, // Replace with actual image
-      ],
-    },
-    Dinner: {
-      suggested: {
-        name: 'Grilled Salmon with Quinoa',
-        description:
-          'A healthy dinner with grilled salmon and quinoa, rich in omega-3s and protein.',
+  // Validation Schema - ALL fields REQUIRED
+  const validationSchema = Yup.object().shape({
+    currentGlucose: Yup.number()
+      .typeError('Must be a valid number')
+      .positive('Glucose must be positive')
+      .min(50, 'Value too low')
+      .max(400, 'Value too high')
+      .required('Current glucose is required'),
+
+    diabetesControlLevel: Yup.number()
+      .typeError('Must be a valid number')
+      .positive('HbA1c must be positive')
+      .min(4, 'Value too low')
+      .max(15, 'Value too high')
+      .required('Diabetes control level (HbA1c) is required'),
+
+    mealDescription: Yup.string()
+      .trim()
+      .required('Meal description is required')
+      .max(100, 'Description too long (max 100 characters)'),
+
+    portionSize: Yup.string()
+      .trim()
+      .required('Portion size is required')
+      .max(50, 'Portion size too long'),
+  });
+
+  // Personalization logic
+  const getPersonalizedMeal = values => {
+    const glucose = parseFloat(values.currentGlucose);
+    const hba1c = parseFloat(values.diabetesControlLevel);
+
+    let suggestion = {
+      name: 'Balanced Veggie Bowl',
+      image: appImages.p11,
+      description:
+        'Low glycemic, fiber-rich meal suitable for your current levels.',
+    };
+
+    if (glucose > 160 || hba1c > 7.0) {
+      suggestion = {
+        name: 'Grilled Fish with Steamed Greens',
         image: appImages.p2,
-      },
-      alternatives: [
-        {
-          name: 'Chicken Stir-Fry with Veggies',
-          image: appImages.p2,
-        }, // Replace with actual image
-        {
-          name: 'Baked Cod with Asparagus',
-          image: appImages.p2,
-        }, // Replace with actual image
-        {name: 'Vegetable Curry', image: appImages.p2}, // Replace with actual image
-      ],
-    },
-    Snacks: {
-      suggested: {
-        name: 'Mixed Nuts and Fruit',
         description:
-          'A quick snack of mixed nuts and fruit for a healthy energy boost.',
-        image: appImages.p11, // Replace with actual image URL or local asset
-      },
-      alternatives: [
-        {
-          name: 'Carrot Sticks with Hummus',
-          image: appImages.p11,
-        }, // Replace with actual image
-        {
-          name: 'Apple Slices with Peanut Butter',
-          image: appImages.p2,
-        }, // Replace with actual image
-        {name: 'Cheese and Crackers', image: appImages.p2}, // Replace with actual image
-      ],
-    },
+          'Very low carb, high protein to help stabilize high glucose.',
+      };
+    } else if (
+      glucose < 100 &&
+      values.portionSize.toLowerCase().includes('large')
+    ) {
+      suggestion = {
+        name: 'Quinoa Salad with Chickpeas & Avocado',
+        image: appImages.p1,
+        description: 'Healthy carbs and fats to maintain stable energy.',
+      };
+    } else if (values.mealDescription.toLowerCase().includes('sweet')) {
+      suggestion = {
+        name: 'Greek Yogurt with Berries & Nuts',
+        image: appImages.p11,
+        description: 'Low-sugar sweet option with protein and healthy fats.',
+      };
+    }
+
+    return {
+      ...suggestion,
+      description: `${suggestion.description}\n\nTailored for glucose: ${glucose} mg/dL, HbA1c: ${hba1c}%, portion: ${values.portionSize}.`,
+    };
   };
 
-  const currentMeal = mealData[activeMealType];
-
-  // Function to navigate to Recipe screen with meal details
-  const navigateToRecipe = meal => {
-    navigation.navigate('Recipe', {
-      mealName: meal.name,
-      mealDescription: meal.description || 'No description available',
-      mealImage: meal.image,
-    });
+  // Default meals
+  const defaultMeal = {
+    Breakfast: {name: 'Oatmeal with Berries', image: appImages.p11},
+    Lunch: {name: 'Quinoa Salad with Chickpeas', image: appImages.p1},
+    Dinner: {name: 'Grilled Salmon with Veggies', image: appImages.p2},
+    Snacks: {name: 'Mixed Nuts and Apple', image: appImages.p11},
   };
+
+  const currentMeal = personalizedMeal || defaultMeal[activeMealType];
 
   return (
     <SafeAreaView style={styles.container}>
       <Header title="What to Eat?" onPress={() => navigation.goBack()} />
 
+      {/* Personalize Button */}
+      <View style={styles.personalizeContainer}>
+        <TouchableOpacity
+          style={styles.personalizeButton}
+          onPress={() => setModalVisible(true)}>
+          <Text style={styles.personalizeText}>Get Personalized Meal</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Meal Type Tabs */}
       <View style={styles.mealTypeContainer}>
         {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map(type => (
           <TouchableOpacity
@@ -135,153 +134,136 @@ const WhatToEat = () => {
           </TouchableOpacity>
         ))}
       </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Suggested Meal Section */}
         <View style={styles.suggestedMealSection}>
-          <Text style={styles.sectionTitle}>Suggested Meal</Text>
-          <TouchableOpacity
-            style={styles.mealCard}
-            onPress={() => navigateToRecipe(currentMeal.suggested)}>
+          <Text style={styles.sectionTitle}>
+            {personalizedMeal ? 'Your Personalized Meal' : 'Suggested Meal'}
+          </Text>
+
+          <TouchableOpacity style={styles.mealCard}>
             <Image
-              source={currentMeal.suggested.image}
+              source={currentMeal.image}
               style={styles.mealImage}
               resizeMode="cover"
             />
-            <Text style={styles.mealName}>{currentMeal.suggested.name}</Text>
+            <Text style={styles.mealName}>{currentMeal.name}</Text>
             <Text style={styles.mealDescription}>
-              {currentMeal.suggested.description}
+              {currentMeal.description ||
+                'A healthy and balanced option for you.'}
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Healthier Alternatives Section */}
-        <View style={styles.alternativesSection}>
-          <Text style={styles.sectionTitle}>Healthier Alternatives</Text>
-          {currentMeal.alternatives.map((alternative, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.alternativeCard}
-              onPress={() => navigateToRecipe(alternative)}>
-              <Image
-                source={alternative.image}
-                style={styles.alternativeImage}
-                resizeMode="cover"
-              />
-              <View style={styles.alternativeText}>
-                <Text style={styles.alternativeName}>{alternative.name}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
       </ScrollView>
+
+      {/* Personalization Modal - All Fields Required */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Personalize Your Meal</Text>
+
+            <Formik
+              initialValues={{
+                currentGlucose: '',
+                diabetesControlLevel: '',
+                mealDescription: '',
+                portionSize: '',
+              }}
+              validationSchema={validationSchema}
+              onSubmit={values => {
+                const meal = getPersonalizedMeal(values);
+                setPersonalizedMeal(meal);
+                setModalVisible(false);
+              }}>
+              {({
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+              }) => (
+                <View>
+                  {/* Current Glucose */}
+                  <AppInput
+                    title="Current Glucose (mg/dL)"
+                    placeholder="e.g. 140"
+                    keyboardType="numeric"
+                    value={values.currentGlucose}
+                    onChangeText={handleChange('currentGlucose')}
+                    onBlur={handleBlur('currentGlucose')}
+                    errorMessage={
+                      touched.currentGlucose && errors.currentGlucose
+                        ? errors.currentGlucose
+                        : ''
+                    }
+                  />
+
+                  {/* Diabetes Control Level (HbA1c) */}
+                  <AppInput
+                    title="Diabetes Control Level (HbA1c %)"
+                    placeholder="e.g. 6.5"
+                    keyboardType="decimal-pad"
+                    value={values.diabetesControlLevel}
+                    onChangeText={handleChange('diabetesControlLevel')}
+                    onBlur={handleBlur('diabetesControlLevel')}
+                    errorMessage={
+                      touched.diabetesControlLevel &&
+                      errors.diabetesControlLevel
+                        ? errors.diabetesControlLevel
+                        : ''
+                    }
+                  />
+
+                  {/* Meal Description */}
+                  <AppInput
+                    title="Meal Description"
+                    placeholder="e.g. craving something sweet"
+                    value={values.mealDescription}
+                    onChangeText={handleChange('mealDescription')}
+                    onBlur={handleBlur('mealDescription')}
+                    errorMessage={
+                      touched.mealDescription && errors.mealDescription
+                        ? errors.mealDescription
+                        : ''
+                    }
+                  />
+
+                  {/* Portion Size */}
+                  <AppInput
+                    title="Portion Size"
+                    placeholder="e.g. small, medium, large"
+                    value={values.portionSize}
+                    onChangeText={handleChange('portionSize')}
+                    onBlur={handleBlur('portionSize')}
+                    errorMessage={
+                      touched.portionSize && errors.portionSize
+                        ? errors.portionSize
+                        : ''
+                    }
+                  />
+
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => setModalVisible(false)}>
+                      <Text style={styles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.submitButton}
+                      onPress={handleSubmit}>
+                      <Text style={styles.submitText}>Get Suggestion</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </Formik>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  mealTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: HP(0.7),
-    backgroundColor: colors.g15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    marginHorizontal: WP(2),
-    borderRadius: 30,
-  },
-  mealTypeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-  },
-  activeButton: {
-    backgroundColor: colors.p1,
-  },
-  mealTypeText: {
-    color: colors.b1,
-    fontSize: size.medium,
-    fontFamily: family.inter_medium,
-  },
-  mealTypeTextActive: {
-    color: colors.white,
-    fontSize: size.medium,
-    fontFamily: family.inter_medium,
-  },
-  suggestedMealSection: {
-    padding: 20,
-    backgroundColor: '#ffffff',
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 10,
-  },
-  mealCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  mealImage: {
-    width: '100%',
-    height: 200,
-  },
-  mealName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2c3e50',
-    padding: 10,
-  },
-  mealDescription: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-  },
-  alternativesSection: {
-    padding: 20,
-    backgroundColor: '#ffffff',
-  },
-  alternativeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    marginBottom: 10,
-    padding: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  alternativeImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  alternativeText: {
-    flex: 1,
-  },
-  alternativeName: {
-    fontSize: 16,
-    color: '#2c3e50',
-  },
-});
 
 export default WhatToEat;
