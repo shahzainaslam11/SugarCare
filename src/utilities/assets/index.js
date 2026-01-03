@@ -74,4 +74,8 @@ export const appIcons = {
   trackSugar: require('../../assets/icons/trackSugar.png'),
   spike: require('../../assets/icons/spike.png'),
   forwardArrow: require('../../assets/icons/forwardArrow.png'),
+  bellIcon: require('../../assets/icons/bellIcon.png'),
+  eat: require('../../assets/icons/Eat.png'),
+  aiRisk: require('../../assets/icons/AiRisk.png'),
+  communityInsights: require('../../assets/icons/CommunityInsights.png'),
 };

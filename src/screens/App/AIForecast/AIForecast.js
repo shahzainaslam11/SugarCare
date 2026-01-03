@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import {appIcons} from '../../../utilities';
+import {Header} from '../../../components';
 
 // Reusable RiskCard Component
 const RiskCard = ({risk}) => {
@@ -143,13 +144,7 @@ export default function AIRiskForecasting({navigation}) {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={appIcons.back_Arrow} style={styles.iconSmall} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>AI Risk Forecasting</Text>
-        <Image source={appIcons.info} style={styles.iconSmall} />
-      </View>
+      <Header title="AI Risk Forecasting" onPress={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.scrollView}

@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   textStyle: {
     color: colors.b1,
     fontFamily: family.inter_bold,
-    fontSize: size.h3,
+    fontSize: size.large,
     textAlign: 'center',
     width: '70%',
   },

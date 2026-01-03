@@ -46,7 +46,11 @@ export const signUpVS = yup.object().shape({
       'Please provide a valid email address',
     ),
 
-  name: yup.string().required('Name Required').min(2, 'Name too short'),
+  name: yup
+    .string()
+    .required('Name Required')
+    .min(2, 'Name too short')
+    .matches(/^[a-zA-Z\s]*$/, 'Name should only contain letters'),
 
   gender: yup
     .string()
@@ -88,6 +92,13 @@ export const signUpVS = yup.object().shape({
     .min(50, 'Cholesterol too low')
     .max(600, 'Cholesterol too high')
     .required('Cholesterol Required'),
+
+  hba1c: yup
+    .number()
+    .typeError('HbA1c must be a number')
+    .min(2.0, 'HbA1c too low (normal range starts at ~4.0)')
+    .max(20.0, 'HbA1c too high (maximum realistic value is ~20)')
+    .required('HbA1c Required'),
 
   usingInsulin: yup.boolean(),
 

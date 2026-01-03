@@ -7,15 +7,15 @@ import {Fonts} from '../../../assets/fonts';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white, // Clean white background like screenshot
+    backgroundColor: colors.white,
   },
 
   scrollView: {
     flex: 1,
-    paddingHorizontal: WP(4), // ~16px
+    paddingHorizontal: WP(4),
+    paddingTop: HP(2),
   },
 
-  // Action Buttons Row (Add Sugar, Scan Food, Ask AI)
   actionButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
