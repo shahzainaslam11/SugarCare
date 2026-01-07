@@ -11,7 +11,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
-import {Header} from '../../../components';
+import {Header, SmallLoader} from '../../../components';
 import {colors, appImages} from '../../../utilities';
 import {fetchCommunityInsights} from '../../../redux/slices/communityInsightsSlice';
 import styles from './styles';
@@ -73,70 +73,63 @@ const CommunityInsight = () => {
             onChangeText={setSearchQuery}
           />
         </View>
+        {loading && <SmallLoader />}
 
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.p1} />
-        ) : error ? (
-          <Text style={{color: 'red', textAlign: 'center', marginTop: 20}}>
-            {error}
-          </Text>
-        ) : (
-          <>
-            {/* Featured Section */}
-            <View style={styles.featuredSection}>
-              <Text style={styles.sectionTitle}>Featured</Text>
-              <TouchableOpacity
-                style={styles.featuredCard}
-                onPress={() => navigateToInsightDetails(featuredInsight)}>
-                <Image
-                  source={{uri: featuredInsight.image}}
-                  style={styles.featuredImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.featuredText}>
-                  <Text style={styles.featuredTitle}>
-                    {featuredInsight.title}
-                  </Text>
-                  <Text style={styles.featuredDescription}>
-                    {featuredInsight.description}
-                    <TouchableOpacity>
-                      <Text style={styles.readMore}> Read More</Text>
-                    </TouchableOpacity>
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Explore Latest Section */}
-            <View style={styles.exploreSection}>
-              <Text style={styles.sectionTitle}>Explore Latest</Text>
-              {exploreInsights.length > 0 ? (
-                exploreInsights.map(insight => (
-                  <TouchableOpacity
-                    key={insight.id}
-                    style={styles.exploreCard}
-                    onPress={() => navigateToInsightDetails(insight)}>
-                    <Image
-                      source={{uri: insight.image}}
-                      style={styles.exploreImage}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.exploreText}>
-                      <Text style={styles.exploreTitle}>{insight.title}</Text>
-                      <Text style={styles.exploreTime}>
-                        {insight.read_time} min read
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <Text style={{textAlign: 'center', marginTop: 20}}>
-                  No more insights to explore
+        <>
+          {/* Featured Section */}
+          <View style={styles.featuredSection}>
+            <Text style={styles.sectionTitle}>Featured</Text>
+            <TouchableOpacity
+              style={styles.featuredCard}
+              onPress={() => navigateToInsightDetails(featuredInsight)}>
+              <Image
+                source={{uri: featuredInsight.image}}
+                style={styles.featuredImage}
+                resizeMode="cover"
+              />
+              <View style={styles.featuredText}>
+                <Text style={styles.featuredTitle}>
+                  {featuredInsight.title}
                 </Text>
-              )}
-            </View>
-          </>
-        )}
+                <Text style={styles.featuredDescription}>
+                  {featuredInsight.description}
+                  <TouchableOpacity>
+                    <Text style={styles.readMore}> Read More</Text>
+                  </TouchableOpacity>
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Explore Latest Section */}
+          <View style={styles.exploreSection}>
+            <Text style={styles.sectionTitle}>Explore Latest</Text>
+            {exploreInsights.length > 0 ? (
+              exploreInsights.map(insight => (
+                <TouchableOpacity
+                  key={insight.id}
+                  style={styles.exploreCard}
+                  onPress={() => navigateToInsightDetails(insight)}>
+                  <Image
+                    source={{uri: insight.image}}
+                    style={styles.exploreImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.exploreText}>
+                    <Text style={styles.exploreTitle}>{insight.title}</Text>
+                    <Text style={styles.exploreTime}>
+                      {insight.read_time} min read
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{textAlign: 'center', marginTop: 20}}>
+                No more insights to explore
+              </Text>
+            )}
+          </View>
+        </>
       </ScrollView>
     </SafeAreaView>
   );

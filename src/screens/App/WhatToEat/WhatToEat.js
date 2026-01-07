@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header, AppInput} from '../../../components';
+import {Header, AppInput, SmallLoader} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
@@ -234,7 +234,7 @@ const WhatToEat = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading && !apiRecommendations ? (
-          <ActivityIndicator size="large" color="#000" style={styles.loader} />
+          <SmallLoader />
         ) : error && !apiRecommendations ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : null}

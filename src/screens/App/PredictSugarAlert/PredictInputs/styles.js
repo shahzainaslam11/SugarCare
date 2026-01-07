@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   formSection: {
-    marginBottom: HP(2),
+    marginBottom: HP(0),
   },
   infoContainer: {
     backgroundColor: '#f0f9ff',

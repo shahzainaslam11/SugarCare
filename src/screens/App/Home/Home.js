@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  Alert,
+  AppState,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -22,6 +24,7 @@ const RANGE_MAP = {
   '1M': 'OneMonth',
   'All Time': 'AllTime',
 };
+
 export default function Home() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -30,6 +33,7 @@ export default function Home() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const {data: profile} = useSelector(state => state.profile);
   const [activeRange, setActiveRange] = useState('Today');
+  const appState = useRef(AppState.currentState);
 
   const {
     graphData: sugarGraphData,
@@ -39,14 +43,64 @@ export default function Home() {
   } = useSelector(state => state.sugarForecast);
   const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
-  console.log('profile---->', accessToken);
-  console.log('profile---->', user?.id);
-
-  const toggleMenu = () => {
-    setIsMenuVisible(!isMenuVisible);
+  // Function to show session expired message
+  const showSessionExpired = () => {
+    Alert.alert(
+      'Session Expired',
+      'Your session has expired. Please login again.',
+      [
+        {
+          text: 'Login',
+          onPress: () => {
+            // Navigate to login screen
+            // Adjust based on your navigation structure
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Auth'}],
+            });
+          },
+        },
+      ],
+    );
   };
+
+  // Function to check token validity
+  const checkTokenValidity = () => {
+    if (!accessToken) {
+      showSessionExpired();
+      return false;
+    }
+    return true;
+  };
+
+  // Handle app state changes (background/foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App came to foreground - check token
+        checkTokenValidity();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [accessToken]);
+
+  // Initial token check on mount
+  useEffect(() => {
+    checkTokenValidity();
+  }, []);
+
+  // Check token before API calls
   useEffect(() => {
     if (user?.id && accessToken) {
+      if (!checkTokenValidity()) return;
+
       dispatch(
         fetchSugarRecords({
           user_id: user.id,
@@ -59,6 +113,54 @@ export default function Home() {
     }
   }, [dispatch, user, accessToken, activeRange]);
 
+  // Handle API error responses
+  useEffect(() => {
+    if (
+      sugarError?.status === 401 ||
+      sugarError?.message?.includes('token') ||
+      sugarError?.message?.includes('unauthorized') ||
+      sugarError?.message?.includes('expired')
+    ) {
+      showSessionExpired();
+    }
+  }, [sugarError]);
+
+  // You can also add periodic token check (optional)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkTokenValidity();
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [accessToken]);
+
+  const toggleMenu = () => {
+    if (!checkTokenValidity()) return;
+    setIsMenuVisible(!isMenuVisible);
+  };
+
+  // Handle navigation with token check
+  const handleNavigation = screenName => {
+    if (!checkTokenValidity()) return;
+    navigation.navigate('AppScreens', {screen: screenName});
+  };
+
+  // If token is null, show redirecting screen
+  if (!accessToken) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <View
+          style={[
+            styles.container,
+            {justifyContent: 'center', alignItems: 'center'},
+          ]}>
+          <Text>Session expired. Redirecting to login...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -70,9 +172,7 @@ export default function Home() {
           <Text style={styles.title}>{profile?.name}</Text>
         </View>
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('AppScreens', {screen: 'Notification'})
-          }
+          onPress={() => handleNavigation('Notification')}
           style={styles.iconButton}>
           <Text style={styles.icon}>🔔</Text>
         </TouchableOpacity>
@@ -88,9 +188,7 @@ export default function Home() {
 
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'NewSugarRecord'})
-            }
+            onPress={() => handleNavigation('NewSugarRecord')}
             style={styles.actionButton}>
             <Image
               source={appIcons.trackSugar}
@@ -101,7 +199,10 @@ export default function Home() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('Scan')}
+            onPress={() => {
+              if (!checkTokenValidity()) return;
+              navigation.navigate('Scan');
+            }}
             style={styles.actionButton}>
             <Image
               source={appIcons.activeScan}
@@ -112,9 +213,7 @@ export default function Home() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'ChatScreen'})
-            }
+            onPress={() => handleNavigation('ChatScreen')}
             style={styles.actionButton}>
             <Image
               source={appIcons.aiIcon}
@@ -138,9 +237,7 @@ export default function Home() {
             Based on your recent activity, your sugar may spike in next 2hrs
           </Text>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'PredictSugarAlert'})
-            }
+            onPress={() => handleNavigation('PredictSugarAlert')}
             style={styles.seeSuggestionsButton}>
             <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
             <Image
@@ -169,9 +266,7 @@ export default function Home() {
             </View>
           </View>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'AIForecast'})
-            }
+            onPress={() => handleNavigation('AIForecast')}
             style={styles.seeDetailButton}>
             <Text style={styles.seeDetailText}>See in detail</Text>
             <Image
@@ -186,10 +281,7 @@ export default function Home() {
         <View style={styles.mealCard}>
           <View style={styles.mealHeader}>
             <Text style={styles.mealTitle}>Suggested Meal</Text>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('AppScreens', {screen: 'WhatToEat'})
-              }>
+            <TouchableOpacity onPress={() => handleNavigation('WhatToEat')}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
