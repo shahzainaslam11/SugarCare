@@ -12,9 +12,8 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import ImageResizer from 'react-native-image-resizer';
 import {appIcons, colors} from '../../../../utilities';
-import {Header} from '../../../../components';
+import {Header, NutritionCard} from '../../../../components';
 import styles from './styles';
-import NutritionCard from '../../../../components/Card/NutritionCard';
 
 const ScanResult = () => {
   const navigation = useNavigation();

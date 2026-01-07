@@ -101,7 +101,7 @@ const NutritionCard = ({
   </View>
 );
 
-export default NutritionCard;
+export {NutritionCard};
 
 const styles = StyleSheet.create({
   card: {

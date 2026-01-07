@@ -39,7 +39,8 @@ export default function Home() {
   } = useSelector(state => state.sugarForecast);
   const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
-  console.log('profile---->', JSON.stringify(profile?.id));
+  console.log('profile---->', accessToken);
+  console.log('profile---->', user?.id);
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);

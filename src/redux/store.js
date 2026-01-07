@@ -9,6 +9,9 @@ import chatReducer from './slices/chatSlice';
 import foodReducer from './slices/foodRecognitionSlice';
 import notificationReducer from './slices/notificationSlice';
 import reportReducer from './slices/reportSlice';
+import mealRecommendationsReducer from './slices/mealRecommendationsSlice';
+import communityInsightsReducer from './slices/communityInsightsSlice';
+import sugarAlertReducer from './slices/sugarAlertSlice';
 
 const store = configureStore({
   reducer: {
@@ -22,6 +25,9 @@ const store = configureStore({
     food: foodReducer,
     notifications: notificationReducer,
     report: reportReducer,
+    meals: mealRecommendationsReducer,
+    communityInsights: communityInsightsReducer,
+    sugarAlert: sugarAlertReducer,
   },
 });
 
