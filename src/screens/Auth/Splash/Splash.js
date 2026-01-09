@@ -1,23 +1,53 @@
 import React, {useEffect} from 'react';
-import {View, Text, ImageBackground, StyleSheet, Image} from 'react-native';
+import {
+  View,
+  Text,
+  ImageBackground,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import {appIcons, appImages} from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import styles from './styles';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
+  const {accessToken, isInitialized} = useSelector(state => state.auth);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Auth');
-    }, 2000);
+    let timeoutId;
 
-    return () => clearTimeout(timer);
-  }, [navigation]);
+    const navigateBasedOnAuth = () => {
+      // Check if Redux Persist has rehydrated and auth is initialized
+      if (isInitialized !== undefined) {
+        // or use a specific initialization flag
+        if (accessToken) {
+          console.log('Token exists, navigating to BottomTabs');
+          navigation.replace('BottomTabs');
+        } else {
+          console.log('No token, navigating to Auth');
+          navigation.replace('Auth');
+        }
+      } else {
+        // If not initialized yet, wait a bit more
+        timeoutId = setTimeout(navigateBasedOnAuth, 100);
+      }
+    };
+
+    // Start checking after a short delay to ensure Redux is hydrated
+    timeoutId = setTimeout(navigateBasedOnAuth, 1000);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [navigation, accessToken, isInitialized]);
+
   return (
     <ImageBackground
       source={appImages.bgImage}
       style={styles.background}
-      resizeMode="stretch">
+      resizeMode="cover">
       <View style={styles.overlay}>
         <View style={styles.row}>
           <Image
@@ -28,47 +58,16 @@ const SplashScreen = () => {
           <View style={styles.textContainer}>
             <Text style={styles.title}>SugarCare</Text>
             <Text style={styles.subtitle}>Stay Balanced, Stay Well</Text>
+            <ActivityIndicator
+              size="small"
+              color="#ffffff"
+              style={{marginTop: 20}}
+            />
           </View>
         </View>
       </View>
     </ImageBackground>
   );
 };
-
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 70,
-    height: 70,
-    marginRight: 15,
-  },
-  textContainer: {
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#000',
-    marginTop: 4,
-  },
-});
 
 export default SplashScreen;

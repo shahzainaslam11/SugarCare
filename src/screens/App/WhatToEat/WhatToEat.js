@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,40 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header, AppInput} from '../../../components';
+import {Header, AppInput, SmallLoader} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
-import {appImages, family, HP, size, WP} from '../../../utilities';
+import {useDispatch, useSelector} from 'react-redux';
+import {appImages} from '../../../utilities';
 import styles from './styles';
+import {
+  generateMealRecommendations,
+  fetchMealHistory,
+} from '../../../redux/slices/mealRecommendationsSlice';
 
 const WhatToEat = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
-  const [activeMealType, setActiveMealType] = useState('Breakfast');
+  const {accessToken, user} = useSelector(state => state.auth);
+  const {recommendations, history, loading, error} = useSelector(
+    state => state.meals,
+  );
+  console.log('recommendations0---->', JSON.stringify(recommendations));
+
+  const [activeMealType, setActiveMealType] = useState('breakfast');
   const [modalVisible, setModalVisible] = useState(false);
-  const [personalizedMeal, setPersonalizedMeal] = useState(null);
+  const [currentMeal, setCurrentMeal] = useState(null);
+  const [apiRecommendations, setApiRecommendations] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  console.log('currentMeal', JSON.stringify(currentMeal));
 
-  // Validation Schema - ALL fields REQUIRED
+  // Validation schema
   const validationSchema = Yup.object().shape({
     currentGlucose: Yup.number()
       .typeError('Must be a valid number')
@@ -31,75 +48,152 @@ const WhatToEat = () => {
       .max(400, 'Value too high')
       .required('Current glucose is required'),
 
-    diabetesControlLevel: Yup.number()
-      .typeError('Must be a valid number')
-      .positive('HbA1c must be positive')
-      .min(4, 'Value too low')
-      .max(15, 'Value too high')
-      .required('Diabetes control level (HbA1c) is required'),
+    diabetesControlLevel: Yup.string()
+      .trim()
+      .required('Diabetes control level is required')
+      .oneOf(
+        ['Well controlled', 'Moderately controlled', 'Poorly controlled'],
+        'Must be: Well controlled, Moderately controlled, or Poorly controlled',
+      ),
 
     mealDescription: Yup.string()
       .trim()
       .required('Meal description is required')
+      .min(3, 'Description too short (min 3 characters)')
       .max(100, 'Description too long (max 100 characters)'),
 
     portionSize: Yup.string()
       .trim()
       .required('Portion size is required')
-      .max(50, 'Portion size too long'),
+      .oneOf(['Small', 'Medium', 'Large'], 'Must be Small, Medium, or Large'),
   });
 
-  // Personalization logic
-  const getPersonalizedMeal = values => {
-    const glucose = parseFloat(values.currentGlucose);
-    const hba1c = parseFloat(values.diabetesControlLevel);
+  // Fetch meal history on mount
+  useEffect(() => {
+    if (accessToken && user?.id) {
+      dispatch(
+        fetchMealHistory({
+          user_id: user.id,
+          token: accessToken,
+        }),
+      );
+    }
+  }, [accessToken, user?.id, dispatch]);
 
-    let suggestion = {
-      name: 'Balanced Veggie Bowl',
-      image: appImages.p11,
-      description:
-        'Low glycemic, fiber-rich meal suitable for your current levels.',
-    };
+  // Extract and set API recommendations from state or history
+  useEffect(() => {
+    if (recommendations) {
+      console.log('Using recommendations from state:', recommendations);
+      setApiRecommendations(recommendations);
+    } else if (history?.length > 0) {
+      const lastHistory = history[history.length - 1];
+      const recs = lastHistory.response_json?.recommendations || null;
+      console.log('Extracted recommendations from history:', recs);
+      setApiRecommendations(recs);
+    } else {
+      setApiRecommendations(null);
+    }
+  }, [recommendations, history]);
 
-    if (glucose > 160 || hba1c > 7.0) {
-      suggestion = {
-        name: 'Grilled Fish with Steamed Greens',
-        image: appImages.p2,
-        description:
-          'Very low carb, high protein to help stabilize high glucose.',
-      };
-    } else if (
-      glucose < 100 &&
-      values.portionSize.toLowerCase().includes('large')
-    ) {
-      suggestion = {
-        name: 'Quinoa Salad with Chickpeas & Avocado',
-        image: appImages.p1,
-        description: 'Healthy carbs and fats to maintain stable energy.',
-      };
-    } else if (values.mealDescription.toLowerCase().includes('sweet')) {
-      suggestion = {
-        name: 'Greek Yogurt with Berries & Nuts',
-        image: appImages.p11,
-        description: 'Low-sugar sweet option with protein and healthy fats.',
-      };
+  // Update current meal when apiRecommendations or activeMealType changes
+  useEffect(() => {
+    if (apiRecommendations && apiRecommendations[activeMealType]) {
+      const meals = apiRecommendations[activeMealType];
+      if (meals.length > 0) {
+        const newMeal =
+          meals.find(meal => meal.name !== currentMeal?.name) || meals[0];
+        setCurrentMeal(newMeal);
+      } else {
+        setCurrentMeal(null);
+      }
+    } else {
+      setCurrentMeal(null);
+    }
+  }, [apiRecommendations, activeMealType]);
+
+  // Handle form submission
+  const handleFormSubmit = async (values, {resetForm}) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User information not available');
+      return;
     }
 
-    return {
-      ...suggestion,
-      description: `${suggestion.description}\n\nTailored for glucose: ${glucose} mg/dL, HbA1c: ${hba1c}%, portion: ${values.portionSize}.`,
+    setIsSubmitting(true);
+
+    const payload = {
+      current_glucose: Number(values.currentGlucose),
+      diabetes_control_level: values.diabetesControlLevel,
+      meal_description: values.mealDescription.trim(),
+      portion_size: values.portionSize.trim(),
+      time: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+      user_id: user.id,
     };
+
+    console.log('Submitting payload to API:', payload);
+
+    try {
+      const result = await dispatch(
+        generateMealRecommendations({
+          payload,
+          token: accessToken,
+        }),
+      ).unwrap();
+
+      console.log('API success response:', result);
+
+      if (result) {
+        setApiRecommendations(result);
+        resetForm();
+        setModalVisible(false);
+
+        Alert.alert('Success', 'Meal recommendations generated successfully!');
+      }
+    } catch (error) {
+      console.error('API error:', error);
+
+      let errorMessage = 'Failed to generate meal recommendations';
+
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Default meals
-  const defaultMeal = {
-    Breakfast: {name: 'Oatmeal with Berries', image: appImages.p11},
-    Lunch: {name: 'Quinoa Salad with Chickpeas', image: appImages.p1},
-    Dinner: {name: 'Grilled Salmon with Veggies', image: appImages.p2},
-    Snacks: {name: 'Mixed Nuts and Apple', image: appImages.p11},
-  };
+  // Get meals for active type
+  const apiMeals = apiRecommendations?.[activeMealType] || [];
 
-  const currentMeal = personalizedMeal || defaultMeal[activeMealType];
+  // Get alternative meals (all meals except current)
+  const alternativeMeals =
+    apiMeals.filter(meal => meal.name !== currentMeal?.name) || [];
+
+  // Handle meal card press - Navigate to RecipeDetail
+  const handleMealPress = meal => {
+    if (meal && apiRecommendations) {
+      navigation.navigate('Recipe', {
+        meal: meal,
+        mealType: activeMealType,
+        allMeals: apiMeals,
+        userData: {
+          userId: user?.id,
+          userName: user?.name,
+          diabetesType: user?.diabetes_type,
+        },
+        recommendationsData: apiRecommendations,
+      });
+    } else {
+      Alert.alert('No Meal', 'Please generate a personalized meal first.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,14 +203,17 @@ const WhatToEat = () => {
       <View style={styles.personalizeContainer}>
         <TouchableOpacity
           style={styles.personalizeButton}
-          onPress={() => setModalVisible(true)}>
-          <Text style={styles.personalizeText}>Get Personalized Meal</Text>
+          onPress={() => setModalVisible(true)}
+          disabled={isSubmitting}>
+          <Text style={styles.personalizeText}>
+            {isSubmitting ? 'Processing...' : 'Get Personalize My Meal'}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Meal Type Tabs */}
       <View style={styles.mealTypeContainer}>
-        {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map(type => (
+        {['breakfast', 'lunch', 'dinner', 'snacks'].map(type => (
           <TouchableOpacity
             key={type}
             style={[
@@ -129,52 +226,121 @@ const WhatToEat = () => {
                 styles.mealTypeText,
                 activeMealType === type && styles.mealTypeTextActive,
               ]}>
-              {type}
+              {type.charAt(0).toUpperCase() + type.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.suggestedMealSection}>
-          <Text style={styles.sectionTitle}>
-            {personalizedMeal ? 'Your Personalized Meal' : 'Suggested Meal'}
-          </Text>
+        {loading && !apiRecommendations ? (
+          <SmallLoader />
+        ) : error && !apiRecommendations ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
 
-          <TouchableOpacity style={styles.mealCard}>
-            <Image
-              source={currentMeal.image}
-              style={styles.mealImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.mealName}>{currentMeal.name}</Text>
-            <Text style={styles.mealDescription}>
-              {currentMeal.description ||
-                'A healthy and balanced option for you.'}
+        {/* Suggested Meal Section */}
+        {currentMeal ? (
+          <View style={styles.suggestedMealSection}>
+            <Text style={styles.sectionTitle}>Suggested Meal</Text>
+            <TouchableOpacity
+              style={styles.mealCard}
+              onPress={() => handleMealPress(currentMeal)}
+              activeOpacity={0.8}>
+              <Image
+                source={
+                  currentMeal.image_url
+                    ? {uri: currentMeal.image_url}
+                    : appImages.p11
+                }
+                style={styles.mealImage}
+                resizeMode="cover"
+                defaultSource={appImages.p11}
+              />
+              <Text style={styles.mealName}>{currentMeal.name}</Text>
+              <Text style={styles.mealDescription}>
+                {currentMeal.description ||
+                  'A healthy and balanced option for you.'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : apiRecommendations ? (
+          <View style={styles.noMealContainer}>
+            <Text style={styles.noMealText}>
+              No meals available for {activeMealType}.
             </Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.noMealSubtext}>
+              Try selecting a different meal type.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.noMealContainer}>
+            <Text style={styles.noMealText}>No personalized meals yet.</Text>
+            <Text style={styles.noMealSubtext}>
+              Click "Get Personalize My Meal" to get recommendations.
+            </Text>
+          </View>
+        )}
+
+        {/* Healthier Alternatives Section */}
+        {alternativeMeals.length > 0 && (
+          <View style={styles.alternativesSection}>
+            <Text style={styles.sectionTitle}>Healthier Alternatives</Text>
+            {alternativeMeals.map((alternative, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.alternativeCard}
+                onPress={() => handleMealPress(alternative)}
+                activeOpacity={0.8}>
+                <Image
+                  source={
+                    alternative.image_url
+                      ? {uri: alternative.image_url}
+                      : index % 2 === 0
+                      ? appImages.p1
+                      : appImages.p2
+                  }
+                  style={styles.alternativeImage}
+                  resizeMode="cover"
+                  defaultSource={index % 2 === 0 ? appImages.p1 : appImages.p2}
+                />
+                <View style={styles.alternativeText}>
+                  <Text style={styles.alternativeName}>{alternative.name}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Personalization Modal - All Fields Required */}
-      <Modal visible={modalVisible} transparent animationType="slide">
+      {/* Personalization Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !isSubmitting && setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Personalize Your Meal</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Personalize Your Meal</Text>
+              {!isSubmitting && (
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={styles.closeButton}>
+                  <Text style={styles.closeButtonText}>×</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             <Formik
               initialValues={{
                 currentGlucose: '',
-                diabetesControlLevel: '',
+                diabetesControlLevel: 'Moderately controlled',
                 mealDescription: '',
-                portionSize: '',
+                portionSize: 'Medium',
               }}
               validationSchema={validationSchema}
-              onSubmit={values => {
-                const meal = getPersonalizedMeal(values);
-                setPersonalizedMeal(meal);
-                setModalVisible(false);
-              }}>
+              onSubmit={handleFormSubmit}>
               {({
                 handleChange,
                 handleBlur,
@@ -182,9 +348,11 @@ const WhatToEat = () => {
                 values,
                 errors,
                 touched,
+                isValid,
+                dirty,
+                setFieldValue,
               }) => (
-                <View>
-                  {/* Current Glucose */}
+                <ScrollView style={styles.formContainer}>
                   <AppInput
                     title="Current Glucose (mg/dL)"
                     placeholder="e.g. 140"
@@ -197,25 +365,50 @@ const WhatToEat = () => {
                         ? errors.currentGlucose
                         : ''
                     }
+                    editable={!isSubmitting}
                   />
 
-                  {/* Diabetes Control Level (HbA1c) */}
-                  <AppInput
-                    title="Diabetes Control Level (HbA1c %)"
-                    placeholder="e.g. 6.5"
-                    keyboardType="decimal-pad"
-                    value={values.diabetesControlLevel}
-                    onChangeText={handleChange('diabetesControlLevel')}
-                    onBlur={handleBlur('diabetesControlLevel')}
-                    errorMessage={
-                      touched.diabetesControlLevel &&
-                      errors.diabetesControlLevel
-                        ? errors.diabetesControlLevel
-                        : ''
-                    }
-                  />
+                  {/* Diabetes Control Level Dropdown */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputTitle}>
+                      Diabetes Control Level *
+                    </Text>
+                    <View style={styles.dropdownContainer}>
+                      {[
+                        'Well controlled',
+                        'Moderately controlled',
+                        'Poorly controlled',
+                      ].map(option => (
+                        <TouchableOpacity
+                          key={option}
+                          style={[
+                            styles.dropdownOption,
+                            values.diabetesControlLevel === option &&
+                              styles.dropdownOptionSelected,
+                          ]}
+                          onPress={() =>
+                            setFieldValue('diabetesControlLevel', option)
+                          }
+                          disabled={isSubmitting}>
+                          <Text
+                            style={[
+                              styles.dropdownOptionText,
+                              values.diabetesControlLevel === option &&
+                                styles.dropdownOptionTextSelected,
+                            ]}>
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {touched.diabetesControlLevel &&
+                      errors.diabetesControlLevel && (
+                        <Text style={styles.errorTextSmall}>
+                          {errors.diabetesControlLevel}
+                        </Text>
+                      )}
+                  </View>
 
-                  {/* Meal Description */}
                   <AppInput
                     title="Meal Description"
                     placeholder="e.g. craving something sweet"
@@ -227,36 +420,70 @@ const WhatToEat = () => {
                         ? errors.mealDescription
                         : ''
                     }
+                    multiline
+                    numberOfLines={3}
+                    editable={!isSubmitting}
                   />
 
-                  {/* Portion Size */}
-                  <AppInput
-                    title="Portion Size"
-                    placeholder="e.g. small, medium, large"
-                    value={values.portionSize}
-                    onChangeText={handleChange('portionSize')}
-                    onBlur={handleBlur('portionSize')}
-                    errorMessage={
-                      touched.portionSize && errors.portionSize
-                        ? errors.portionSize
-                        : ''
-                    }
-                  />
+                  {/* Portion Size Dropdown */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputTitle}>Portion Size *</Text>
+                    <View style={styles.dropdownContainer}>
+                      {['Small', 'Medium', 'Large'].map(option => (
+                        <TouchableOpacity
+                          key={option}
+                          style={[
+                            styles.dropdownOption,
+                            values.portionSize === option &&
+                              styles.dropdownOptionSelected,
+                          ]}
+                          onPress={() => setFieldValue('portionSize', option)}
+                          disabled={isSubmitting}>
+                          <Text
+                            style={[
+                              styles.dropdownOptionText,
+                              values.portionSize === option &&
+                                styles.dropdownOptionTextSelected,
+                            ]}>
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {touched.portionSize && errors.portionSize && (
+                      <Text style={styles.errorTextSmall}>
+                        {errors.portionSize}
+                      </Text>
+                    )}
+                  </View>
 
                   <View style={styles.modalButtons}>
                     <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => setModalVisible(false)}>
+                      style={[
+                        styles.cancelButton,
+                        isSubmitting && styles.buttonDisabled,
+                      ]}
+                      onPress={() => setModalVisible(false)}
+                      disabled={isSubmitting}>
                       <Text style={styles.cancelText}>Cancel</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.submitButton}
-                      onPress={handleSubmit}>
-                      <Text style={styles.submitText}>Get Suggestion</Text>
+                      style={[
+                        styles.submitButton,
+                        (!isValid || !dirty || isSubmitting) &&
+                          styles.buttonDisabled,
+                      ]}
+                      onPress={handleSubmit}
+                      disabled={!isValid || !dirty || isSubmitting}>
+                      {isSubmitting ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.submitText}>Get Suggestion</Text>
+                      )}
                     </TouchableOpacity>
                   </View>
-                </View>
+                </ScrollView>
               )}
             </Formik>
           </View>

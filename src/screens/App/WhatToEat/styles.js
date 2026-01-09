@@ -126,64 +126,85 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#fff',
-    width: WP(90),
-    borderRadius: 20,
-    padding: WP(6),
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: WP(5),
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: HP(2),
   },
   modalTitle: {
-    fontSize: size.xlarge,
-    fontFamily: family.bold,
-    textAlign: 'center',
-    marginBottom: HP(3),
-    color: '#000',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    padding: HP(2),
-    marginBottom: HP(2),
-    fontSize: size.normal,
-  },
-  label: {
-    fontSize: size.normal,
-    fontFamily: family.semiBold,
-    marginBottom: HP(1),
+    fontSize: size.large,
+    fontFamily: family.inter_medium,
     color: '#333',
   },
-  mealTypeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: HP(2),
-  },
-  smallMealButton: {
-    paddingHorizontal: WP(5),
-    paddingVertical: HP(1.2),
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: HP(1),
-    width: '48%',
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  smallActiveButton: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  smallMealText: {
+  closeButtonText: {
+    fontSize: 24,
     color: '#333',
+    lineHeight: 30,
+  },
+  formContainer: {
+    maxHeight: HP(60),
+  },
+  inputContainer: {
+    marginBottom: HP(2),
+  },
+  inputTitle: {
     fontSize: size.normal,
-    fontFamily: family.semiBold,
+    fontFamily: family.inter_medium,
+    color: '#333',
+    marginBottom: HP(1),
+  },
+  dropdownContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dropdownOption: {
+    flex: 1,
+    paddingVertical: HP(1.2),
+    paddingHorizontal: WP(2),
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    marginHorizontal: WP(0.5),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#2563eb',
+  },
+  dropdownOptionText: {
+    fontSize: size.tiny,
+    fontFamily: family.inter_medium,
+    color: '#666',
+    textAlign: 'center',
+  },
+  dropdownOptionTextSelected: {
+    color: '#fff',
+    fontSize: size.tiny,
+    fontFamily: family.inter_medium,
+    textAlign: 'center',
+  },
+  errorTextSmall: {
+    color: 'red',
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    marginTop: HP(0.5),
   },
   modalButtons: {
     flexDirection: 'row',
@@ -192,29 +213,117 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: HP(1),
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    paddingVertical: HP(1.5),
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginRight: WP(2),
     alignItems: 'center',
-    marginRight: WP(3),
-  },
-  cancelText: {
-    color: '#666',
-    fontSize: size.normal,
-    fontFamily: family.semiBold,
   },
   submitButton: {
     flex: 1,
+    paddingVertical: HP(1.5),
     backgroundColor: '#2563eb',
-    paddingVertical: HP(1),
-    borderRadius: 10,
+    borderRadius: 8,
+    marginLeft: WP(2),
     alignItems: 'center',
   },
-  submitText: {
-    color: '#fff',
+  cancelText: {
     fontSize: size.normal,
-    fontFamily: family.semiBold,
+    fontFamily: family.inter_medium,
+    color: '#666',
+  },
+  submitText: {
+    fontSize: size.normal,
+    fontFamily: family.medium,
+    color: '#fff',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+
+  // Loading and Error States
+  loader: {
+    marginTop: HP(5),
+  },
+  errorText: {
+    color: 'red',
+    fontSize: size.normal,
+    fontFamily: family.inter_medium,
+    textAlign: 'center',
+    marginTop: HP(5),
+  },
+  noMealContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: HP(10),
+    paddingHorizontal: WP(5),
+  },
+  noMealText: {
+    fontSize: size.large,
+    fontFamily: family.inter_medium,
+
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: HP(1),
+  },
+  noMealSubtext: {
+    fontSize: size.normal,
+
+    fontFamily: family.inter_medium,
+    color: '#666',
+    textAlign: 'center',
+  },
+
+  // Navigation buttons for meal cycling
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  navButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  navButtonDisabled: {
+    backgroundColor: '#CCCCCC',
+  },
+  navButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  navigationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+
+  // Nutrition Container (optional - if you want to show nutrition in WhatToEat)
+  nutritionContainer: {
+    marginTop: 15,
+    padding: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+  },
+  nutritionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  nutritionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  nutritionItem: {
+    width: '48%',
+    fontSize: 14,
+    marginBottom: 8,
+    color: '#666',
   },
 });
 

@@ -2,16 +2,25 @@ import React from 'react';
 import MainAppNav from './src/navigation';
 import FlashMessage from 'react-native-flash-message';
 import {Provider} from 'react-redux';
-import store from './src/redux/store';
+import {PersistGate} from 'redux-persist/integration/react';
+import {store, persistor} from './src/redux/store'; // Updated import
+import {ActivityIndicator, View} from 'react-native';
 
 const App = () => {
   return (
-    <>
-      <Provider store={store}>
+    <Provider store={store}>
+      <PersistGate
+        loading={
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        }
+        persistor={persistor}>
         <MainAppNav />
         <FlashMessage position="top" />
-      </Provider>
-    </>
+      </PersistGate>
+    </Provider>
   );
 };
 

@@ -15,6 +15,7 @@ import {
   Header,
   CustomDropdown,
   AppInput,
+  SmallLoader,
 } from '../../../../components';
 import {
   appIcons,
@@ -163,6 +164,8 @@ const EditProfile = () => {
         .catch(err => {
           setUploadingImage(false);
           setLocalImage(null);
+          console.log('err?.message---->', err?.message);
+
           showError(err?.message || 'Upload failed');
         });
     } catch {
@@ -214,17 +217,10 @@ const EditProfile = () => {
       .catch(err => showError(err?.message || 'Update failed'));
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loaderScreen}>
-        <ActivityIndicator size="large" color={colors.p1} />
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Edit Profile" onPress={() => navigation.goBack()} />
+      {loading && <SmallLoader />}
 
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.avatarContainer}>
