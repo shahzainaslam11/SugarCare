@@ -237,7 +237,7 @@ export default function Home() {
             Based on your recent activity, your sugar may spike in next 2hrs
           </Text>
           <TouchableOpacity
-            onPress={() => handleNavigation('PredictSugarAlert')}
+            onPress={() => handleNavigation('PredictInputs')}
             style={styles.seeSuggestionsButton}>
             <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
             <Image
