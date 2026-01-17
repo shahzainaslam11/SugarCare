@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 5,
+    marginTop: 20,
   },
   inactiveBtn: {
     borderRadius: 20,

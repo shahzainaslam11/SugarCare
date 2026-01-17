@@ -9,6 +9,27 @@ import {
 import {HP} from '../../utilities';
 
 const FastingPlans = ({fastingPlans, startFasting, isFasting, navigation}) => {
+  if (!fastingPlans || fastingPlans.length === 0) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: HP(20),
+        }}>
+        <Text
+          style={{
+            textAlign: 'center',
+            color: '#888',
+            fontSize: 16,
+          }}>
+          No fasting plans available
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.section}>
       <ScrollView

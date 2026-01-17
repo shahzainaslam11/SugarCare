@@ -24,7 +24,7 @@ import {logoutUser} from '../../../redux/slices/authSlice';
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
-  const {user, accessToken, refreshToken, loading} = useSelector(
+  const {user, accessToken, refreshToken} = useSelector(
     state => state.auth,
   );
 
@@ -35,39 +35,17 @@ const SettingsScreen = () => {
     setIsLoggingOut(true);
 
     try {
-      // Check if we have tokens
-      if (!accessToken || !refreshToken) {
-        // If no tokens, just clear local data
-        dispatch({type: 'auth/clearAuthData'});
-        showSuccess('Logged out successfully');
-        navigation.replace('Auth', {screen: 'LogIn'});
-        return;
-      }
-
-      // Call logout API with tokens
-      const result = await dispatch(
-        logoutUser({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        }),
-      );
+      // Call logout API - it handles both cases (with/without tokens)
+      const result = await dispatch(logoutUser());
 
       console.log('Logout result:', JSON.stringify(result));
 
-      if (result.meta.requestStatus === 'fulfilled') {
-        showSuccess('Logged out successfully');
-        // Navigate to login screen
-        navigation.replace('Auth', {screen: 'LogIn'});
-      } else {
-        // Even if API fails, clear local data
-        dispatch({type: 'auth/clearAuthData'});
-        showSuccess('Logged out successfully');
-        navigation.replace('Auth', {screen: 'LogIn'});
-      }
+      // Show success message and navigate to login
+      showSuccess('Logged out successfully');
+      navigation.replace('Auth', {screen: 'LogIn'});
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local data even if there's an error
-      dispatch({type: 'auth/clearAuthData'});
+      // Even if there's an error, logout was attempted - clear and navigate
       showSuccess('Logged out successfully');
       navigation.replace('Auth', {screen: 'LogIn'});
     } finally {
@@ -93,9 +71,16 @@ const SettingsScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Profile Section */}
         <View style={styles.profileContainer}>
-          <Image source={appImages.messi} style={styles.avatar} />
+          <Image
+            source={
+              profile?.profile_image
+                ? {uri: profile.profile_image}
+                : appImages.messi
+            }
+            style={styles.avatar}
+          />
           <Text style={styles.name}>{profile?.name}</Text>
-          <Text style={styles.email}>{profile?.email}</Text>
+          <Text style={styles.email}>{lowerFirst(profile?.email)}</Text>
         </View>
 
         {/* Settings Content */}
@@ -169,6 +154,10 @@ const SettingsScreen = () => {
     </ImageBackground>
   );
 };
+
+// Utility to lowercase first letter
+const lowerFirst = str =>
+  str ? str.charAt(0).toLowerCase() + str.slice(1) : '';
 
 const SettingsItem = ({title, isLast = true, onPress}) => (
   <TouchableOpacity

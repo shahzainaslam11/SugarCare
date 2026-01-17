@@ -31,9 +31,11 @@ const DRAWER_WIDTH = WP(80);
 
 const MenuModal = ({updatedName, visible, onClose, navigation}) => {
   const dispatch = useDispatch();
-  const {user, accessToken, refreshToken, loading} = useSelector(
+  const {user, accessToken, refreshToken} = useSelector(
     state => state.auth,
   );
+  console.log('user---->', user);
+
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const isAnimating = useRef(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -108,10 +110,7 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
 
   const handleMenuItemPress = itemId => {
     // Close modal immediately
-    slideAnim.setValue(-DRAWER_WIDTH);
-    onClose();
-
-    // Navigate after a small delay
+    closeModal();
     setTimeout(() => {
       switch (itemId) {
         case 'whatToEat':
@@ -135,7 +134,7 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
         default:
           break;
       }
-    }, 50);
+    }, 250); // Increased delay to avoid blink
   };
 
   const handleLogout = () => {
@@ -208,9 +207,15 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
     setTimeout(() => onClose(), 250);
   };
 
+  // Utility to lowercase first letter
+  const lowerFirst = str =>
+    str ? str.charAt(0).toLowerCase() + str.slice(1) : '';
+
   // Get user info from Redux store
   const userName = updatedName || 'User';
-  const userEmail = user?.email || 'user@example.com';
+  const userEmail = lowerFirst(user?.email) || 'user@example.com';
+  const userAvatar = user?.profile_image || null;
+  console.log('userAvatar', userAvatar);
 
   return (
     <SafeAreaView>
@@ -246,9 +251,16 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
               style={styles.safeArea}
               edges={['right', 'top', 'bottom']}>
               <View style={styles.profileHeader}>
-                <View style={styles.profileIcon}>
-                  <Text style={styles.profileIconText}>👤</Text>
-                </View>
+                {userAvatar ? (
+                  <Image
+                    source={{uri: userAvatar}}
+                    style={styles.profileAvatar}
+                  />
+                ) : (
+                  <View style={styles.profileIcon}>
+                    <Text style={styles.profileIconText}>👤</Text>
+                  </View>
+                )}
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>{userName}</Text>
                   <Text style={styles.profileEmail}>{userEmail}</Text>
@@ -361,6 +373,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.g1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: WP(3),
+  },
+  profileAvatar: {
+    width: WP(14),
+    height: WP(14),
+    borderRadius: WP(7),
     marginRight: WP(3),
   },
   profileIconText: {

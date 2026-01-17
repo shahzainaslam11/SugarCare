@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,6 @@ import {
   uploadProfileImage,
   deleteProfileImage,
 } from '../../../../redux/slices/profileSlice';
-import ImageResizer from 'react-native-image-resizer';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -47,17 +46,17 @@ const EditProfile = () => {
   /* ---------------- IMAGE STATE ---------------- */
   const [localImage, setLocalImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageTimestamp, setImageTimestamp] = useState(Date.now());
 
-  const serverImageUrl = profile?.profile_image
-    ? `${profile.profile_image}?t=${profile.updated_at}`
-    : null;
-
-  const imageSource = localImage
-    ? {uri: localImage}
-    : serverImageUrl
-    ? {uri: serverImageUrl}
-    : appImages.messi;
-  console.log('imageSource', imageSource);
+  const imageSource = useMemo(() => {
+    if (localImage) {
+      return {uri: localImage};
+    }
+    if (profile?.profile_image) {
+      return {uri: `${profile.profile_image}?t=${imageTimestamp}`};
+    }
+    return appImages.messi;
+  }, [localImage, profile?.profile_image, imageTimestamp]);
 
   /* ---------------- FORM STATE ---------------- */
   const [name, setName] = useState('');
@@ -87,13 +86,22 @@ const EditProfile = () => {
 
   /* ---------------- FETCH PROFILE ---------------- */
   const loadProfile = useCallback(() => {
-    if (!accessToken) return;
+    console.log('=== LOAD PROFILE START ===');
+    console.log('Access token available:', !!accessToken);
+
+    if (!accessToken) {
+      console.log('No access token, skipping profile load');
+      return;
+    }
+
+    console.log('Dispatching fetchProfile...');
 
     dispatch(fetchProfile({token: accessToken}))
       .unwrap()
       .then(data => {
-        console.log('data---->', JSON.stringify(data));
-        setLocalImage(null);
+        console.log('=== PROFILE LOAD SUCCESS ===');
+        console.log('Profile data received:', JSON.stringify(data, null, 2));
+
         setName(data.name || '');
         setGenderValue(data.gender || '');
         setAge(data.age?.toString() || '');
@@ -102,8 +110,19 @@ const EditProfile = () => {
         setDiabetesType(data.diabetes_type || '');
         setCholesterol(data.cholesterol_mg_dl?.toString() || '');
         setUsingInsulin(!!data.using_insulin);
+
+        console.log('Profile state updated successfully');
       })
-      .catch(err => showError(err?.message || 'Failed to load profile'));
+      .catch(err => {
+        console.log('=== PROFILE LOAD ERROR ===');
+        console.log('Error message:', err?.message);
+        if (err?.response?.status === 401) {
+          showError('Session expired, please login again');
+          dispatch({type: 'auth/logout'});
+        } else {
+          showError(err?.message || 'Failed to load profile');
+        }
+      });
   }, [accessToken, dispatch]);
 
   useFocusEffect(
@@ -122,130 +141,263 @@ const EditProfile = () => {
   };
 
   const openCamera = () =>
-    launchCamera({mediaType: 'photo', quality: 0.9}, handleImage);
+    launchCamera(
+      {
+        mediaType: 'photo',
+        quality: 0.7,
+        maxWidth: 800,
+        maxHeight: 800,
+        includeBase64: false,
+      },
+      handleImage,
+    );
 
   const openLibrary = () =>
-    launchImageLibrary({mediaType: 'photo', quality: 0.9}, handleImage);
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        quality: 0.7,
+        maxWidth: 800,
+        maxHeight: 800,
+        includeBase64: false,
+      },
+      handleImage,
+    );
 
   const handleImage = async response => {
-    if (response.didCancel || response.errorCode) return;
+    console.log('=== IMAGE PICKER RESPONSE START ===');
+    console.log('Full response:', JSON.stringify(response, null, 2));
+
+    if (response.didCancel) {
+      console.log('User cancelled image picker');
+      return;
+    }
+
+    if (response.errorCode) {
+      console.log('Image picker error:', response.errorMessage);
+      console.log('Error code:', response.errorCode);
+      showError(response.errorMessage || 'Failed to pick image');
+      return;
+    }
 
     const asset = response.assets?.[0];
-    if (!asset?.uri) return;
+    console.log('Selected asset:', JSON.stringify(asset, null, 2));
+
+    if (!asset?.uri) {
+      console.log('No asset URI found');
+      showError('No image selected');
+      return;
+    }
+
+    console.log('=== STARTING UPLOAD PROCESS ===');
+    console.log('Setting uploadingImage to true');
 
     try {
-      const resized = await ImageResizer.createResizedImage(
-        asset.uri,
-        800,
-        800,
-        'JPEG',
-        90,
-      );
-
-      setLocalImage(resized.uri);
       setUploadingImage(true);
+      setLocalImage(asset.uri);
 
-      const file = {
-        uri:
-          Platform.OS === 'ios'
-            ? resized.uri.replace('file://', '')
-            : resized.uri,
+      console.log('Creating file data...');
+      const fileData = {
+        uri: asset.uri,
+        name: asset.fileName || `profile_${Date.now()}.jpg`,
         type: asset.type || 'image/jpeg',
-        name: `profile_${Date.now()}.jpg`,
       };
 
-      dispatch(uploadProfileImage({token: accessToken, file}))
-        .unwrap()
-        .then(() => {
-          showSuccess('Profile image updated');
-          setUploadingImage(false);
-          loadProfile();
-        })
-        .catch(err => {
-          setUploadingImage(false);
-          setLocalImage(null);
-          console.log('err?.message---->', err?.message);
+      console.log('File data to upload:', JSON.stringify(fileData, null, 2));
+      console.log('Access token available:', !!accessToken);
 
-          showError(err?.message || 'Upload failed');
-        });
-    } catch {
-      showError('Image processing failed');
+      console.log('Dispatching uploadProfileImage...');
+
+      const unwrapResult = await dispatch(
+        uploadProfileImage({
+          token: accessToken,
+          file: fileData,
+        }),
+      ).unwrap();
+
+      console.log('=== UPLOAD SUCCESS ===');
+      console.log('Unwrap result:', JSON.stringify(unwrapResult, null, 2));
+
+      console.log('Upload successful, clearing local image');
+      showSuccess('Profile image updated');
+      setLocalImage(null);
+      setImageTimestamp(Date.now()); // Force image reload
+    } catch (error) {
+      console.log('=== UPLOAD ERROR ===');
+      console.log('Error message:', error?.message);
+      console.log('Error response:', error?.response);
+      console.log('Error response data:', error?.response?.data);
+
+      setLocalImage(null);
+      if (error?.response?.status === 401) {
+        showError('Session expired, please login again');
+        dispatch({type: 'auth/logout'});
+      } else {
+        const errorMessage =
+          error?.response?.data?.message || error?.message || 'Upload failed';
+        console.log('Final error message to show:', errorMessage);
+        showError(errorMessage);
+      }
+    } finally {
+      console.log('=== FINALLY BLOCK ===');
+      console.log('Setting uploadingImage to false');
+      setUploadingImage(false);
     }
   };
 
   const removeImage = () => {
+    console.log('=== REMOVE IMAGE START ===');
+
     Alert.alert('Remove Photo', 'Are you sure?', [
       {text: 'Cancel', style: 'cancel'},
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => {
-          dispatch(deleteProfileImage({token: accessToken}))
-            .unwrap()
-            .then(() => {
-              showSuccess('Profile image removed');
-              loadProfile();
-            })
-            .catch(err => showError(err?.message || 'Failed to remove image'));
+        onPress: async () => {
+          console.log(
+            'User confirmed image removal, dispatching deleteProfileImage...',
+          );
+
+          try {
+            const result = await dispatch(
+              deleteProfileImage({token: accessToken}),
+            ).unwrap();
+            console.log('=== REMOVE IMAGE SUCCESS ===');
+            console.log('Delete result:', JSON.stringify(result, null, 2));
+
+            showSuccess('Profile image removed');
+            setImageTimestamp(Date.now()); // Force image reload
+            console.log('Profile reloaded after image removal');
+          } catch (err) {
+            console.log('=== REMOVE IMAGE ERROR ===');
+            console.log('Error message:', err?.message);
+            if (err?.response?.status === 401) {
+              showError('Session expired, please login again');
+              dispatch({type: 'auth/logout'});
+            } else {
+              const errorMsg = err?.message;
+              if (errorMsg && errorMsg.includes("Can't find variable")) {
+                Alert.alert(
+                  'Error',
+                  'Failed to remove image. Please try again.',
+                );
+              } else {
+                Alert.alert('Error', errorMsg || 'Failed to remove image');
+              }
+            }
+          }
         },
       },
     ]);
   };
 
-  /* ---------------- SAVE ---------------- */
-  const saveProfile = () => {
-    dispatch(
-      updateProfile({
-        token: accessToken,
-        payload: {
-          name,
-          age: Number(age),
-          height_cm: Number(height),
-          weight_kg: Number(weight),
-          gender: genderValue,
-          diabetes_type: diabetesType,
-          cholesterol_mg_dl: Number(cholesterol),
-          using_insulin: usingInsulin,
-        },
-      }),
-    )
-      .unwrap()
-      .then(() => {
-        showSuccess('Profile updated');
-        navigation.goBack();
-      })
-      .catch(err => showError(err?.message || 'Update failed'));
+  /* ---------------- SAVE PROFILE ---------------- */
+  const saveProfile = async () => {
+    console.log('=== SAVE PROFILE START ===');
+
+    if (!name.trim()) {
+      console.log('Validation failed: Name is empty');
+      showError('Please enter your name');
+      return;
+    }
+
+    const payload = {
+      name: name.trim(),
+      gender: genderValue,
+      using_insulin: usingInsulin,
+      diabetes_type: diabetesType,
+    };
+
+    // Add optional numeric fields
+    if (age) payload.age = Number(age);
+    if (height) payload.height_cm = Number(height);
+    if (weight) payload.weight_kg = Number(weight);
+    if (cholesterol) payload.cholesterol_mg_dl = Number(cholesterol);
+
+    console.log('Profile payload to save:', JSON.stringify(payload, null, 2));
+    console.log('Dispatching updateProfile...');
+
+    try {
+      const result = await dispatch(
+        updateProfile({
+          token: accessToken,
+          payload,
+        }),
+      ).unwrap();
+
+      console.log('=== SAVE PROFILE SUCCESS ===');
+      console.log('Update result:', JSON.stringify(result, null, 2));
+
+      showSuccess('Profile updated');
+      navigation.goBack();
+    } catch (err) {
+      console.log('=== SAVE PROFILE ERROR ===');
+      console.log('Error message:', err?.message);
+      if (err?.response?.status === 401) {
+        showError('Session expired, please login again');
+        dispatch({type: 'auth/logout'});
+      } else {
+        showError(err?.message || 'Update failed');
+      }
+    }
   };
+
+  // Utility to lowercase first letter
+  const lowerFirst = str =>
+    str ? str.charAt(0).toLowerCase() + str.slice(1) : '';
 
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Edit Profile" onPress={() => navigation.goBack()} />
+
       {loading && <SmallLoader />}
 
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
+        {/* Avatar Container - Fixed Structure */}
         <View style={styles.avatarContainer}>
-          <Image source={imageSource} style={styles.avatar} />
+          {/* Avatar Image Container */}
+          <View style={styles.avatarImageContainer}>
+            <Image
+              source={imageSource}
+              style={styles.avatar}
+              onError={() => console.log('Image load error')}
+            />
 
-          <TouchableOpacity style={styles.cameraBtn} onPress={pickImage}>
-            <Image source={appIcons.camera} style={styles.cameraIcon} />
-          </TouchableOpacity>
+            {/* Camera Button - Positioned at bottom right of avatar */}
+            <TouchableOpacity
+              style={styles.cameraBtn}
+              onPress={pickImage}
+              disabled={uploadingImage}>
+              <Image source={appIcons.camera} style={styles.cameraIcon} />
+            </TouchableOpacity>
+          </View>
 
+          {/* Remove Badge - Positioned below avatar */}
           {profile?.profile_image && (
-            <TouchableOpacity style={styles.removeBadge} onPress={removeImage}>
+            <TouchableOpacity
+              style={styles.removeBadge}
+              onPress={removeImage}
+              disabled={uploadingImage}>
               <Text style={styles.removeBadgeText}>Remove</Text>
             </TouchableOpacity>
           )}
 
+          {/* Uploading Overlay - Only covers the avatar image */}
           {uploadingImage && (
-            <View style={styles.loaderOverlay}>
-              <ActivityIndicator color={colors.white} />
+            <View style={styles.avatarOverlay}>
+              <ActivityIndicator color={colors.white} size="large" />
+              <Text style={styles.uploadingText}>Uploading...</Text>
             </View>
           )}
         </View>
 
         <View style={styles.scrollContent}>
           <AppInput title="Name" value={name} onChangeText={setName} />
-          <AppInput title="Email" value={profile?.email} editable={false} />
+          <AppInput
+            title="Email"
+            value={lowerFirst(profile?.email)}
+            editable={false}
+          />
 
           <View style={styles.row}>
             <View style={styles.half}>
@@ -323,7 +475,11 @@ const EditProfile = () => {
       </KeyboardAwareScrollView>
 
       <View style={styles.saveBtn}>
-        <AppButton title="Save" onPress={saveProfile} />
+        <AppButton
+          title="Save"
+          onPress={saveProfile}
+          disabled={loading || uploadingImage}
+        />
       </View>
     </SafeAreaView>
   );

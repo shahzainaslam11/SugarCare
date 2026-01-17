@@ -65,42 +65,43 @@ const TrackSugar = () => {
   // Full screen loader while fetching data
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}>
-        <Text style={styles.forecastTitle}>Blood Sugar Forecast</Text>
-        <Text style={styles.readingText}>
-          {records[0]?.value ?? '--'} mg/dL
-        </Text>
-        <Text style={styles.trendText}>
-          Next 3 hours {records[0]?.trend ?? '--'}
-        </Text>
-        {loading && <SmallLoader />}
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <View style={{flex: 1}}>
+        <ScrollView
+          contentContainerStyle={[styles.contentContainer, {flexGrow: 1}]}
+          showsVerticalScrollIndicator={false}>
+          <Text style={styles.forecastTitle}>Blood Sugar Forecast</Text>
+          <Text style={styles.readingText}>
+            {records[0]?.value ?? '--'} mg/dL
+          </Text>
+          <Text style={styles.trendText}>
+            Next 3 hours {records[0]?.trend ?? '--'}
+          </Text>
+          {loading && <SmallLoader />}
 
-        {/* Chart */}
-        <ChartComponent
-          activeRange={activeRange}
-          onChangeRange={setActiveRange}
-          chart={chart}
-        />
-        <View style={styles.recordsContainer}>
-          <Text style={styles.sectionTitle}>Recent Records</Text>
+          {/* Chart */}
+          <ChartComponent
+            activeRange={activeRange}
+            onChangeRange={setActiveRange}
+            chart={chart}
+          />
+          <View style={styles.recordsContainer}>
+            <Text style={styles.sectionTitle}>Recent Records</Text>
 
-          {!records.length && <SugarRecordCard empty />}
+            {!records.length && <SugarRecordCard empty />}
 
-          {records.map((record, index) => (
-            <SugarRecordCard key={record.id || index} record={record} />
-          ))}
+            {records.map((record, index) => (
+              <SugarRecordCard key={record.id || index} record={record} />
+            ))}
+          </View>
+        </ScrollView>
+        <View style={styles.buttonContainer}>
+          <AppButton
+            title="Add New Record"
+            onPress={handleAddSugarRecord}
+            icon={appIcons.plus}
+          />
         </View>
-      </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <AppButton
-          title="Add New Record"
-          onPress={handleAddSugarRecord}
-          icon={appIcons.plus}
-        />
       </View>
     </SafeAreaView>
   );

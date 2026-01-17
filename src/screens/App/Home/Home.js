@@ -6,7 +6,6 @@ import {
   ScrollView,
   StatusBar,
   Image,
-  Alert,
   AppState,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -17,6 +16,7 @@ import {fetchProfile} from '../../../redux/slices/profileSlice';
 import {appIcons} from '../../../utilities';
 import styles from './styles';
 import {fetchSugarRecords} from '../../../redux/slices/sugarForecastSlice';
+import {showError} from '../../../utilities';
 
 const RANGE_MAP = {
   Today: 'Today',
@@ -34,6 +34,7 @@ export default function Home() {
   const {data: profile} = useSelector(state => state.profile);
   const [activeRange, setActiveRange] = useState('Today');
   const appState = useRef(AppState.currentState);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   const {
     graphData: sugarGraphData,
@@ -43,31 +44,18 @@ export default function Home() {
   } = useSelector(state => state.sugarForecast);
   const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
-  // Function to show session expired message
-  const showSessionExpired = () => {
-    Alert.alert(
-      'Session Expired',
-      'Your session has expired. Please login again.',
-      [
-        {
-          text: 'Login',
-          onPress: () => {
-            // Navigate to login screen
-            // Adjust based on your navigation structure
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Auth'}],
-            });
-          },
-        },
-      ],
-    );
+  // Function to redirect to login screen
+  const redirectToLogin = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Auth'}],
+    });
   };
 
   // Function to check token validity
   const checkTokenValidity = () => {
     if (!accessToken) {
-      showSessionExpired();
+      redirectToLogin();
       return false;
     }
     return true;
@@ -91,10 +79,12 @@ export default function Home() {
     };
   }, [accessToken]);
 
-  // Initial token check on mount
+  // Initial token check on mount - redirect immediately if no token
   useEffect(() => {
-    checkTokenValidity();
-  }, []);
+    if (!accessToken) {
+      redirectToLogin();
+    }
+  }, [accessToken]);
 
   // Check token before API calls
   useEffect(() => {
@@ -121,7 +111,7 @@ export default function Home() {
       sugarError?.message?.includes('unauthorized') ||
       sugarError?.message?.includes('expired')
     ) {
-      showSessionExpired();
+      redirectToLogin();
     }
   }, [sugarError]);
 
@@ -145,20 +135,10 @@ export default function Home() {
     navigation.navigate('AppScreens', {screen: screenName});
   };
 
-  // If token is null, show redirecting screen
+  // If token is null, don't render anything or return null
+  // The useEffect will handle the redirect immediately
   if (!accessToken) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <View
-          style={[
-            styles.container,
-            {justifyContent: 'center', alignItems: 'center'},
-          ]}>
-          <Text>Session expired. Redirecting to login...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return null; // Or you can return a minimal loading view if needed
   }
 
   return (

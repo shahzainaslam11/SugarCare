@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    // paddingTop: HP(4),
+    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
   },
   content: {
     flex: 1,
