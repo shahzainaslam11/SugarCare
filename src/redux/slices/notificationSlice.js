@@ -1,8 +1,10 @@
-// slices/notificationSlice.js
+// redux/slices/notificationSlice.js
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import api from '../api/axiosInstance';
 
+// =======================
 // Fetch Notifications
+// =======================
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
   async ({user_id, token, type_filter = 'all'}, {rejectWithValue}) => {
@@ -23,12 +25,14 @@ export const fetchNotifications = createAsyncThunk(
   },
 );
 
+// =======================
 // Mark Single Notification Read
+// =======================
 export const markNotificationRead = createAsyncThunk(
   'notifications/markNotificationRead',
   async ({notification_id, user_id, token}, {rejectWithValue}) => {
     try {
-      const res = await api.patch(
+      await api.patch(
         `/notifications/${notification_id}/read?user_id=${user_id}`,
         {},
         {
@@ -45,7 +49,9 @@ export const markNotificationRead = createAsyncThunk(
   },
 );
 
+// =======================
 // Mark All Notifications Read
+// =======================
 export const markAllNotificationsRead = createAsyncThunk(
   'notifications/markAllNotificationsRead',
   async ({user_id, token}, {rejectWithValue}) => {
@@ -70,8 +76,9 @@ export const markAllNotificationsRead = createAsyncThunk(
 const notificationSlice = createSlice({
   name: 'notifications',
   initialState: {
-    items: [],
-    loading: false,
+    items: {}, // { Today: [], Yesterday: [], ... }
+    loading: false, // only for fetch
+    markLoading: false, // only for mark read
     error: null,
   },
   reducers: {
@@ -81,7 +88,9 @@ const notificationSlice = createSlice({
   },
   extraReducers: builder => {
     builder
+      // =======================
       // Fetch Notifications
+      // =======================
       .addCase(fetchNotifications.pending, state => {
         state.loading = true;
       })
@@ -95,35 +104,50 @@ const notificationSlice = createSlice({
           action.payload?.message || 'Failed to fetch notifications';
       })
 
-      // Mark Single Notification as Read
+      // =======================
+      // Mark Single Read
+      // =======================
       .addCase(markNotificationRead.pending, state => {
-        state.loading = true;
+        state.markLoading = true;
       })
       .addCase(markNotificationRead.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = state.items.map(n =>
-          n.id === action.payload.notification_id ? {...n, is_read: true} : n,
-        );
+        state.markLoading = false;
+        const id = action.payload.notification_id;
+
+        Object.keys(state.items || {}).forEach(section => {
+          state.items[section] = state.items[section].map(n =>
+            n.id === id ? {...n, is_read: true} : n,
+          );
+        });
+        
+        // Update unread count
+        if (state.items?.unread_count && state.items.unread_count > 0) {
+          state.items.unread_count = state.items.unread_count - 1;
+        }
       })
       .addCase(markNotificationRead.rejected, (state, action) => {
-        state.loading = false;
+        state.markLoading = false;
         state.error =
           action.payload?.message || 'Failed to mark notification as read';
       })
 
-      // Mark All Notifications Read
+      // =======================
+      // Mark All Read
+      // =======================
       .addCase(markAllNotificationsRead.pending, state => {
-        state.loading = true;
+        state.markLoading = true;
       })
       .addCase(markAllNotificationsRead.fulfilled, state => {
-        state.loading = false;
-        state.items = state.items.map(n => ({
-          ...n,
-          is_read: true,
-        }));
+        state.markLoading = false;
+        Object.keys(state.items || {}).forEach(section => {
+          state.items[section] = state.items[section].map(n => ({
+            ...n,
+            is_read: true,
+          }));
+        });
       })
       .addCase(markAllNotificationsRead.rejected, (state, action) => {
-        state.loading = false;
+        state.markLoading = false;
         state.error =
           action.payload?.message || 'Failed to mark all notifications read';
       });

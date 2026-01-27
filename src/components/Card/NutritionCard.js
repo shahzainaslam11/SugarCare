@@ -56,9 +56,18 @@ const NutritionCard = ({
   proteinValue,
   sugarValue,
   fibreValue,
-  data,
+  data, // Keep for backward compatibility but don't use for validation
 }) => {
-  if (!data || data.length === 0) {
+  // Check if we have any nutrition values instead of checking data prop
+  const hasNutritionData =
+    carbohydrates ||
+    fatValue ||
+    proteinValue ||
+    sugarValue ||
+    fibreValue ||
+    glycemicIndex;
+
+  if (!hasNutritionData) {
     return (
       <View
         style={{
@@ -220,7 +229,7 @@ const styles = StyleSheet.create({
     fontSize: size.normal,
     fontFamily: family.inter_medium,
     fontWeight: '800',
-    incolor: colors.black,
+    color: colors.black,
     marginBottom: 10,
   },
 });

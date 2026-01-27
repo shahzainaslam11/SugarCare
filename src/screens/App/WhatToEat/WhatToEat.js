@@ -8,6 +8,8 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Header, AppInput, SmallLoader} from '../../../components';
@@ -319,20 +321,23 @@ const WhatToEat = () => {
         transparent
         animationType="slide"
         onRequestClose={() => !isSubmitting && setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Personalize Your Meal</Text>
-              {!isSubmitting && (
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>×</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+        <KeyboardAvoidingView
+          style={{flex: 1}}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Personalize Your Meal</Text>
+                {!isSubmitting && (
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>×</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <Formik
+              <Formik
               initialValues={{
                 currentGlucose: '',
                 diabetesControlLevel: 'Moderately controlled',
@@ -352,7 +357,10 @@ const WhatToEat = () => {
                 dirty,
                 setFieldValue,
               }) => (
-                <ScrollView style={styles.formContainer}>
+                <ScrollView
+                  style={styles.formContainer}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}>
                   <AppInput
                     title="Current Glucose (mg/dL)"
                     placeholder="e.g. 140"
@@ -485,9 +493,10 @@ const WhatToEat = () => {
                   </View>
                 </ScrollView>
               )}
-            </Formik>
+              </Formik>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

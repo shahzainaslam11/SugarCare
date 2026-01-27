@@ -50,7 +50,7 @@ export default function LogIn() {
           });
         }
       } catch (e) {
-        console.log('Error loading saved credentials', e);
+        // Error loading saved credentials - silently fail
       }
       setLoadingCredentials(false);
     })();
@@ -98,7 +98,6 @@ export default function LogIn() {
                 password: values.password,
               }),
             );
-            // console.log('Login API Response:', JSON.stringify(res));
 
             if (res.meta.requestStatus === 'fulfilled') {
               showSuccess(`Welcome ${res.payload?.user?.email || 'User'}`);
@@ -107,7 +106,6 @@ export default function LogIn() {
                 routes: [{name: 'BottomTabs'}],
               });
             } else {
-              console.log('Login Error Response:', JSON.stringify(res));
               showError(res.payload?.message || 'Login failed');
             }
           }}>

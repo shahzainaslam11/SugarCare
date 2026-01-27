@@ -45,22 +45,24 @@ const Recipe = ({route}) => {
       return {
         glycemicIndex: glycemic_index.toString(),
         giStatus: giStatus,
-        carbohydrates: `${nutrition_facts.carbohydrates_g}g`,
-        fatValue: `${nutrition_facts.fats_g}g`,
-        proteinValue: `${nutrition_facts.proteins_g}g`,
-        sugarValue: `${nutrition_facts.sugar_g}g`,
-        fibreValue: `${nutrition_facts.fiber_g}g`,
+        carbohydrates: `${nutrition_facts.carbohydrates_g || 0}g`,
+        fatValue: `${nutrition_facts.fats_g || 0}g`,
+        proteinValue: `${nutrition_facts.proteins_g || 0}g`,
+        sugarValue: `${nutrition_facts.sugar_g || 0}g`,
+        fibreValue: `${nutrition_facts.fiber_g || 0}g`,
+        data: [1], // Add data prop for backward compatibility
       };
     } else if (nutrition_facts) {
       // If we have nutrition facts but no GI
       return {
         glycemicIndex: 'N/A',
         giStatus: 'N/A',
-        carbohydrates: `${nutrition_facts.carbohydrates_g}g`,
-        fatValue: `${nutrition_facts.fats_g}g`,
-        proteinValue: `${nutrition_facts.proteins_g}g`,
-        sugarValue: `${nutrition_facts.sugar_g}g`,
-        fibreValue: `${nutrition_facts.fiber_g}g`,
+        carbohydrates: `${nutrition_facts.carbohydrates_g || 0}g`,
+        fatValue: `${nutrition_facts.fats_g || 0}g`,
+        proteinValue: `${nutrition_facts.proteins_g || 0}g`,
+        sugarValue: `${nutrition_facts.sugar_g || 0}g`,
+        fibreValue: `${nutrition_facts.fiber_g || 0}g`,
+        data: [1], // Add data prop for backward compatibility
       };
     } else {
       // Default data if no API data
@@ -72,11 +74,19 @@ const Recipe = ({route}) => {
         proteinValue: '15g',
         sugarValue: '8g',
         fibreValue: '10g',
+        data: [1], // Add data prop for backward compatibility
       };
     }
   };
 
   const nutritionCardData = getNutritionCardData();
+  
+  // Debug logging
+  console.log('=== Nutrition Card Data ===');
+  console.log('nutritionCardData:', JSON.stringify(nutritionCardData, null, 2));
+  console.log('nutrition_facts:', JSON.stringify(nutrition_facts, null, 2));
+  console.log('glycemic_index:', glycemic_index);
+  console.log('==========================');
 
   // Handle share
   const handleShare = async () => {

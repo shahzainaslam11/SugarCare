@@ -9,7 +9,7 @@ import {
   AppState,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {ChartComponent, MenuModal} from '../../../components';
 import {fetchProfile} from '../../../redux/slices/profileSlice';
@@ -123,6 +123,37 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [accessToken]);
+
+  // Close menu when screen loses focus (prevents menu from appearing on other screens)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Ensure menu is closed when screen gains focus (if somehow left open)
+      setIsMenuVisible(false);
+      
+      // Cleanup: close menu when screen loses focus
+      return () => {
+        setIsMenuVisible(false);
+      };
+    }, []),
+  );
+
+  // Listen to navigation state changes - close menu immediately when navigating away
+  useEffect(() => {
+    // Close menu before navigation completes to prevent blinking
+    const unsubscribeBeforeRemove = navigation.addListener('beforeRemove', () => {
+      setIsMenuVisible(false);
+    });
+    
+    const unsubscribeState = navigation.addListener('state', () => {
+      // Close menu immediately on any navigation state change
+      setIsMenuVisible(false);
+    });
+
+    return () => {
+      unsubscribeBeforeRemove();
+      unsubscribeState();
+    };
+  }, [navigation]);
 
   const toggleMenu = () => {
     if (!checkTokenValidity()) return;
@@ -298,12 +329,15 @@ export default function Home() {
             </View>
           </View>
         </View>
-        <MenuModal
-          updatedName={profile?.name}
-          visible={isMenuVisible}
-          onClose={() => setIsMenuVisible(false)}
-          navigation={navigation}
-        />
+        {/* Only render MenuModal when actually visible - prevents any blinking */}
+        {isMenuVisible && (
+          <MenuModal
+            updatedName={profile?.name}
+            visible={isMenuVisible}
+            onClose={() => setIsMenuVisible(false)}
+            navigation={navigation}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

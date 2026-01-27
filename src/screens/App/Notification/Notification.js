@@ -7,8 +7,8 @@ import {
   Image,
   StatusBar,
   RefreshControl,
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -16,28 +16,29 @@ import {
   fetchNotifications,
   markNotificationRead,
 } from '../../../redux/slices/notificationSlice';
-import {appIcons, colors} from '../../../utilities';
+import {appIcons} from '../../../utilities';
 import styles from './styles';
 import {SmallLoader} from '../../../components';
 
 const Notifications = ({navigation}) => {
-  const [activeTab, setActiveTab] = useState('all'); // all | insights
+  const [activeTab, setActiveTab] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
   const dispatch = useDispatch();
-  const {items, loading} = useSelector(state => state.notifications);
+  const {items, loading, markLoading} = useSelector(state => state.notifications);
   const {accessToken, user} = useSelector(state => state.auth);
-  console.log('items---->', items);
 
   const user_id = user?.id;
   const token = accessToken;
 
-  // Fetch data whenever screen opens or tab changes
+  // =======================
+  // Fetch Notifications
+  // =======================
   useEffect(() => {
     if (user_id && token) {
       dispatch(fetchNotifications({user_id, token, type_filter: activeTab}));
     }
-  }, [activeTab]);
+  }, [activeTab, user_id, token, dispatch]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -46,7 +47,9 @@ const Notifications = ({navigation}) => {
     ).finally(() => setRefreshing(false));
   }, [dispatch, user_id, token, activeTab]);
 
-  // Correct API structure:
+  // =======================
+  // Sections from API
+  // =======================
   const notifications = {
     Today: items?.Today || [],
     Yesterday: items?.Yesterday || [],
@@ -54,7 +57,6 @@ const Notifications = ({navigation}) => {
     Older: items?.Older || [],
   };
 
-  // Badge count from response
   const unreadCount = useSelector(
     state => state.notifications.items?.unread_count || 0,
   );
@@ -82,7 +84,7 @@ const Notifications = ({navigation}) => {
         </TouchableOpacity>
       </View>
 
-      {/* Tab Switcher */}
+      {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'all' && styles.activeTab]}
@@ -94,7 +96,6 @@ const Notifications = ({navigation}) => {
             ]}>
             All Notifications
           </Text>
-
           {activeTab === 'all' && <View style={styles.tabIndicator} />}
         </TouchableOpacity>
 
@@ -109,7 +110,6 @@ const Notifications = ({navigation}) => {
             Smart Insights
           </Text>
 
-          {/* 🔥 Live badge */}
           {unreadCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{unreadCount}</Text>
@@ -120,7 +120,8 @@ const Notifications = ({navigation}) => {
         </TouchableOpacity>
       </View>
 
-      {loading && <SmallLoader height={100} width={'100%'} />}
+      {/* Loader only for fetch */}
+      {loading && <SmallLoader height={100} width="100%" />}
 
       {!loading && (
         <ScrollView
@@ -132,35 +133,48 @@ const Notifications = ({navigation}) => {
           }>
           {Object.keys(notifications).map(section => {
             const list = notifications[section];
-            if (list.length === 0) return null;
+            if (!list?.length) return null;
+
             return (
               <View key={section}>
                 <Text style={styles.sectionTitle}>{section}</Text>
 
-                {list.map(item => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.notificationCard}
-                    onPress={() =>
-                      !item.is_read &&
-                      dispatch(
-                        markNotificationRead({
-                          notification_id: item.id,
-                          user_id,
-                          token,
-                        }),
-                      )
-                    }>
-                    <View style={styles.cardContent}>
-                      <Text style={styles.cardTitle}>{item.title}</Text>
-                      <Text style={styles.cardMessage}>{item.detail}</Text>
-                    </View>
-                    <View style={styles.cardRight}>
-                      <Text style={styles.cardTime}>{item.time_ago}</Text>
-                      {!item.is_read && <View style={styles.newDot} />}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                {list.map(item => {
+                  // Optimistically mark as read in UI immediately
+                  const isMarkingRead = markLoading && !item.is_read;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.notificationCard}
+                      onPress={() => {
+                        if (!item.is_read && !isMarkingRead && user_id && token) {
+                          // Mark as read - state will update optimistically, no need to refresh
+                          dispatch(
+                            markNotificationRead({
+                              notification_id: item.id,
+                              user_id,
+                              token,
+                            }),
+                          );
+                        }
+                      }}
+                      disabled={isMarkingRead}>
+                      <View style={styles.cardContent}>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                        <Text style={styles.cardMessage}>{item.detail}</Text>
+                      </View>
+
+                      <View style={styles.cardRight}>
+                        <Text style={styles.cardTime}>{item.time_ago}</Text>
+                        {!item.is_read && !isMarkingRead && <View style={styles.newDot} />}
+                        {isMarkingRead && (
+                          <ActivityIndicator size="small" color="#007AFF" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             );
           })}

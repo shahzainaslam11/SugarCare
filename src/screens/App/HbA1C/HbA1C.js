@@ -5,7 +5,7 @@ const HbA1cReportScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>HbA1c Test Reports</Text>
+        <Text style={styles.headerText}>HbA1c Test Repo</Text>
       </View>
 
       <View style={styles.reportsContainer}>

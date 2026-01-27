@@ -53,13 +53,8 @@ export const sendChatMessage = createAsyncThunk(
         },
       );
 
+      // Return only bot message - user message is added optimistically via addUserMessage
       return {
-        userMessage: {
-          id: Date.now() + '_user',
-          sender: 'user',
-          message,
-          created_at: new Date().toISOString(),
-        },
         botMessage: {
           id: Date.now() + '_bot',
           sender: 'bot',
@@ -82,12 +77,18 @@ const chatSlice = createSlice({
   },
   reducers: {
     addUserMessage: (state, action) => {
+      const messageId = Date.now() + '_user_' + Math.random().toString(36).substr(2, 9);
       state.messages.push({
-        id: Date.now() + '_user',
+        id: messageId,
         sender: 'user',
         message: action.payload,
         created_at: new Date().toISOString(),
+        isOptimistic: true, // Mark as optimistic for potential removal on error
       });
+    },
+    removeOptimisticMessage: (state, action) => {
+      // Remove optimistic message by ID if API call fails
+      state.messages = state.messages.filter(msg => msg.id !== action.payload);
     },
     clearChat: state => {
       state.messages = [];
@@ -123,17 +124,31 @@ const chatSlice = createSlice({
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload) {
-          state.messages.push(action.payload.userMessage);
-          state.messages.push(action.payload.botMessage);
+        if (action.payload?.botMessage) {
+          // Only add bot message - user message was already added optimistically via addUserMessage
+          // Check if bot message doesn't already exist to prevent duplicates
+          const botMessageExists = state.messages.some(
+            msg => msg.id === action.payload.botMessage.id,
+          );
+          if (!botMessageExists) {
+            state.messages.push(action.payload.botMessage);
+          }
         }
       })
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to send message';
+        // Remove the most recent optimistic user message if API call failed
+        // Find the last optimistic message and remove it
+        for (let i = state.messages.length - 1; i >= 0; i--) {
+          if (state.messages[i].sender === 'user' && state.messages[i].isOptimistic) {
+            state.messages.splice(i, 1);
+            break;
+          }
+        }
       });
   },
 });
 
-export const {addUserMessage, clearChat} = chatSlice.actions;
+export const {addUserMessage, clearChat, removeOptimisticMessage} = chatSlice.actions;
 export default chatSlice.reducer;

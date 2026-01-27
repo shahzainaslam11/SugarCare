@@ -80,7 +80,7 @@ api.interceptors.response.use(
           const refreshResult = await store.dispatch(refreshAccessToken());
           
           if (refreshAccessToken.fulfilled.match(refreshResult)) {
-            const newToken = result.payload.access_token;
+            const newToken = refreshResult.payload.access_token;
             
             // Update the original request with new token
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -102,6 +102,11 @@ api.interceptors.response.use(
           
           await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
           store.dispatch({type: 'auth/logout'});
+          
+          // Force navigation to login screen
+          if (store.getState().auth?.accessToken === null) {
+            // Navigation will be handled by MainAppNav useEffect
+          }
           
           return Promise.reject(refreshError);
         }

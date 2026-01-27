@@ -356,7 +356,7 @@ const EditProfile = () => {
         {/* Avatar Container - Fixed Structure */}
         <View style={styles.avatarContainer}>
           {/* Avatar Image Container */}
-          <View style={styles.avatarImageContainer}>
+          <View style={styles.avatarContainer}>
             <Image
               source={imageSource}
               style={styles.avatar}

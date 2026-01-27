@@ -74,10 +74,7 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
         <View style={styles.durationContainer}>
           <Image source={iconSource} style={styles.icon} resizeMode="contain" />
           <Text style={styles.durationText}>
-            <Text
-              style={
-                styles.timeValue
-              }>{`${durationHours}h ${durationMinutes}m`}</Text>
+            <Text style={styles.timeValue}>{totalDuration}</Text>
           </Text>
         </View>
 

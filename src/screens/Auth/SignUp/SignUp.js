@@ -99,9 +99,6 @@ export default function SignUp() {
               try {
                 const res = await dispatch(registerUser(payload));
 
-                // ✅ Log the full API response for debugging
-                console.log('Register API Response:', JSON.stringify(res));
-
                 if (res.meta.requestStatus === 'fulfilled') {
                   showSuccess('Signup successful! Please login.');
                   navigation.navigate('LogIn', {email: values.email});
@@ -127,7 +124,6 @@ export default function SignUp() {
                   showError('Sign up failed. Please try again.');
                 }
               } catch (e) {
-                console.log('Unexpected error:', e);
                 showError('Something went wrong. Please try again.');
               } finally {
                 setSubmitting(false);

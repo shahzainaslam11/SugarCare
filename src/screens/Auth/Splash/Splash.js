@@ -23,10 +23,8 @@ const SplashScreen = () => {
       if (isInitialized !== undefined) {
         // or use a specific initialization flag
         if (accessToken) {
-          console.log('Token exists, navigating to BottomTabs');
           navigation.replace('BottomTabs');
         } else {
-          console.log('No token, navigating to Auth');
           navigation.replace('Auth');
         }
       } else {

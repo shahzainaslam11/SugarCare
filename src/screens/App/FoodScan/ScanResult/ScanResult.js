@@ -57,16 +57,29 @@ const ScanResult = () => {
     suggestion,
     confidence_score,
   } = scanData;
+  // Debug logging
+  console.log('=== Scan Result Data ===');
+  console.log('scanData:', JSON.stringify(scanData, null, 2));
+  console.log('nutrition_facts:', JSON.stringify(nutrition_facts, null, 2));
+  console.log('glycemic_index:', JSON.stringify(glycemic_index, null, 2));
 
   const nutritionData = {
-    glycemicIndex: `${glycemic_index?.value}`,
-    giStatus: glycemic_index?.category,
-    carbohydrates: `${nutrition_facts?.carbohydrates_g}g`,
-    fatValue: `${nutrition_facts?.fats_g}g`,
-    proteinValue: `${nutrition_facts?.proteins_g}g`,
-    sugarValue: `${nutrition_facts?.sugar_g}g`,
-    fibreValue: `${nutrition_facts?.fiber_g}g`,
+    glycemicIndex: glycemic_index?.value ? `${glycemic_index.value}` : 'N/A',
+    giStatus: glycemic_index?.category || 'N/A',
+    carbohydrates: nutrition_facts?.carbohydrates_g
+      ? `${nutrition_facts.carbohydrates_g}g`
+      : '0g',
+    fatValue: nutrition_facts?.fats_g ? `${nutrition_facts.fats_g}g` : '0g',
+    proteinValue: nutrition_facts?.proteins_g
+      ? `${nutrition_facts.proteins_g}g`
+      : '0g',
+    sugarValue: nutrition_facts?.sugar_g ? `${nutrition_facts.sugar_g}g` : '0g',
+    fibreValue: nutrition_facts?.fiber_g ? `${nutrition_facts.fiber_g}g` : '0g',
+    data: [1], // Add data prop for backward compatibility
   };
+
+  console.log('nutritionData (final):', JSON.stringify(nutritionData, null, 2));
+  console.log('========================');
 
   return (
     <SafeAreaView style={styles.container}>
