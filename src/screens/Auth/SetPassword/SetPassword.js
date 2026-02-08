@@ -13,12 +13,15 @@ import styles from './styles';
 const setPasswordVS = yup.object().shape({
   password: yup
     .string()
+    .required('Password Required')
     .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
+    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter'),
+
   confirmPassword: yup
     .string()
-    .oneOf([yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
+    .oneOf([yup.ref('password')], 'Passwords do not match')
+    .required('Confirm Password Required'),
 });
 
 export default function SetNewPassword() {

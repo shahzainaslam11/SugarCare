@@ -35,6 +35,7 @@ export default function Home() {
   const [activeRange, setActiveRange] = useState('Today');
   const appState = useRef(AppState.currentState);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  console.log('User---->', accessToken);
 
   const {
     graphData: sugarGraphData,
@@ -129,7 +130,7 @@ export default function Home() {
     React.useCallback(() => {
       // Ensure menu is closed when screen gains focus (if somehow left open)
       setIsMenuVisible(false);
-      
+
       // Cleanup: close menu when screen loses focus
       return () => {
         setIsMenuVisible(false);
@@ -140,10 +141,13 @@ export default function Home() {
   // Listen to navigation state changes - close menu immediately when navigating away
   useEffect(() => {
     // Close menu before navigation completes to prevent blinking
-    const unsubscribeBeforeRemove = navigation.addListener('beforeRemove', () => {
-      setIsMenuVisible(false);
-    });
-    
+    const unsubscribeBeforeRemove = navigation.addListener(
+      'beforeRemove',
+      () => {
+        setIsMenuVisible(false);
+      },
+    );
+
     const unsubscribeState = navigation.addListener('state', () => {
       // Close menu immediately on any navigation state change
       setIsMenuVisible(false);

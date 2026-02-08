@@ -31,9 +31,14 @@ const Recipe = ({route}) => {
   console.log('Glycemic index:', glycemic_index);
 
   // Prepare nutrition data for NutritionCard
+  const format2 = val => {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
+
   const getNutritionCardData = () => {
     if (nutrition_facts && glycemic_index !== null) {
-      // Determine GI status based on glycemic index
       const getGIStatus = gi => {
         if (gi <= 55) return 'Low';
         if (gi <= 69) return 'Medium';
@@ -43,44 +48,45 @@ const Recipe = ({route}) => {
       const giStatus = getGIStatus(glycemic_index);
 
       return {
-        glycemicIndex: glycemic_index.toString(),
-        giStatus: giStatus,
-        carbohydrates: `${nutrition_facts.carbohydrates_g || 0}g`,
-        fatValue: `${nutrition_facts.fats_g || 0}g`,
-        proteinValue: `${nutrition_facts.proteins_g || 0}g`,
-        sugarValue: `${nutrition_facts.sugar_g || 0}g`,
-        fibreValue: `${nutrition_facts.fiber_g || 0}g`,
-        data: [1], // Add data prop for backward compatibility
+        glycemicIndex: format2(glycemic_index),
+        giStatus,
+        carbohydrates: `${format2(nutrition_facts.carbohydrates_g)}g`,
+        fatValue: `${format2(nutrition_facts.fats_g)}g`,
+        proteinValue: `${format2(nutrition_facts.proteins_g)}g`,
+        sugarValue: `${format2(nutrition_facts.sugar_g)}g`,
+        fibreValue: `${format2(nutrition_facts.fiber_g)}g`,
+        data: [1],
       };
-    } else if (nutrition_facts) {
-      // If we have nutrition facts but no GI
+    }
+
+    if (nutrition_facts) {
       return {
         glycemicIndex: 'N/A',
         giStatus: 'N/A',
-        carbohydrates: `${nutrition_facts.carbohydrates_g || 0}g`,
-        fatValue: `${nutrition_facts.fats_g || 0}g`,
-        proteinValue: `${nutrition_facts.proteins_g || 0}g`,
-        sugarValue: `${nutrition_facts.sugar_g || 0}g`,
-        fibreValue: `${nutrition_facts.fiber_g || 0}g`,
-        data: [1], // Add data prop for backward compatibility
-      };
-    } else {
-      // Default data if no API data
-      return {
-        glycemicIndex: '35',
-        giStatus: 'Low',
-        carbohydrates: '45g',
-        fatValue: '12g',
-        proteinValue: '15g',
-        sugarValue: '8g',
-        fibreValue: '10g',
-        data: [1], // Add data prop for backward compatibility
+        carbohydrates: `${format2(nutrition_facts.carbohydrates_g)}g`,
+        fatValue: `${format2(nutrition_facts.fats_g)}g`,
+        proteinValue: `${format2(nutrition_facts.proteins_g)}g`,
+        sugarValue: `${format2(nutrition_facts.sugar_g)}g`,
+        fibreValue: `${format2(nutrition_facts.fiber_g)}g`,
+        data: [1],
       };
     }
+
+    // ✅ No API data → show nothing meaningful instead of fake values
+    return {
+      glycemicIndex: 'N/A',
+      giStatus: 'N/A',
+      carbohydrates: '0.00g',
+      fatValue: '0.00g',
+      proteinValue: '0.00g',
+      sugarValue: '0.00g',
+      fibreValue: '0.00g',
+      data: [],
+    };
   };
 
   const nutritionCardData = getNutritionCardData();
-  
+
   // Debug logging
   console.log('=== Nutrition Card Data ===');
   console.log('nutritionCardData:', JSON.stringify(nutritionCardData, null, 2));

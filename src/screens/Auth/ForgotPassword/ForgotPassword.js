@@ -4,7 +4,12 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import * as yup from 'yup';
 import {AppInput, AppButton} from '../../../components';
-import {appImages, showError, showSuccess} from '../../../utilities';
+import {
+  appImages,
+  normalizeEmail,
+  showError,
+  showSuccess,
+} from '../../../utilities';
 import styles from './styles';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
@@ -33,10 +38,11 @@ export default function ForgotPassword() {
           initialValues={{email: ''}}
           validationSchema={forgotPasswordVS}
           onSubmit={async values => {
+            const email = normalizeEmail(values.email);
             // Call sendOtp with purpose 'reset_pw' as per API documentation
             const res = await dispatch(
               sendOtp({
-                email: values.email,
+                email,
                 purpose: 'reset_pw',
               }),
             );

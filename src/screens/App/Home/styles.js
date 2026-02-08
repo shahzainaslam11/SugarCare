@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
+    paddingBottom: 0,
   },
 
   scrollView: {

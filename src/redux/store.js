@@ -26,6 +26,7 @@ import reportReducer from './slices/reportSlice';
 import mealRecommendationsReducer from './slices/mealRecommendationsSlice';
 import communityInsightsReducer from './slices/communityInsightsSlice';
 import sugarAlertReducer from './slices/sugarAlertSlice';
+import riskForecastReducer from './slices/riskForecastSlice';
 
 // Persist configuration
 const persistConfig = {
@@ -52,6 +53,7 @@ const rootReducer = combineReducers({
   meals: mealRecommendationsReducer,
   communityInsights: communityInsightsReducer,
   sugarAlert: sugarAlertReducer,
+  riskForecast: riskForecastReducer,
 });
 
 // Create persisted reducer

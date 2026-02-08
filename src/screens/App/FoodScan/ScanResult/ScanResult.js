@@ -63,19 +63,39 @@ const ScanResult = () => {
   console.log('nutrition_facts:', JSON.stringify(nutrition_facts, null, 2));
   console.log('glycemic_index:', JSON.stringify(glycemic_index, null, 2));
 
+  const format2 = val => {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
+
   const nutritionData = {
-    glycemicIndex: glycemic_index?.value ? `${glycemic_index.value}` : 'N/A',
+    glycemicIndex: glycemic_index?.value
+      ? format2(glycemic_index.value)
+      : 'N/A',
     giStatus: glycemic_index?.category || 'N/A',
+
     carbohydrates: nutrition_facts?.carbohydrates_g
-      ? `${nutrition_facts.carbohydrates_g}g`
-      : '0g',
-    fatValue: nutrition_facts?.fats_g ? `${nutrition_facts.fats_g}g` : '0g',
+      ? `${format2(nutrition_facts.carbohydrates_g)}g`
+      : '0.00g',
+
+    fatValue: nutrition_facts?.fats_g
+      ? `${format2(nutrition_facts.fats_g)}g`
+      : '0.00g',
+
     proteinValue: nutrition_facts?.proteins_g
-      ? `${nutrition_facts.proteins_g}g`
-      : '0g',
-    sugarValue: nutrition_facts?.sugar_g ? `${nutrition_facts.sugar_g}g` : '0g',
-    fibreValue: nutrition_facts?.fiber_g ? `${nutrition_facts.fiber_g}g` : '0g',
-    data: [1], // Add data prop for backward compatibility
+      ? `${format2(nutrition_facts.proteins_g)}g`
+      : '0.00g',
+
+    sugarValue: nutrition_facts?.sugar_g
+      ? `${format2(nutrition_facts.sugar_g)}g`
+      : '0.00g',
+
+    fibreValue: nutrition_facts?.fiber_g
+      ? `${format2(nutrition_facts.fiber_g)}g`
+      : '0.00g',
+
+    data: [1],
   };
 
   console.log('nutritionData (final):', JSON.stringify(nutritionData, null, 2));
@@ -125,14 +145,14 @@ const ScanResult = () => {
               {predicted_impact?.confidence_note}
             </Text>
           </View>
-
+          {/* 
           {confidence_score && (
             <View style={styles.confidenceBox}>
               <Text style={styles.confidenceText}>
                 Confidence Score: {(confidence_score * 100).toFixed(0)}%
               </Text>
             </View>
-          )}
+          )} */}
 
           <NutritionCard {...nutritionData} />
 

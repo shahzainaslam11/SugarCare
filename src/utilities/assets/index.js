@@ -66,6 +66,7 @@ export const appIcons = {
   heart: require('../../assets/icons/heart.png'),
   nerve: require('../../assets/icons/nerve.png'),
   eye: require('../../assets/icons/eye.png'),
+  foot: require('../../assets/icons/foot.png'),
   tip: require('../../assets/icons/tip.png'),
   arrowDown: require('../../assets/icons/arrowDown.png'),
   arrowUp: require('../../assets/icons/arrowUp.png'),

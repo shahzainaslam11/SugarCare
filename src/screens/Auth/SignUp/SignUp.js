@@ -18,6 +18,7 @@ import {
   showSuccess,
   signUpVS,
   colors,
+  normalizeEmail,
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
@@ -80,9 +81,11 @@ export default function SignUp() {
             initialValues={initialValues}
             validationSchema={signUpVS}
             onSubmit={async (values, {setSubmitting}) => {
+              const email = normalizeEmail(values.email);
+
               // Prepare payload matching backend API
               const payload = {
-                email: values.email,
+                email,
                 password: values.password,
                 confirm_password: values.confirmPassword,
                 full_name: values.name,

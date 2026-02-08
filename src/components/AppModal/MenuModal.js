@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -115,7 +116,7 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
     slideAnim.stopAnimation();
     slideAnim.setValue(-DRAWER_WIDTH);
     isAnimating.current = false;
-    
+
     // Set visible to false immediately - this hides modal instantly
     onClose();
 
@@ -313,7 +314,7 @@ const MenuModal = ({updatedName, visible, onClose, navigation}) => {
                   <ActivityIndicator size="small" color={colors.p1} />
                 ) : (
                   <>
-                    <Text style={styles.logoutIcon}>🚪</Text>
+                    <Image source={appIcons.logOut} style={styles.logOutIcon} />
                     <View style={styles.logoutTextContainer}>
                       <Text style={styles.logoutText}>Logout</Text>
                     </View>
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginTop: HP(4),
+    marginTop: Platform.OS === 'ios' ? HP(3) : HP(2),
   },
   profileHeader: {
     flexDirection: 'row',
@@ -491,6 +492,12 @@ const styles = StyleSheet.create({
     fontFamily: family.inter_medium,
     color: colors.p1,
     textAlign: 'center',
+  },
+  logOutIcon: {
+    width: WP(5),
+    height: WP(5),
+    tintColor: colors.p1,
+    marginRight: WP(4),
   },
 });
 
