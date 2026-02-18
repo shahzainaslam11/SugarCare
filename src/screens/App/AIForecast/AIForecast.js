@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo} from 'react';
 import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {Header} from '../../../components';
+import {Header, MedicalDisclaimer} from '../../../components';
 import {appIcons, colors} from '../../../utilities';
 import styles from './styles';
 import {fetchRiskForecast} from '../../../redux/slices/riskForecastSlice';
@@ -111,15 +111,26 @@ export default function AIRiskForecasting({navigation}) {
      Icon Resolver (Fixes heart icon everywhere issue)
   -------------------------------------------------- */
   const getRiskIcon = name => {
-    if (!name) return appIcons.heart;
-
+    if (!name) {
+      return appIcons.heart;
+    }
     const key = name.toLowerCase();
 
-    if (key.includes('nerve')) return appIcons.nerve;
-    if (key.includes('kidney')) return appIcons.kidney;
-    if (key.includes('eye')) return appIcons.eye;
-    if (key.includes('cardio') || key.includes('heart')) return appIcons.heart;
-    if (key.includes('foot')) return appIcons.foot;
+    if (key.includes('nerve')) {
+      return appIcons.nerve;
+    }
+    if (key.includes('kidney')) {
+      return appIcons.kidney;
+    }
+    if (key.includes('eye')) {
+      return appIcons.eye;
+    }
+    if (key.includes('cardio') || key.includes('heart')) {
+      return appIcons.heart;
+    }
+    if (key.includes('foot')) {
+      return appIcons.foot;
+    }
 
     return appIcons.heart;
   };
@@ -179,7 +190,7 @@ export default function AIRiskForecasting({navigation}) {
 
         {/* Loading */}
         {loading && (
-          <ActivityIndicator size="large" style={{marginVertical: 20}} />
+          <ActivityIndicator size="large" style={styles.activityIndicator} />
         )}
 
         {/* Empty */}
@@ -220,6 +231,8 @@ export default function AIRiskForecasting({navigation}) {
             </Text>
           </View>
         </View>
+
+        <MedicalDisclaimer />
       </ScrollView>
     </SafeAreaView>
   );

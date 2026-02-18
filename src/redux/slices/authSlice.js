@@ -2,6 +2,9 @@ import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/axiosInstance';
 
+// Ensure email is always lowercase before sending to backend
+const normalizeEmail = e => (typeof e === 'string' ? e.trim().toLowerCase() : e);
+
 // Helper to extract validation errors
 const getErrorMessage = payload => {
   if (!payload) return 'Something went wrong.';
@@ -51,7 +54,10 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({email, password}, {rejectWithValue, dispatch}) => {
     try {
-      const res = await api.post('/auth/login', {email, password});
+      const res = await api.post('/auth/login', {
+        email: normalizeEmail(email),
+        password,
+      });
 
       // Save to AsyncStorage
       await saveAuthDataToStorage({
@@ -72,7 +78,11 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (payload, {rejectWithValue}) => {
     try {
-      const res = await api.post('/auth/register', payload);
+      const normalized = {
+        ...payload,
+        email: normalizeEmail(payload.email),
+      };
+      const res = await api.post('/auth/register', normalized);
 
       // Save to AsyncStorage
       await saveAuthDataToStorage({
@@ -111,7 +121,7 @@ export const verifyOtp = createAsyncThunk(
     try {
       const res = await api.post('/auth/otp/verify', {
         purpose,
-        email,
+        email: normalizeEmail(email),
         code,
       });
       return res.data;
@@ -127,7 +137,7 @@ export const resetPassword = createAsyncThunk(
   async ({email, new_password, confirm_password}, {rejectWithValue}) => {
     try {
       const res = await api.post('/auth/reset-password', {
-        email,
+        email: normalizeEmail(email),
         new_password,
         confirm_password,
       });

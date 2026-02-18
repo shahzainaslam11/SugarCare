@@ -12,7 +12,12 @@ import {
   Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header, AppInput, SmallLoader} from '../../../components';
+import {
+  Header,
+  AppInput,
+  MedicalDisclaimer,
+  SmallLoader,
+} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
@@ -313,6 +318,8 @@ const WhatToEat = () => {
             ))}
           </View>
         )}
+
+        <MedicalDisclaimer />
       </ScrollView>
 
       {/* Personalization Modal */}

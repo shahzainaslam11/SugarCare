@@ -125,6 +125,11 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>Support & Legal</Text>
           <View style={styles.card}>
             <SettingsItem
+              onPress={() => navigation.navigate('MedicalSources')}
+              title="Sources & Medical Information"
+              isLast={false}
+            />
+            <SettingsItem
               onPress={() => navigation.navigate('FAQs')}
               title="FAQs"
               isLast={false}

@@ -6,7 +6,7 @@ import {AreaChart, Grid, YAxis} from 'react-native-svg-charts';
 import {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import * as shape from 'd3-shape';
 import {appIcons} from '../../../utilities';
-import {AppButton, Header} from '../../../components';
+import {AppButton, Header, MedicalDisclaimer} from '../../../components';
 import styles from './styles';
 
 export default function PredictiveSugarAlert() {
@@ -443,6 +443,8 @@ export default function PredictiveSugarAlert() {
             </Text>
           </View>
         )}
+
+        <MedicalDisclaimer />
       </ScrollView>
 
       {/* Single Bottom Button */}

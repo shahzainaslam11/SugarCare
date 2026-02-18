@@ -20,13 +20,14 @@ export const analyzeFoodImage = createAsyncThunk(
       const res = await api.post('/food/analyze', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
           accept: 'application/json',
         },
       });
 
       console.log('📥 Food Analysis Response:', JSON.stringify(res.data));
-      return res.data?.data;
+      // Handle both { data: {...} } and direct {...} response structures
+      const result = res.data?.data ?? res.data;
+      return result;
     } catch (err) {
       console.log(
         '❌ Food Analysis Error:',
