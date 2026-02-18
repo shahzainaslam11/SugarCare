@@ -3,7 +3,21 @@ import {View, Text, StyleSheet, Image} from 'react-native';
 import {appIcons, family, size} from '../../utilities';
 
 const SugarRecordCard = ({record}) => {
-  if (!record) return null;
+  if (!record) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 120,
+        }}>
+        <Text style={{textAlign: 'center', color: '#888', fontSize: 16}}>
+          No sugar record available
+        </Text>
+      </View>
+    );
+  }
 
   const getStatusStyle = value => {
     if (value < 70) return styles.lowStatus;

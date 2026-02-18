@@ -16,8 +16,10 @@ export const loginVS = yup.object().shape({
     ),
   password: yup
     .string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password Required'),
+    .required('Password Required')
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter'),
 });
 
 // SignUp form fields
@@ -104,11 +106,15 @@ export const signUpVS = yup.object().shape({
 
   password: yup
     .string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password Required'),
+    .required('Password Required')
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter'),
 
   confirmPassword: yup
     .string()
     .oneOf([yup.ref('password')], 'Passwords do not match')
     .required('Confirm Password Required'),
 });
+
+export const normalizeEmail = email => email?.trim().toLowerCase();

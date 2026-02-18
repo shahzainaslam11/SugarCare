@@ -59,16 +59,22 @@ export const uploadProfileImage = createAsyncThunk(
 );
 
 // Delete profile image
+// In deleteProfileImage thunk:
 export const deleteProfileImage = createAsyncThunk(
   'profile/deleteProfileImage',
   async ({token}, {rejectWithValue}) => {
     try {
+      console.log('DELETE API Request to /profile/me/image');
       const res = await api.delete('/profile/me/image', {
-        headers: {Authorization: `Bearer ${token}`}, // Simplified headers
+        headers: {Authorization: `Bearer ${token}`},
       });
-      // Assuming API returns an object like { profile_image: null } or just null
-      return res.data.data;
+
+      console.log('DELETE Response:', JSON.stringify(res.data, null, 2));
+
+      // Check if the API returns the full profile or just success message
+      return res.data.data || res.data;
     } catch (error) {
+      console.log('DELETE Error:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data || error.message);
     }
   },
@@ -123,8 +129,7 @@ const profileSlice = createSlice({
       })
       .addCase(uploadProfileImage.fulfilled, (state, action) => {
         state.loading = false;
-        // ⭐ ASSUMING action.payload = { profile_image: '/path' }
-        if (state.data) state.data.profile_image = action.payload.profile_image;
+        state.data = action.payload; // Assuming API returns full profile
       })
       .addCase(uploadProfileImage.rejected, (state, action) => {
         state.loading = false;
@@ -137,9 +142,9 @@ const profileSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteProfileImage.fulfilled, state => {
+      .addCase(deleteProfileImage.fulfilled, (state, action) => {
         state.loading = false;
-        if (state.data) state.data.profile_image = null;
+        state.data = action.payload;
       })
       .addCase(deleteProfileImage.rejected, (state, action) => {
         state.loading = false;

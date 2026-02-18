@@ -34,9 +34,6 @@ const PredictInputs = () => {
     state => state.sugarAlert,
   );
 
-  /* =====================================================
-     Fetch Previous Readings
-  ===================================================== */
   useEffect(() => {
     if (accessToken && user?.id) {
       dispatch(
@@ -49,7 +46,6 @@ const PredictInputs = () => {
     }
   }, [accessToken, user?.id, dispatch]);
 
-  // Show error alert if prediction fails
   useEffect(() => {
     if (error) {
       Alert.alert(

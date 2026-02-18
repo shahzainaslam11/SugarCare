@@ -57,16 +57,49 @@ const ScanResult = () => {
     suggestion,
     confidence_score,
   } = scanData;
+  // Debug logging
+  console.log('=== Scan Result Data ===');
+  console.log('scanData:', JSON.stringify(scanData, null, 2));
+  console.log('nutrition_facts:', JSON.stringify(nutrition_facts, null, 2));
+  console.log('glycemic_index:', JSON.stringify(glycemic_index, null, 2));
+
+  const format2 = val => {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
 
   const nutritionData = {
-    glycemicIndex: `${glycemic_index?.value}`,
-    giStatus: glycemic_index?.category,
-    carbohydrates: `${nutrition_facts?.carbohydrates_g}g`,
-    fatValue: `${nutrition_facts?.fats_g}g`,
-    proteinValue: `${nutrition_facts?.proteins_g}g`,
-    sugarValue: `${nutrition_facts?.sugar_g}g`,
-    fibreValue: `${nutrition_facts?.fiber_g}g`,
+    glycemicIndex: glycemic_index?.value
+      ? format2(glycemic_index.value)
+      : 'N/A',
+    giStatus: glycemic_index?.category || 'N/A',
+
+    carbohydrates: nutrition_facts?.carbohydrates_g
+      ? `${format2(nutrition_facts.carbohydrates_g)}g`
+      : '0.00g',
+
+    fatValue: nutrition_facts?.fats_g
+      ? `${format2(nutrition_facts.fats_g)}g`
+      : '0.00g',
+
+    proteinValue: nutrition_facts?.proteins_g
+      ? `${format2(nutrition_facts.proteins_g)}g`
+      : '0.00g',
+
+    sugarValue: nutrition_facts?.sugar_g
+      ? `${format2(nutrition_facts.sugar_g)}g`
+      : '0.00g',
+
+    fibreValue: nutrition_facts?.fiber_g
+      ? `${format2(nutrition_facts.fiber_g)}g`
+      : '0.00g',
+
+    data: [1],
   };
+
+  console.log('nutritionData (final):', JSON.stringify(nutritionData, null, 2));
+  console.log('========================');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,14 +145,14 @@ const ScanResult = () => {
               {predicted_impact?.confidence_note}
             </Text>
           </View>
-
+          {/* 
           {confidence_score && (
             <View style={styles.confidenceBox}>
               <Text style={styles.confidenceText}>
                 Confidence Score: {(confidence_score * 100).toFixed(0)}%
               </Text>
             </View>
-          )}
+          )} */}
 
           <NutritionCard {...nutritionData} />
 

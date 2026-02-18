@@ -6,9 +6,10 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     paddingHorizontal: WP(4),
+    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
   },
   contentContainer: {
-    paddingTop: HP(3),
+    paddingTop: HP(4),
     paddingBottom: HP(2),
   },
   header: {
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
     fontSize: WP(4.5),
     fontWeight: '600',
     marginBottom: HP(0.6),
-    marginTop: HP(1),
+    marginTop: HP(0.5),
   },
   readingText: {
     fontSize: WP(6),
@@ -115,6 +116,8 @@ export const styles = StyleSheet.create({
     marginHorizontal: WP(6), // Match the container padding
   },
   buttonContainer: {
-    paddingHorizontal: WP(6), // For the button to match container padding
+    paddingHorizontal: WP(6),
+    paddingBottom: 0, // Remove extra bottom padding
+    backgroundColor: 'transparent',
   },
 });

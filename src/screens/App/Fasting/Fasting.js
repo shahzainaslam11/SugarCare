@@ -298,7 +298,7 @@ const Fasting = () => {
             onPress={() =>
               navigation.navigate('AppScreens', {screen: 'CustomFast'})
             }
-            style={styles.addButton}
+            // style={styles.addButton}
             icon={appIcons.plus}
           />
         </View>

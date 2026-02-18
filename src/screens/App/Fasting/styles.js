@@ -7,6 +7,7 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: WP(4),
     paddingTop: HP(2),
+    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
   },
   contentContainer: {
     paddingTop: HP(3),
@@ -129,9 +130,11 @@ export const styles = StyleSheet.create({
   addButton: {
     marginBottom: HP(2.5),
     backgroundColor: colors.p1,
-    marginHorizontal: WP(6), // Match the container padding
+    marginHorizontal: WP(6),
   },
   buttonContainer: {
-    paddingHorizontal: WP(6), // For the button to match container padding
+    paddingHorizontal: WP(6),
+    paddingBottom: 0,
+    backgroundColor: 'transparent',
   },
 });

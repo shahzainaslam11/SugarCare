@@ -29,7 +29,26 @@ const COMPLETED_TEXT_COLOR = '#00CC66';
 const CARD_BG = '#FFFFFF';
 
 const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
-  if (!record) return null;
+  if (!record) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 120,
+        }}>
+        <Text
+          style={{
+            textAlign: 'center',
+            color: '#888',
+            fontSize: 16,
+          }}>
+          No fasting record available
+        </Text>
+      </View>
+    );
+  }
 
   const totalDuration = record.duration_hours || 0;
   const durationHours = Math.trunc(totalDuration).toString();
@@ -55,10 +74,7 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
         <View style={styles.durationContainer}>
           <Image source={iconSource} style={styles.icon} resizeMode="contain" />
           <Text style={styles.durationText}>
-            <Text
-              style={
-                styles.timeValue
-              }>{`${durationHours}h ${durationMinutes}m`}</Text>
+            <Text style={styles.timeValue}>{totalDuration}</Text>
           </Text>
         </View>
 

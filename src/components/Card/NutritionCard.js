@@ -56,50 +56,78 @@ const NutritionCard = ({
   proteinValue,
   sugarValue,
   fibreValue,
-}) => (
-  <View style={styles.card}>
-    <Text style={styles.nutrientsFactsTitle}>Nutrients Facts:</Text>
+  data, // Keep for backward compatibility but don't use for validation
+}) => {
+  // Check if we have any nutrition values instead of checking data prop
+  const hasNutritionData =
+    carbohydrates ||
+    fatValue ||
+    proteinValue ||
+    sugarValue ||
+    fibreValue ||
+    glycemicIndex;
 
-    {/* Header Section: GI and Carbs */}
-    <View style={styles.headerRow}>
-      <GICarbsBox
-        title="Glycemic Index:"
-        value={glycemicIndex}
-        status={giStatus}
-        isGI={true}
-      />
-      <GICarbsBox title="Carbohydrates" value={carbohydrates} isGI={false} />
-    </View>
+  if (!hasNutritionData) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: HP(20),
+        }}>
+        <Text style={{textAlign: 'center', color: '#888', fontSize: 16}}>
+          No nutrition data available
+        </Text>
+      </View>
+    );
+  }
 
-    {/* Nutrient Fact Section */}
-    <View style={styles.factsRow}>
-      <NutrientFactItem
-        value={fatValue}
-        label="Fats"
-        icon={appIcons.fats}
-        color={colors.danger}
-      />
-      <NutrientFactItem
-        value={proteinValue}
-        label="Protein"
-        icon={appIcons.protien}
-        color={colors.success}
-      />
-      <NutrientFactItem
-        value={sugarValue}
-        label="Sugar"
-        icon={appIcons.sugar}
-        color={colors.warning} // Orange
-      />
-      <NutrientFactItem
-        value={fibreValue}
-        label="Fibre"
-        icon={appIcons.carbs}
-        color={colors.info} // Blue
-      />
+  return (
+    <View style={styles.card}>
+      <Text style={styles.nutrientsFactsTitle}>Nutrients Facts:</Text>
+
+      {/* Header Section: GI and Carbs */}
+      <View style={styles.headerRow}>
+        <GICarbsBox
+          title="Glycemic Index:"
+          value={glycemicIndex}
+          status={giStatus}
+          isGI={true}
+        />
+        <GICarbsBox title="Carbohydrates" value={carbohydrates} isGI={false} />
+      </View>
+
+      {/* Nutrient Fact Section */}
+      <View style={styles.factsRow}>
+        <NutrientFactItem
+          value={fatValue}
+          label="Fats"
+          icon={appIcons.fats}
+          color={colors.danger}
+        />
+        <NutrientFactItem
+          value={proteinValue}
+          label="Protein"
+          icon={appIcons.protien}
+          color={colors.success}
+        />
+        <NutrientFactItem
+          value={sugarValue}
+          label="Sugar"
+          icon={appIcons.sugar}
+          color={colors.warning} // Orange
+        />
+        <NutrientFactItem
+          value={fibreValue}
+          label="Fibre"
+          icon={appIcons.carbs}
+          color={colors.info} // Blue
+        />
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export {NutritionCard};
 
@@ -201,7 +229,7 @@ const styles = StyleSheet.create({
     fontSize: size.normal,
     fontFamily: family.inter_medium,
     fontWeight: '800',
-    incolor: colors.black,
+    color: colors.black,
     marginBottom: 10,
   },
 });

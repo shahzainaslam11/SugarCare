@@ -14,6 +14,8 @@ const AppInput = ({
   editable = true,
   secureTextEntry = false,
   keyboardType = 'default',
+  multiline = false,
+  numberOfLines = 1,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -29,9 +31,15 @@ const AppInput = ({
         editable={editable}
         secureTextEntry={secureTextEntry && !isPasswordVisible}
         keyboardType={keyboardType}
+        multiline={multiline}
+        numberOfLines={multiline ? numberOfLines : 1}
         containerStyle={styles.inputContainer}
-        inputContainerStyle={styles.inputInner}
+        inputContainerStyle={[
+          styles.inputInner,
+          multiline && styles.inputInnerMultiline,
+        ]}
         inputStyle={styles.inputText}
+        textAlignVertical={multiline ? 'top' : 'center'}
         rightIcon={
           secureTextEntry ? (
             <TouchableOpacity
@@ -74,10 +82,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: WP('2'),
     backgroundColor: colors.white,
-    height: HP(5), // fixed height for all inputs
+    minHeight: HP(5), // minimum height for all inputs
+  },
+  inputInnerMultiline: {
+    minHeight: HP(5),
+    paddingVertical: HP('1'),
+    alignItems: 'flex-start', // Align text to top for multiline
   },
   inputText: {
-    color: colors.black,
+    color: colors.g1,
     paddingVertical: 0, // prevents extra height issues
   },
   iconTouchable: {
@@ -104,6 +117,8 @@ AppInput.propTypes = {
   editable: PropTypes.bool,
   secureTextEntry: PropTypes.bool,
   keyboardType: PropTypes.string,
+  multiline: PropTypes.bool,
+  numberOfLines: PropTypes.number,
 };
 
 export {AppInput};

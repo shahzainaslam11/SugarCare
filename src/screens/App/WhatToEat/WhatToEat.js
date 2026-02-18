@@ -8,6 +8,8 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Header, AppInput, SmallLoader} from '../../../components';
@@ -65,7 +67,7 @@ const WhatToEat = () => {
     portionSize: Yup.string()
       .trim()
       .required('Portion size is required')
-      .oneOf(['Small', 'Medium', 'Large'], 'Must be Small, Medium, or Large'),
+      .oneOf(['Light', 'Medium', 'Large'], 'Must be Light, Medium, or Large'),
   });
 
   // Fetch meal history on mount
@@ -319,175 +321,182 @@ const WhatToEat = () => {
         transparent
         animationType="slide"
         onRequestClose={() => !isSubmitting && setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Personalize Your Meal</Text>
-              {!isSubmitting && (
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>×</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+        <KeyboardAvoidingView
+          style={{flex: 1}}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Personalize Your Meal</Text>
+                {!isSubmitting && (
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>×</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <Formik
-              initialValues={{
-                currentGlucose: '',
-                diabetesControlLevel: 'Moderately controlled',
-                mealDescription: '',
-                portionSize: 'Medium',
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleFormSubmit}>
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isValid,
-                dirty,
-                setFieldValue,
-              }) => (
-                <ScrollView style={styles.formContainer}>
-                  <AppInput
-                    title="Current Glucose (mg/dL)"
-                    placeholder="e.g. 140"
-                    keyboardType="numeric"
-                    value={values.currentGlucose}
-                    onChangeText={handleChange('currentGlucose')}
-                    onBlur={handleBlur('currentGlucose')}
-                    errorMessage={
-                      touched.currentGlucose && errors.currentGlucose
-                        ? errors.currentGlucose
-                        : ''
-                    }
-                    editable={!isSubmitting}
-                  />
+              <Formik
+                initialValues={{
+                  currentGlucose: '',
+                  diabetesControlLevel: 'Moderately controlled',
+                  mealDescription: '',
+                  portionSize: 'Medium',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={handleFormSubmit}>
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                  isValid,
+                  dirty,
+                  setFieldValue,
+                }) => (
+                  <ScrollView
+                    style={styles.formContainer}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}>
+                    <AppInput
+                      title="Current Glucose (mg/dL)"
+                      placeholder="e.g. 140"
+                      keyboardType="numeric"
+                      value={values.currentGlucose}
+                      onChangeText={handleChange('currentGlucose')}
+                      onBlur={handleBlur('currentGlucose')}
+                      errorMessage={
+                        touched.currentGlucose && errors.currentGlucose
+                          ? errors.currentGlucose
+                          : ''
+                      }
+                      editable={!isSubmitting}
+                    />
 
-                  {/* Diabetes Control Level Dropdown */}
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputTitle}>
-                      Diabetes Control Level *
-                    </Text>
-                    <View style={styles.dropdownContainer}>
-                      {[
-                        'Well controlled',
-                        'Moderately controlled',
-                        'Poorly controlled',
-                      ].map(option => (
-                        <TouchableOpacity
-                          key={option}
-                          style={[
-                            styles.dropdownOption,
-                            values.diabetesControlLevel === option &&
-                              styles.dropdownOptionSelected,
-                          ]}
-                          onPress={() =>
-                            setFieldValue('diabetesControlLevel', option)
-                          }
-                          disabled={isSubmitting}>
-                          <Text
+                    {/* Diabetes Control Level Dropdown */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.inputTitle}>
+                        Diabetes Control Level *
+                      </Text>
+                      <View style={styles.dropdownContainer}>
+                        {[
+                          'Well controlled',
+                          'Moderately controlled',
+                          'Poorly controlled',
+                        ].map(option => (
+                          <TouchableOpacity
+                            key={option}
                             style={[
-                              styles.dropdownOptionText,
+                              styles.dropdownOption,
                               values.diabetesControlLevel === option &&
-                                styles.dropdownOptionTextSelected,
-                            ]}>
-                            {option}
+                                styles.dropdownOptionSelected,
+                            ]}
+                            onPress={() =>
+                              setFieldValue('diabetesControlLevel', option)
+                            }
+                            disabled={isSubmitting}>
+                            <Text
+                              style={[
+                                styles.dropdownOptionText,
+                                values.diabetesControlLevel === option &&
+                                  styles.dropdownOptionTextSelected,
+                              ]}>
+                              {option}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      {touched.diabetesControlLevel &&
+                        errors.diabetesControlLevel && (
+                          <Text style={styles.errorTextSmall}>
+                            {errors.diabetesControlLevel}
                           </Text>
-                        </TouchableOpacity>
-                      ))}
+                        )}
                     </View>
-                    {touched.diabetesControlLevel &&
-                      errors.diabetesControlLevel && (
+
+                    <AppInput
+                      title="Meal Description"
+                      placeholder="e.g. craving something sweet"
+                      value={values.mealDescription}
+                      onChangeText={handleChange('mealDescription')}
+                      onBlur={handleBlur('mealDescription')}
+                      errorMessage={
+                        touched.mealDescription && errors.mealDescription
+                          ? errors.mealDescription
+                          : ''
+                      }
+                      multiline
+                      numberOfLines={3}
+                      editable={!isSubmitting}
+                    />
+
+                    {/* Portion Size Dropdown */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.inputTitle}>Portion Size *</Text>
+                      <View style={styles.dropdownContainer}>
+                        {['Light', 'Medium', 'Large'].map(option => (
+                          <TouchableOpacity
+                            key={option}
+                            style={[
+                              styles.dropdownOption,
+                              values.portionSize === option &&
+                                styles.dropdownOptionSelected,
+                            ]}
+                            onPress={() => setFieldValue('portionSize', option)}
+                            disabled={isSubmitting}>
+                            <Text
+                              style={[
+                                styles.dropdownOptionText,
+                                values.portionSize === option &&
+                                  styles.dropdownOptionTextSelected,
+                              ]}>
+                              {option}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      {touched.portionSize && errors.portionSize && (
                         <Text style={styles.errorTextSmall}>
-                          {errors.diabetesControlLevel}
+                          {errors.portionSize}
                         </Text>
                       )}
-                  </View>
-
-                  <AppInput
-                    title="Meal Description"
-                    placeholder="e.g. craving something sweet"
-                    value={values.mealDescription}
-                    onChangeText={handleChange('mealDescription')}
-                    onBlur={handleBlur('mealDescription')}
-                    errorMessage={
-                      touched.mealDescription && errors.mealDescription
-                        ? errors.mealDescription
-                        : ''
-                    }
-                    multiline
-                    numberOfLines={3}
-                    editable={!isSubmitting}
-                  />
-
-                  {/* Portion Size Dropdown */}
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputTitle}>Portion Size *</Text>
-                    <View style={styles.dropdownContainer}>
-                      {['Small', 'Medium', 'Large'].map(option => (
-                        <TouchableOpacity
-                          key={option}
-                          style={[
-                            styles.dropdownOption,
-                            values.portionSize === option &&
-                              styles.dropdownOptionSelected,
-                          ]}
-                          onPress={() => setFieldValue('portionSize', option)}
-                          disabled={isSubmitting}>
-                          <Text
-                            style={[
-                              styles.dropdownOptionText,
-                              values.portionSize === option &&
-                                styles.dropdownOptionTextSelected,
-                            ]}>
-                            {option}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
                     </View>
-                    {touched.portionSize && errors.portionSize && (
-                      <Text style={styles.errorTextSmall}>
-                        {errors.portionSize}
-                      </Text>
-                    )}
-                  </View>
 
-                  <View style={styles.modalButtons}>
-                    <TouchableOpacity
-                      style={[
-                        styles.cancelButton,
-                        isSubmitting && styles.buttonDisabled,
-                      ]}
-                      onPress={() => setModalVisible(false)}
-                      disabled={isSubmitting}>
-                      <Text style={styles.cancelText}>Cancel</Text>
-                    </TouchableOpacity>
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        style={[
+                          styles.cancelButton,
+                          isSubmitting && styles.buttonDisabled,
+                        ]}
+                        onPress={() => setModalVisible(false)}
+                        disabled={isSubmitting}>
+                        <Text style={styles.cancelText}>Cancel</Text>
+                      </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[
-                        styles.submitButton,
-                        (!isValid || !dirty || isSubmitting) &&
-                          styles.buttonDisabled,
-                      ]}
-                      onPress={handleSubmit}
-                      disabled={!isValid || !dirty || isSubmitting}>
-                      {isSubmitting ? (
-                        <ActivityIndicator size="small" color="#FFF" />
-                      ) : (
-                        <Text style={styles.submitText}>Get Suggestion</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </ScrollView>
-              )}
-            </Formik>
+                      <TouchableOpacity
+                        style={[
+                          styles.submitButton,
+                          (!isValid || !dirty || isSubmitting) &&
+                            styles.buttonDisabled,
+                        ]}
+                        onPress={handleSubmit}
+                        disabled={!isValid || !dirty || isSubmitting}>
+                        {isSubmitting ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <Text style={styles.submitText}>Get Suggestion</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </ScrollView>
+                )}
+              </Formik>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

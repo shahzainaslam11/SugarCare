@@ -6,6 +6,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
     paddingHorizontal: WP(4),
+    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
   },
   statusBar: {
     height: 44,
@@ -120,11 +121,11 @@ const styles = StyleSheet.create({
     marginVertical: HP(2),
   },
   cardTitle: {
-    fontSize: size.medium,
+    fontSize: size.small,
     fontFamily: family.inter_medium,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     color: colors.b1,
-    marginBottom: HP(1),
+    marginBottom: HP(0.5),
   },
   value: {
     fontSize: size.small,

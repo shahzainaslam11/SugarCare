@@ -92,7 +92,7 @@ const Reports = () => {
           if (fetchFastingRecords.fulfilled.match(actionResult)) {
             const message =
               actionResult.payload?.message || 'Fetched successfully';
-            showSuccess(message);
+            // showSuccess(message);
           } else if (fetchFastingRecords.rejected.match(actionResult)) {
             const message = actionResult.payload?.message || 'Failed to fetch';
             showError(message);
@@ -109,7 +109,7 @@ const Reports = () => {
           if (fetchSugarRecords.fulfilled.match(actionResult)) {
             const message =
               actionResult.payload?.message || 'Fetched successfully';
-            showSuccess(message);
+            // showSuccess(message);
           } else if (fetchSugarRecords.rejected.match(actionResult)) {
             const message = actionResult.payload?.message || 'Failed to fetch';
             showError(message);

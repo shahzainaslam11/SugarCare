@@ -12,12 +12,14 @@ import {
   colors,
   loginFormFields,
   loginVS,
+  normalizeEmail,
   showError,
   showSuccess,
 } from '../../../utilities';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import {loginUser, clearAuthError} from '../../../redux/slices/authSlice';
+import {clearSugarForecastError} from '../../../redux/slices/sugarForecastSlice';
 
 export default function LogIn() {
   const navigation = useNavigation();
@@ -50,7 +52,7 @@ export default function LogIn() {
           });
         }
       } catch (e) {
-        console.log('Error loading saved credentials', e);
+        // Error loading saved credentials - silently fail
       }
       setLoadingCredentials(false);
     })();
@@ -85,11 +87,9 @@ export default function LogIn() {
           validationSchema={loginVS}
           enableReinitialize
           onSubmit={async values => {
-            await handleRememberMe(
-              values.email,
-              values.password,
-              values.rememberMe,
-            );
+            const email = normalizeEmail(values.email);
+
+            await handleRememberMe(email, values.password, values.rememberMe);
 
             // ✅ Dispatch login and log full API response
             const res = await dispatch(
@@ -98,16 +98,14 @@ export default function LogIn() {
                 password: values.password,
               }),
             );
-            // console.log('Login API Response:', JSON.stringify(res));
-
+            console.log('Login API Response:', JSON.stringify(res));
             if (res.meta.requestStatus === 'fulfilled') {
-              showSuccess(`Welcome ${res.payload?.user?.email || 'User'}`);
+              showSuccess(`Welcome ${res.payload?.data?.name || 'User'}`);
               navigation.reset({
                 index: 0,
                 routes: [{name: 'BottomTabs'}],
               });
             } else {
-              console.log('Login Error Response:', JSON.stringify(res));
               showError(res.payload?.message || 'Login failed');
             }
           }}>

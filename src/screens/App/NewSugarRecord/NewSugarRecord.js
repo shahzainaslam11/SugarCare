@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {TimePicker, DatePicker, Header} from '../../../components';
 import {styles} from './styles';
@@ -77,9 +79,14 @@ const NewSugarRecord = () => {
     <SafeAreaView style={styles.container}>
       <Header title="New Sugar Record" onPress={() => navigation.goBack()} />
 
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
+        <ScrollView
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
         <View style={styles.pickersRow}>
           <DatePicker
             title="Date"
@@ -157,18 +164,19 @@ const NewSugarRecord = () => {
           />
         </View>
         <Text style={styles.notesCounter}>{notes.length}/100</Text>
-      </ScrollView>
+        </ScrollView>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          disabled={loading}>
-          <Text style={styles.saveButtonText}>
-            {loading ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+            disabled={loading}>
+            <Text style={styles.saveButtonText}>
+              {loading ? 'Saving...' : 'Save'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

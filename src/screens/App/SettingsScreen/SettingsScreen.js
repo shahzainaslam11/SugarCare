@@ -13,20 +13,22 @@ import {
   appIcons,
   appImages,
   colors,
+  family,
   HP,
   showSuccess,
+  size,
   WP,
 } from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
-import {AppButton} from '../../../components';
+import {AppButton, Header} from '../../../components';
 import {useDispatch, useSelector} from 'react-redux';
 import {logoutUser} from '../../../redux/slices/authSlice';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {Fonts} from '../../../assets/fonts';
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
-  const {user, accessToken, refreshToken, loading} = useSelector(
-    state => state.auth,
-  );
+  const {user, accessToken, refreshToken} = useSelector(state => state.auth);
 
   const {data: profile} = useSelector(state => state.profile);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -35,67 +37,48 @@ const SettingsScreen = () => {
     setIsLoggingOut(true);
 
     try {
-      // Check if we have tokens
-      if (!accessToken || !refreshToken) {
-        // If no tokens, just clear local data
-        dispatch({type: 'auth/clearAuthData'});
-        showSuccess('Logged out successfully');
-        navigation.replace('Auth', {screen: 'LogIn'});
-        return;
-      }
+      // Call logout API - it handles both cases (with/without tokens)
+      await dispatch(logoutUser());
 
-      // Call logout API with tokens
-      const result = await dispatch(
-        logoutUser({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        }),
-      );
-
-      console.log('Logout result:', JSON.stringify(result));
-
-      if (result.meta.requestStatus === 'fulfilled') {
-        showSuccess('Logged out successfully');
-        // Navigate to login screen
-        navigation.replace('Auth', {screen: 'LogIn'});
-      } else {
-        // Even if API fails, clear local data
-        dispatch({type: 'auth/clearAuthData'});
-        showSuccess('Logged out successfully');
-        navigation.replace('Auth', {screen: 'LogIn'});
-      }
+      // Show success message and navigate to login
+      showSuccess('Logged out successfully');
+      navigation.replace('Auth', {screen: 'LogIn'});
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local data even if there's an error
-      dispatch({type: 'auth/clearAuthData'});
+      // Even if there's an error, logout was attempted - clear and navigate
       showSuccess('Logged out successfully');
       navigation.replace('Auth', {screen: 'LogIn'});
     } finally {
       setIsLoggingOut(false);
     }
   };
-  console.log('user0000>', user?.email);
+
   const navigation = useNavigation();
   return (
-    <ImageBackground
-      source={appImages.settingBG}
-      style={styles.container}
-      resizeMode="cover">
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container}>
+      {/* <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
-      </View>
+      </View> */}
+      <Header title="Settings" onPress={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Profile Section */}
         <View style={styles.profileContainer}>
-          <Image source={appImages.messi} style={styles.avatar} />
+          <Image
+            source={
+              profile?.profile_image
+                ? {uri: profile.profile_image}
+                : appImages.messi
+            }
+            style={styles.avatar}
+          />
           <Text style={styles.name}>{profile?.name}</Text>
-          <Text style={styles.email}>{profile?.email}</Text>
+          <Text style={styles.email}>{lowerFirst(profile?.email)}</Text>
         </View>
 
         {/* Settings Content */}
@@ -166,9 +149,13 @@ const SettingsScreen = () => {
           )}
         </View>
       </ScrollView>
-    </ImageBackground>
+    </SafeAreaView>
   );
 };
+
+// Utility to lowercase first letter
+const lowerFirst = str =>
+  str ? str.charAt(0).toLowerCase() + str.slice(1) : '';
 
 const SettingsItem = ({title, isLast = true, onPress}) => (
   <TouchableOpacity
@@ -182,7 +169,7 @@ const SettingsItem = ({title, isLast = true, onPress}) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: HP(4),
+    // paddingTop: HP(4),s
   },
   header: {
     flexDirection: 'row',
@@ -217,34 +204,37 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: colors.p1,
     backgroundColor: '#eee',
   },
   name: {
-    fontSize: WP(5.5),
+    fontSize: size.large,
+    fontFamily: family.inter_black,
     fontWeight: 'bold',
     color: '#000',
     marginTop: HP(1.5),
   },
   email: {
-    fontSize: WP(3.8),
     color: '#666',
     marginTop: HP(0.3),
+    fontSize: size.medium,
+    fontFamily: family.inter_medium,
   },
   contentContainer: {
     paddingHorizontal: WP(5),
   },
   sectionTitle: {
-    fontSize: WP(4),
+    fontSize: size.large,
+    fontFamily: family.inter_medium,
     fontWeight: '600',
-    color: '#000',
+    color: colors.b1,
     marginBottom: HP(1.2),
-    marginTop: HP(2),
+    marginTop: HP(1),
   },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: WP(3),
-    marginBottom: HP(1),
+    marginBottom: HP(0.5),
     shadowColor: '#000',
     shadowOffset: {width: 1, height: 1},
     shadowOpacity: 0.1,
@@ -255,7 +245,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: HP(2),
+    paddingVertical: HP(1),
     paddingHorizontal: WP(4),
     borderBottomColor: '#f0f0f0',
     borderBottomWidth: 1,
@@ -264,17 +254,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   itemTitle: {
-    fontSize: WP(4),
+    fontSize: size.large,
+    fontFamily: family.inter_medium,
     fontWeight: '400',
     color: '#333',
   },
   chevron: {
     fontSize: WP(6),
-    color: '#ccc',
+    color: colors.b3,
   },
   signOutButton: {
     backgroundColor: '#FF3B30',
-    paddingVertical: HP(2),
+    paddingVertical: HP(1.5),
     borderRadius: WP(7),
     alignItems: 'center',
     justifyContent: 'center',
@@ -290,11 +281,12 @@ const styles = StyleSheet.create({
     width: WP(5),
     height: WP(5),
     tintColor: '#fff',
-    marginRight: WP(2),
+    marginRight: WP(4),
   },
   signOutText: {
     color: '#fff',
-    fontSize: WP(4.5),
+    fontSize: size.medium,
+    fontFamily: family.inter_medium,
     fontWeight: '600',
   },
 });

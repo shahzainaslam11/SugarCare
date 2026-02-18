@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   cameraBtn: {
     position: 'absolute',
     bottom: 0,
-    right: WP(37),
+    right: WP(0),
     backgroundColor: colors.p1,
     padding: WP(1.5),
     borderRadius: WP(5),

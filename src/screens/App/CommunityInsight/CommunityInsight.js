@@ -6,13 +6,12 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {Header, SmallLoader} from '../../../components';
-import {colors, appImages} from '../../../utilities';
+import {colors, appImages, appIcons} from '../../../utilities';
 import {fetchCommunityInsights} from '../../../redux/slices/communityInsightsSlice';
 import styles from './styles';
 
@@ -20,21 +19,15 @@ const CommunityInsight = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {accessToken, user} = useSelector(state => state.auth);
-
-  const {insights, loading, error} = useSelector(
-    state => state.communityInsights,
-  );
-  console.log('insights--->', JSON.stringify(insights));
-
+  const {items, loading} = useSelector(state => state.communityInsights);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (accessToken) {
       dispatch(fetchCommunityInsights({token: accessToken, user_id: user.id}));
     }
-  }, [dispatch, accessToken]);
+  }, [dispatch, accessToken, user.id]);
 
-  // Function to navigate to Insight Details screen with insight data
   const navigateToInsightDetails = insight => {
     navigation.navigate('InsightDetails', {
       title: insight.title,
@@ -43,93 +36,154 @@ const CommunityInsight = () => {
     });
   };
 
-  // Filter insights based on search query
-  const filteredInsights = insights.filter(insight =>
-    insight.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const getImageSource = image => {
+    if (!image) return appImages.p1;
+    if (typeof image === 'string') return {uri: image};
+    return image;
+  };
+
+  // Filtered by search query
+  const filteredItems = items.filter(i =>
+    i.title?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // Featured: pick the first insight or fallback
-  const featuredInsight = filteredInsights[0] || {
+  // Featured is the first item
+  const featuredInsight = filteredItems[0] || {
     title: 'No Featured Insight',
     description: 'No description available',
     image: appImages.p1,
   };
 
-  // Explore: remaining insights
-  const exploreInsights = filteredInsights.slice(1);
+  // Explore Latest is the rest
+  const exploreInsights = filteredItems.slice(1);
 
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Community Insights" onPress={() => navigation.goBack()} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor={colors.g9}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+          <View style={styles.searchWrapper}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search insights..."
+              placeholderTextColor={colors.g9}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}>
+                <Text style={styles.clearButtonText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
+
         {loading && <SmallLoader />}
 
-        <>
-          {/* Featured Section */}
-          <View style={styles.featuredSection}>
+        {/* Featured Section */}
+        <View style={styles.featuredSection}>
+          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured</Text>
-            <TouchableOpacity
-              style={styles.featuredCard}
-              onPress={() => navigateToInsightDetails(featuredInsight)}>
+            <View style={styles.featuredBadge}>
+              <Text style={styles.featuredBadgeText}>TOP STORY</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.featuredCard}
+            onPress={() => navigateToInsightDetails(featuredInsight)}
+            activeOpacity={0.9}>
+            <View style={styles.featuredImageContainer}>
               <Image
-                source={{uri: featuredInsight.image}}
+                source={getImageSource(featuredInsight.image)}
                 style={styles.featuredImage}
                 resizeMode="cover"
               />
-              <View style={styles.featuredText}>
-                <Text style={styles.featuredTitle}>
-                  {featuredInsight.title}
-                </Text>
-                <Text style={styles.featuredDescription}>
-                  {featuredInsight.description}
-                  <TouchableOpacity>
-                    <Text style={styles.readMore}> Read More</Text>
-                  </TouchableOpacity>
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Explore Latest Section */}
-          <View style={styles.exploreSection}>
-            <Text style={styles.sectionTitle}>Explore Latest</Text>
-            {exploreInsights.length > 0 ? (
-              exploreInsights.map(insight => (
+              <View style={styles.imageOverlay} />
+            </View>
+            <View style={styles.featuredContent}>
+              <Text style={styles.featuredTitle} numberOfLines={2}>
+                {featuredInsight.title}
+              </Text>
+              <Text style={styles.featuredDescription} numberOfLines={2}>
+                {featuredInsight.description}
+              </Text>
+              <View style={styles.featuredFooter}>
                 <TouchableOpacity
-                  key={insight.id}
-                  style={styles.exploreCard}
-                  onPress={() => navigateToInsightDetails(insight)}>
+                  style={styles.readMoreButton}
+                  onPress={() => navigateToInsightDetails(featuredInsight)}>
+                  <Text style={styles.readMoreButtonText}>Read More</Text>
+                </TouchableOpacity>
+                {featuredInsight.read_time && (
+                  <Text style={styles.readTime}>
+                    {featuredInsight.read_time} min read
+                  </Text>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Explore Latest Section */}
+        <View style={styles.exploreSection}>
+          <View style={styles.exploreHeader}>
+            <Text style={styles.sectionTitle}>Explore Latest</Text>
+            <Text style={styles.resultsCount}>
+              {exploreInsights.length}{' '}
+              {exploreInsights.length === 1 ? 'result' : 'results'}
+            </Text>
+          </View>
+          {exploreInsights.length > 0 ? (
+            exploreInsights.map(insight => (
+              <TouchableOpacity
+                key={insight.id}
+                style={styles.exploreCard}
+                onPress={() => navigateToInsightDetails(insight)}
+                activeOpacity={0.9}>
+                <View style={styles.exploreImageContainer}>
                   <Image
-                    source={{uri: insight.image}}
+                    source={getImageSource(insight.image)}
                     style={styles.exploreImage}
                     resizeMode="cover"
                   />
-                  <View style={styles.exploreText}>
-                    <Text style={styles.exploreTitle}>{insight.title}</Text>
-                    <Text style={styles.exploreTime}>
-                      {insight.read_time} min read
+                </View>
+                <View style={styles.exploreContent}>
+                  <View style={styles.titleContainer}>
+                    <Text style={styles.exploreTitle} numberOfLines={2}>
+                      {insight.title}
                     </Text>
                   </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={{textAlign: 'center', marginTop: 20}}>
-                No more insights to explore
+                  <View style={styles.exploreFooter}>
+                    <Text style={styles.exploreTime}>
+                      {insight.read_time || 5} min read
+                    </Text>
+                    <View style={styles.arrowContainer}>
+                      <Image
+                        source={appIcons.forwardArrow}
+                        style={styles.arrowImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>No insights to explore</Text>
+              <Text style={styles.emptyStateText}>
+                {searchQuery
+                  ? 'Try a different search term'
+                  : 'Check back soon for new insights'}
               </Text>
-            )}
-          </View>
-        </>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

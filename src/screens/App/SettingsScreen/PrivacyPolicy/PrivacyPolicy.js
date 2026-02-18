@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
   const navigation = useNavigation();
 
   const openEmail = () => {
-    Linking.openURL('mailto:info@sugarcare.com');
+    Linking.openURL('mailto:info@sugarcare.cloud');
   };
 
   return (
@@ -104,7 +104,7 @@ const PrivacyPolicy = () => {
           By using our app, you consent to our privacy policy. If you have any
           questions or concerns, please contact us at{' '}
           <Text style={styles.emailLink} onPress={openEmail}>
-            info@sugarcare.com
+            info@sugarcare.cloud
           </Text>
           .
         </Text>

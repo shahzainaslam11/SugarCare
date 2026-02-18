@@ -1,21 +1,18 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  Image,
-} from 'react-native';
-import {appIcons} from '../../../utilities';
+import React, {useEffect, useMemo} from 'react';
+import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
 import {Header} from '../../../components';
+import {appIcons, colors} from '../../../utilities';
+import styles from './styles';
+import {fetchRiskForecast} from '../../../redux/slices/riskForecastSlice';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
-// Reusable RiskCard Component
+/* --------------------------------------------------
+   Reusable RiskCard Component
+-------------------------------------------------- */
 const RiskCard = ({risk}) => {
-  const {title, icon, riskLevel, riskPercentage, cause, tip} = risk;
+  const {title, icon, riskLevel, riskPercentage, change, statusLabel} = risk;
 
-  // Determine styling based on risk level
   const getRiskStyles = () => {
     switch (riskLevel) {
       case 'High':
@@ -23,37 +20,31 @@ const RiskCard = ({risk}) => {
           riskText: styles.riskLevelHigh,
           arrowIcon: appIcons.arrowUp,
           arrowTint: '#DC143C',
-          tipBadge: styles.tipBadgeHigh,
-          tipText: styles.tipTextHigh,
+          badge: styles.tipBadgeHigh,
+          badgeText: styles.tipTextHigh,
         };
       case 'Safe':
         return {
           riskText: styles.riskLevelSafe,
           arrowIcon: appIcons.arrowDown,
           arrowTint: '#28A745',
-          tipBadge: styles.tipBadgeSafe,
-          tipText: styles.tipTextSafe,
-        };
-      case 'Average':
-        return {
-          riskText: styles.riskLevelAverage,
-          arrowIcon: null, // No arrow for average
-          tipBadge: styles.tipBadgeAverage,
-          tipText: styles.tipText,
+          badge: styles.tipBadgeSafe,
+          badgeText: styles.tipTextSafe,
         };
       case 'Moderate':
         return {
           riskText: styles.riskLevelModerate,
-          arrowIcon: appIcons.arrowUp, // No arrow for moderate
-          tipBadge: styles.tipBadgeModerate,
-          tipText: styles.tipText,
+          arrowIcon: appIcons.arrowUp,
+          arrowTint: '#FFA500',
+          badge: styles.tipBadgeModerate,
+          badgeText: styles.tipText,
         };
       default:
         return {
           riskText: styles.riskLevelAverage,
           arrowIcon: null,
-          tipBadge: styles.tipBadgeAverage,
-          tipText: styles.tipText,
+          badge: styles.tipBadgeAverage,
+          badgeText: styles.tipText,
         };
     }
   };
@@ -62,7 +53,7 @@ const RiskCard = ({risk}) => {
 
   return (
     <View style={styles.riskCard}>
-      {/* Header with title and icon */}
+      {/* Header */}
       <View style={styles.riskHeader}>
         <Text style={styles.riskTitle}>{title}</Text>
         <View style={styles.iconContainer}>
@@ -70,10 +61,10 @@ const RiskCard = ({risk}) => {
         </View>
       </View>
 
-      {/* Risk level with arrow indicator */}
+      {/* Risk Level */}
       <View style={styles.riskLevelContainer}>
         <Text style={riskStyles.riskText}>
-          Risk: {riskLevel} ({riskPercentage})
+          {riskLevel} ({riskPercentage})
         </Text>
         {riskStyles.arrowIcon && (
           <Image
@@ -83,73 +74,81 @@ const RiskCard = ({risk}) => {
         )}
       </View>
 
-      {/* Cause section */}
-      <Text style={styles.causeLabel}>Cause:</Text>
-      <Text style={styles.causeText}>{cause}</Text>
+      {/* Change */}
+      <Text style={styles.causeLabel}>Change:</Text>
+      <Text style={styles.causeText}>{change}</Text>
 
-      {/* Tip section */}
-      <Text style={styles.tipLabel}>Tip:</Text>
-      <View style={riskStyles.tipBadge}>
-        <Text style={riskStyles.tipText}>{tip}</Text>
+      {/* Status Badge */}
+      <Text style={styles.tipLabel}>Status:</Text>
+      <View style={riskStyles.badge}>
+        <Text style={riskStyles.badgeText}>{statusLabel}</Text>
       </View>
     </View>
   );
 };
 
+/* --------------------------------------------------
+   Main Screen
+-------------------------------------------------- */
 export default function AIRiskForecasting({navigation}) {
-  // Risk data array (you can move this to a separate file or fetch from API)
-  const risksData = [
-    {
-      id: 1,
-      title: 'Neuropathy (Nerve Damage)',
-      icon: appIcons.nerve,
-      riskLevel: 'High',
-      riskPercentage: '10%',
-      cause:
-        'Long-term elevated blood sugar, coupled with sedentary habits, significantly increasing risk of nerve damage.',
-      tip: 'Prioritize daily physical activity.',
-    },
-    {
-      id: 2,
-      title: 'Cardiovascular Risk (Heart Issues)',
-      icon: appIcons.heart,
-      riskLevel: 'Safe',
-      riskPercentage: '10%',
-      cause:
-        'Healthy fasting glucose, consistent physical activity, and balanced meal patterns supporting heart health.',
-      tip: 'Continue a heart-healthy diet, regular exercise, and stress management.',
-    },
-    // Add more risks as needed following the same structure
-    {
-      id: 3,
-      title: 'Nephropathy (Kidney Health)',
-      icon: appIcons.kidney,
-      riskLevel: 'Average',
-      riskPercentage: '10%',
-      cause:
-        'Occasional post-meal glucose spikes and inconsistent salt intake detected.',
-      tip: 'Watch sodium intake; stay hydrated daily',
-    },
-    {
-      id: 4,
-      title: 'Retinopathy (Eye Damage)',
-      icon: appIcons.eye,
-      riskLevel: 'Moderate',
-      riskPercentage: '15%',
-      cause: 'Consistent elevated long-term glucose patterns detected.',
-      tip: 'Annual eye check-ups recommended',
-    },
-  ];
+  const dispatch = useDispatch();
+  const {accessToken, user} = useSelector(state => state.auth);
+
+  // ✅ Crash-proof selectors
+  const overallRiskStatus = useSelector(
+    state => state.riskForecast?.overallStatus ?? null,
+  );
+  const risks = useSelector(state => state.riskForecast?.risks ?? []);
+  const loading = useSelector(state => state.riskForecast?.loading ?? false);
+
+  useEffect(() => {
+    if (accessToken && user?.id) {
+      dispatch(fetchRiskForecast({token: accessToken, user_id: user.id}));
+    }
+  }, [accessToken, user?.id, dispatch]);
+
+  /* --------------------------------------------------
+     Icon Resolver (Fixes heart icon everywhere issue)
+  -------------------------------------------------- */
+  const getRiskIcon = name => {
+    if (!name) return appIcons.heart;
+
+    const key = name.toLowerCase();
+
+    if (key.includes('nerve')) return appIcons.nerve;
+    if (key.includes('kidney')) return appIcons.kidney;
+    if (key.includes('eye')) return appIcons.eye;
+    if (key.includes('cardio') || key.includes('heart')) return appIcons.heart;
+    if (key.includes('foot')) return appIcons.foot;
+
+    return appIcons.heart;
+  };
+
+  /* --------------------------------------------------
+     API → UI Mapping
+  -------------------------------------------------- */
+  const mappedRisks = useMemo(() => {
+    return risks.map((item, index) => ({
+      id: index + 1,
+      title: item?.name || 'Health Risk',
+      icon: getRiskIcon(item?.name),
+      riskLevel: item?.status || 'Average',
+      riskPercentage: `${item?.risk_score ?? '--'}%`,
+      change: item?.risk_change || '--',
+      statusLabel: item?.safe_label || 'Stable',
+      trend: item?.trend || [],
+      predictedRiskLevel: item?.predicted_risk_level || 'low',
+    }));
+  }, [risks]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <Header title="AI Risk Forecasting" onPress={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
-        {/* What is AI Risk Forecasting? */}
+        {/* Info Card */}
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>What is AI Risk Forecasting?</Text>
           <Text style={styles.infoText}>
@@ -158,18 +157,19 @@ export default function AIRiskForecasting({navigation}) {
             recommendations.
           </Text>
           <Text style={styles.infoTextBold}>
-            Our Recommendations are predictions, not a substitute for
-            professional medical advice!
+            These are predictions, not a substitute for medical advice.
           </Text>
         </View>
 
         {/* Overall Risk Status */}
-        <View style={styles.riskStatusCard}>
-          <Text style={styles.sectionTitle}>Overall Risk Status</Text>
-          <View style={styles.safeBadge}>
-            <Text style={styles.safeText}>Safe</Text>
+        {overallRiskStatus && (
+          <View style={styles.riskStatusCard}>
+            <Text style={styles.sectionTitle}>Overall Risk Status</Text>
+            <View style={[styles.safeBadge, {backgroundColor: colors.primary}]}>
+              <Text style={styles.safeText}>{overallRiskStatus.label}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Risk Predictions */}
         <Text style={styles.sectionHeader}>Risk Predictions</Text>
@@ -177,8 +177,18 @@ export default function AIRiskForecasting({navigation}) {
           Next 8–12 weeks (based on your last 30–60 days of data)
         </Text>
 
-        {/* Render all risk cards */}
-        {risksData.map(risk => (
+        {/* Loading */}
+        {loading && (
+          <ActivityIndicator size="large" style={{marginVertical: 20}} />
+        )}
+
+        {/* Empty */}
+        {!loading && mappedRisks.length === 0 && (
+          <Text style={styles.noDataText}>No risk data available yet.</Text>
+        )}
+
+        {/* Render API Risks */}
+        {mappedRisks.map(risk => (
           <RiskCard key={risk.id} risk={risk} />
         ))}
 
@@ -214,240 +224,3 @@ export default function AIRiskForecasting({navigation}) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f8fafc'},
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerTitle: {fontSize: 20, fontWeight: 'bold', color: '#000'},
-  iconSmall: {width: 24, height: 24, resizeMode: 'contain'},
-
-  scrollView: {flex: 1, paddingHorizontal: 20, paddingTop: 20},
-
-  infoCard: {
-    backgroundColor: '#F6F9FF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#C2D3FF',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 10,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  infoTextBold: {
-    fontSize: 14,
-    color: '#d32f2f',
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-
-  riskStatusCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 25,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  safeBadge: {
-    backgroundColor: '#d4edda',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  safeText: {
-    color: '#155724',
-    fontWeight: '600',
-  },
-
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
-  },
-  subtitle: {fontSize: 14, color: '#777', marginBottom: 20},
-
-  // Risk Card Styles
-  riskCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  riskHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  riskTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    flex: 1,
-  },
-  riskIcon: {
-    width: 28,
-    height: 28,
-    resizeMode: 'contain',
-  },
-  iconContainer: {
-    padding: 5,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#C2D3FF',
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  riskLevelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  arrowIcon: {
-    width: 16,
-    height: 16,
-    resizeMode: 'contain',
-    marginLeft: 6,
-  },
-
-  riskLevelAverage: {fontSize: 15, color: '#666'},
-  riskLevelModerate: {
-    fontSize: 15,
-    color: '#FF8C00',
-    fontWeight: '600',
-  },
-  riskLevelHigh: {
-    fontSize: 15,
-    color: '#DC143C',
-    fontWeight: '600',
-  },
-  riskLevelSafe: {
-    fontSize: 15,
-    color: '#28A745',
-    fontWeight: '600',
-  },
-
-  causeLabel: {fontWeight: '600', color: '#000', marginBottom: 4},
-  causeText: {fontSize: 14, color: '#555', lineHeight: 20, marginBottom: 12},
-  tipLabel: {fontWeight: '600', color: '#000', marginBottom: 8},
-
-  tipBadgeAverage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#e2e8f0',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  tipBadgeModerate: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff3cd',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ffeaa7',
-  },
-  tipBadgeHigh: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f8d7da',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#f5c6cb',
-  },
-  tipBadgeSafe: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#d4edda',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#c3e6cb',
-  },
-
-  tipText: {
-    color: '#2d3748',
-    fontSize: 14,
-  },
-  tipTextHigh: {
-    color: '#721c24',
-    fontSize: 14,
-  },
-  tipTextSafe: {
-    color: '#155724',
-    fontSize: 14,
-  },
-
-  tipsContainer: {
-    backgroundColor: '#F6F9FF',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 10,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#C2D3FF',
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  tipIcon: {
-    width: 22,
-    height: 22,
-    resizeMode: 'contain',
-    marginTop: 2,
-  },
-  tipItemText: {
-    flex: 1,
-    marginLeft: 14,
-    fontSize: 14,
-    color: '#616161',
-    lineHeight: 20,
-  },
-});

@@ -100,6 +100,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: HP('2.5%'),
   },
+  // If you want a simpler design, you can use this instead:
+  confidenceBox: {
+    backgroundColor: '#F5F29F',
+    padding: WP('3%'),
+    borderRadius: WP('2%'),
+    marginVertical: HP('2%'),
+  },
+  confidenceText: {
+    fontSize: size.normal,
+    fontFamily: family.inter_medium,
+    fontWeight: '600',
+    color: colors.b1,
+    textAlign: 'center',
+  },
 });
 
 export default styles;

@@ -93,7 +93,7 @@ const BottomNavigator = () => {
         name="TrackSugar"
         component={TrackSugar}
         options={{
-          title: 'Track Sugar',
+          title: 'Sugar',
           tabBarIcon: appIcons.inActiveSugar,
           activeTabBarIcon: appIcons.activeSugar,
           headerShown: false,
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '94%',
     alignSelf: 'center',
-    marginBottom: HP(3),
+    marginBottom: HP(3), // Remove marginBottom so tab bar sits flush
   },
   tabBarButton: {
     flex: 1,
@@ -171,19 +171,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   tabBarIcon: {
-    width: WP(5),
-    height: HP(2.5),
-    marginBottom: 5,
+    width: WP(4),
+    height: HP(4),
+    marginBottom: HP(0.1),
   },
   title: {
-    fontSize: size.px_11,
+    fontSize: size.small,
     fontFamily: Fonts.medium,
   },
   activeTitle: {
-    color: colors.primaryColor,
+    color: colors.p1,
+    fontFamily: Fonts.interMedium,
+    fontSize: size.medium,
   },
   inactiveTitle: {
-    color: colors.grey,
+    color: colors.gray,
+    fontFamily: Fonts.interRegular,
+    fontSize: size.small,
   },
 });
 

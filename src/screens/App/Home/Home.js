@@ -6,17 +6,17 @@ import {
   ScrollView,
   StatusBar,
   Image,
-  Alert,
   AppState,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {ChartComponent, MenuModal} from '../../../components';
 import {fetchProfile} from '../../../redux/slices/profileSlice';
 import {appIcons} from '../../../utilities';
 import styles from './styles';
 import {fetchSugarRecords} from '../../../redux/slices/sugarForecastSlice';
+import {showError} from '../../../utilities';
 
 const RANGE_MAP = {
   Today: 'Today',
@@ -34,6 +34,8 @@ export default function Home() {
   const {data: profile} = useSelector(state => state.profile);
   const [activeRange, setActiveRange] = useState('Today');
   const appState = useRef(AppState.currentState);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  console.log('User---->', accessToken);
 
   const {
     graphData: sugarGraphData,
@@ -43,31 +45,18 @@ export default function Home() {
   } = useSelector(state => state.sugarForecast);
   const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
-  // Function to show session expired message
-  const showSessionExpired = () => {
-    Alert.alert(
-      'Session Expired',
-      'Your session has expired. Please login again.',
-      [
-        {
-          text: 'Login',
-          onPress: () => {
-            // Navigate to login screen
-            // Adjust based on your navigation structure
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Auth'}],
-            });
-          },
-        },
-      ],
-    );
+  // Function to redirect to login screen
+  const redirectToLogin = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Auth'}],
+    });
   };
 
   // Function to check token validity
   const checkTokenValidity = () => {
     if (!accessToken) {
-      showSessionExpired();
+      redirectToLogin();
       return false;
     }
     return true;
@@ -91,10 +80,12 @@ export default function Home() {
     };
   }, [accessToken]);
 
-  // Initial token check on mount
+  // Initial token check on mount - redirect immediately if no token
   useEffect(() => {
-    checkTokenValidity();
-  }, []);
+    if (!accessToken) {
+      redirectToLogin();
+    }
+  }, [accessToken]);
 
   // Check token before API calls
   useEffect(() => {
@@ -121,7 +112,7 @@ export default function Home() {
       sugarError?.message?.includes('unauthorized') ||
       sugarError?.message?.includes('expired')
     ) {
-      showSessionExpired();
+      redirectToLogin();
     }
   }, [sugarError]);
 
@@ -134,6 +125,40 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [accessToken]);
 
+  // Close menu when screen loses focus (prevents menu from appearing on other screens)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Ensure menu is closed when screen gains focus (if somehow left open)
+      setIsMenuVisible(false);
+
+      // Cleanup: close menu when screen loses focus
+      return () => {
+        setIsMenuVisible(false);
+      };
+    }, []),
+  );
+
+  // Listen to navigation state changes - close menu immediately when navigating away
+  useEffect(() => {
+    // Close menu before navigation completes to prevent blinking
+    const unsubscribeBeforeRemove = navigation.addListener(
+      'beforeRemove',
+      () => {
+        setIsMenuVisible(false);
+      },
+    );
+
+    const unsubscribeState = navigation.addListener('state', () => {
+      // Close menu immediately on any navigation state change
+      setIsMenuVisible(false);
+    });
+
+    return () => {
+      unsubscribeBeforeRemove();
+      unsubscribeState();
+    };
+  }, [navigation]);
+
   const toggleMenu = () => {
     if (!checkTokenValidity()) return;
     setIsMenuVisible(!isMenuVisible);
@@ -145,20 +170,10 @@ export default function Home() {
     navigation.navigate('AppScreens', {screen: screenName});
   };
 
-  // If token is null, show redirecting screen
+  // If token is null, don't render anything or return null
+  // The useEffect will handle the redirect immediately
   if (!accessToken) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <View
-          style={[
-            styles.container,
-            {justifyContent: 'center', alignItems: 'center'},
-          ]}>
-          <Text>Session expired. Redirecting to login...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return null; // Or you can return a minimal loading view if needed
   }
 
   return (
@@ -237,7 +252,7 @@ export default function Home() {
             Based on your recent activity, your sugar may spike in next 2hrs
           </Text>
           <TouchableOpacity
-            onPress={() => handleNavigation('PredictSugarAlert')}
+            onPress={() => handleNavigation('PredictInputs')}
             style={styles.seeSuggestionsButton}>
             <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
             <Image
@@ -318,12 +333,15 @@ export default function Home() {
             </View>
           </View>
         </View>
-        <MenuModal
-          updatedName={profile?.name}
-          visible={isMenuVisible}
-          onClose={() => setIsMenuVisible(false)}
-          navigation={navigation}
-        />
+        {/* Only render MenuModal when actually visible - prevents any blinking */}
+        {isMenuVisible && (
+          <MenuModal
+            updatedName={profile?.name}
+            visible={isMenuVisible}
+            onClose={() => setIsMenuVisible(false)}
+            navigation={navigation}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
