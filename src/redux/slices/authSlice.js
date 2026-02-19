@@ -1,6 +1,11 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/axiosInstance';
+import {
+  setSecureCredentials,
+  getSecureCredentials,
+  clearSecureCredentials,
+} from '../../services/secureStorage';
 
 // Ensure email is always lowercase before sending to backend
 const normalizeEmail = e => (typeof e === 'string' ? e.trim().toLowerCase() : e);
@@ -17,33 +22,28 @@ const getErrorMessage = payload => {
   return payload.message || 'Something went wrong.';
 };
 
-// Helper to save auth data to AsyncStorage
+// Helper to save auth data - tokens in Keychain, user in AsyncStorage
 const saveAuthDataToStorage = async data => {
   try {
-    if (data.accessToken || data.access_token) {
-      await AsyncStorage.setItem(
-        'accessToken',
-        data.accessToken || data.access_token,
-      );
+    const accessToken = data.accessToken || data.access_token;
+    const refreshToken = data.refreshToken || data.refresh_token;
+    const user = data.user;
+    if (accessToken || refreshToken || user?.id != null) {
+      await setSecureCredentials(accessToken, refreshToken, user?.id);
     }
-    if (data.refreshToken || data.refresh_token) {
-      await AsyncStorage.setItem(
-        'refreshToken',
-        data.refreshToken || data.refresh_token,
-      );
-    }
-    if (data.user) {
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    if (user) {
+      await AsyncStorage.setItem('user', JSON.stringify(user));
     }
   } catch (error) {
     console.error('Error saving auth data to storage:', error);
   }
 };
 
-// Helper to clear auth data from AsyncStorage
+// Helper to clear auth data - Keychain + AsyncStorage
 const clearAuthDataFromStorage = async () => {
   try {
-    await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
+    await clearSecureCredentials();
+    await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user', 'aiConsent']);
   } catch (error) {
     console.error('Error clearing auth data from storage:', error);
   }
@@ -180,6 +180,30 @@ export const logoutUser = createAsyncThunk(
   },
 );
 
+// DELETE ACCOUNT - Apple 5.1.1(v) compliance
+// DELETE /auth/user/:userId
+export const deleteAccountUser = createAsyncThunk(
+  'auth/deleteAccount',
+  async (_, {rejectWithValue, getState}) => {
+    const state = getState();
+    const {user, accessToken} = state.auth;
+
+    if (!user?.id || !accessToken) {
+      return rejectWithValue({message: 'User not authenticated'});
+    }
+
+    try {
+      await api.delete(`/auth/user/${user.id}`);
+      await clearAuthDataFromStorage();
+      return {success: true};
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {message: error.message || 'Failed to delete account'},
+      );
+    }
+  },
+);
+
 // REFRESH TOKEN (if your API supports it)
 export const refreshAccessToken = createAsyncThunk(
   'auth/refreshToken',
@@ -211,21 +235,41 @@ export const refreshAccessToken = createAsyncThunk(
   },
 );
 
-// INITIALIZE AUTH FROM STORAGE
+// INITIALIZE AUTH - Keychain first (secure), fallback to AsyncStorage for migration
 export const initializeAuth = createAsyncThunk(
   'auth/initialize',
   async (_, {rejectWithValue}) => {
     try {
-      const [accessToken, refreshToken, userString] = await Promise.all([
+      const keychain = await getSecureCredentials();
+      const userString = await AsyncStorage.getItem('user');
+
+      if (keychain.accessToken && userString) {
+        return {
+          accessToken: keychain.accessToken,
+          refreshToken: keychain.refreshToken,
+          user: JSON.parse(userString),
+        };
+      }
+
+      // Fallback for migration from old installs (AsyncStorage)
+      const [accessToken, refreshToken] = await Promise.all([
         AsyncStorage.getItem('accessToken'),
         AsyncStorage.getItem('refreshToken'),
-        AsyncStorage.getItem('user'),
       ]);
 
+      if (accessToken && userString) {
+        await setSecureCredentials(accessToken, refreshToken, null);
+        return {
+          accessToken,
+          refreshToken,
+          user: JSON.parse(userString),
+        };
+      }
+
       return {
-        accessToken,
-        refreshToken,
-        user: userString ? JSON.parse(userString) : null,
+        accessToken: null,
+        refreshToken: null,
+        user: null,
       };
     } catch (error) {
       return rejectWithValue(error.message);
@@ -417,6 +461,26 @@ const authSlice = createSlice({
         state.otpSent = false;
         state.otpVerified = false;
         state.isInitialized = true;
+      })
+
+      // DELETE ACCOUNT
+      .addCase(deleteAccountUser.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAccountUser.fulfilled, state => {
+        state.loading = false;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.otpSent = false;
+        state.otpVerified = false;
+        state.error = null;
+        state.isInitialized = true;
+      })
+      .addCase(deleteAccountUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = getErrorMessage(action.payload);
       })
 
       // REFRESH TOKEN

@@ -1,8 +1,9 @@
 import React, {useEffect, useMemo} from 'react';
 import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {Header, MedicalDisclaimer} from '../../../components';
+import {Header, MedicalDisclaimer, AIConsentModal} from '../../../components';
 import {appIcons, colors} from '../../../utilities';
+import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 import styles from './styles';
 import {fetchRiskForecast} from '../../../redux/slices/riskForecastSlice';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -92,6 +93,7 @@ const RiskCard = ({risk}) => {
 -------------------------------------------------- */
 export default function AIRiskForecasting({navigation}) {
   const dispatch = useDispatch();
+  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
   const {accessToken, user} = useSelector(state => state.auth);
 
   // ✅ Crash-proof selectors
@@ -102,10 +104,17 @@ export default function AIRiskForecasting({navigation}) {
   const loading = useSelector(state => state.riskForecast?.loading ?? false);
 
   useEffect(() => {
-    if (accessToken && user?.id) {
-      dispatch(fetchRiskForecast({token: accessToken, user_id: user.id}));
-    }
-  }, [accessToken, user?.id, dispatch]);
+    let cancelled = false;
+    (async () => {
+      const ok = await gateAIAction();
+      if (ok && !cancelled && accessToken && user?.id) {
+        dispatch(fetchRiskForecast({token: accessToken, user_id: user.id}));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, user?.id, dispatch, gateAIAction]);
 
   /* --------------------------------------------------
      Icon Resolver (Fixes heart icon everywhere issue)
@@ -234,6 +243,12 @@ export default function AIRiskForecasting({navigation}) {
 
         <MedicalDisclaimer />
       </ScrollView>
+
+      <AIConsentModal
+        visible={showModal}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
     </SafeAreaView>
   );
 }

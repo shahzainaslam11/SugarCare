@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  ImageBackground,
   ActivityIndicator,
 } from 'react-native';
 import {
@@ -20,40 +19,33 @@ import {
   WP,
 } from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
-import {AppButton, Header} from '../../../components';
-import {useDispatch, useSelector} from 'react-redux';
-import {logoutUser} from '../../../redux/slices/authSlice';
+import {Header} from '../../../components';
+import {useSelector} from 'react-redux';
+import {useAuth} from '../../../context/AuthContext';
+import {DeleteAccountModal, AIConsentModal} from '../../../components';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Fonts} from '../../../assets/fonts';
 
 const SettingsScreen = () => {
-  const dispatch = useDispatch();
-  const {user, accessToken, refreshToken} = useSelector(state => state.auth);
-
+  const navigation = useNavigation();
+  const {logout, deleteAccount} = useAuth();
+  const {user} = useSelector(state => state.auth);
   const {data: profile} = useSelector(state => state.profile);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAIDisclosure, setShowAIDisclosure] = useState(false);
 
   const performLogout = async () => {
     setIsLoggingOut(true);
-
     try {
-      // Call logout API - it handles both cases (with/without tokens)
-      await dispatch(logoutUser());
-
-      // Show success message and navigate to login
+      await logout();
       showSuccess('Logged out successfully');
-      navigation.replace('Auth', {screen: 'LogIn'});
     } catch (error) {
-      console.error('Logout error:', error);
-      // Even if there's an error, logout was attempted - clear and navigate
       showSuccess('Logged out successfully');
-      navigation.replace('Auth', {screen: 'LogIn'});
     } finally {
       setIsLoggingOut(false);
     }
   };
 
-  const navigation = useNavigation();
   return (
     <SafeAreaView style={styles.container}>
       {/* <View style={styles.header}>
@@ -121,6 +113,21 @@ const SettingsScreen = () => {
             <SettingsItem title="Manage Notifications" />
           </View>
 
+          {/* Privacy & Data Section - Delete Account (Apple 5.1.1 compliance) */}
+          <Text style={styles.sectionTitle}>Privacy & Data</Text>
+          <View style={styles.card}>
+            <SettingsItem
+              onPress={() => setShowAIDisclosure(true)}
+              title="View AI Data Disclosure"
+              isLast={false}
+            />
+            <SettingsItem
+              onPress={() => setShowDeleteModal(true)}
+              title="Delete Account"
+              isLast={true}
+            />
+          </View>
+
           {/* Support & Legal Section */}
           <Text style={styles.sectionTitle}>Support & Legal</Text>
           <View style={styles.card}>
@@ -154,6 +161,17 @@ const SettingsScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirmDelete={deleteAccount}
+      />
+      <AIConsentModal
+        visible={showAIDisclosure}
+        onAccept={() => setShowAIDisclosure(false)}
+        onDecline={() => setShowAIDisclosure(false)}
+      />
     </SafeAreaView>
   );
 };
