@@ -15,6 +15,12 @@ const api = axios.create({
 // Request interceptor to automatically add auth token
 api.interceptors.request.use(
   async config => {
+    // FormData needs multipart/form-data with boundary - remove Content-Type
+    // so axios sets it automatically (application/json breaks file uploads)
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     // Get token from Redux store (more reliable than AsyncStorage)
     const state = store.getState();
     const token = state.auth?.accessToken;

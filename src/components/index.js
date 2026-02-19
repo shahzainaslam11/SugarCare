@@ -34,6 +34,9 @@ export * from './Card/HalfCircle';
 export * from './Card/FastingRecordCard';
 export * from './Card/NutritionCard';
 
+//MedicalDisclaimer
+export * from './MedicalDisclaimer';
+
 //Tabs
 
 //DropDown

@@ -40,10 +40,19 @@ export const fetchRecentSugarReadings = createAsyncThunk(
   },
 );
 
+const VALID_READING_MIN = 50;
+const VALID_READING_MAX = 400;
+
 const prepareReadingsForAPI = readings => {
   if (!readings || readings.length === 0) return [];
 
-  const uniqueReadings = readings.reduce((acc, current) => {
+  // Filter out readings outside valid range (API requires 50-400 mg/dL)
+  const validReadings = readings.filter(r => {
+    const val = Number(r?.value);
+    return !isNaN(val) && val >= VALID_READING_MIN && val <= VALID_READING_MAX;
+  });
+
+  const uniqueReadings = validReadings.reduce((acc, current) => {
     const exists = acc.find(item => item.timestamp === current.timestamp);
     if (!exists) {
       acc.push(current);
@@ -180,8 +189,11 @@ const sugarAlertSlice = createSlice({
       })
       .addCase(predictSugarAlert.rejected, (state, action) => {
         state.loading = false;
+        const payload = action.payload;
         state.error =
-          action.payload?.message || 'Failed to predict sugar alert';
+          payload?.error ||
+          payload?.message ||
+          'Failed to predict sugar alert';
       });
   },
 });

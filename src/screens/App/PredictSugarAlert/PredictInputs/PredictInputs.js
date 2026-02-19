@@ -13,6 +13,7 @@ import {
   AppInput,
   AppButton,
   CustomDropdown,
+  MedicalDisclaimer,
 } from '../../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
@@ -48,11 +49,11 @@ const PredictInputs = () => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert(
-        'Prediction Error',
-        error.message || 'Failed to get prediction. Please try again.',
-        [{text: 'OK'}],
-      );
+      const message =
+        typeof error === 'string'
+          ? error
+          : error?.message || 'Failed to get prediction. Please try again.';
+      Alert.alert('Prediction Error', message, [{text: 'OK'}]);
     }
   }, [error]);
 
@@ -270,6 +271,8 @@ const PredictInputs = () => {
                     </Text>
                   )}
                 </View>
+
+                <MedicalDisclaimer />
               </ScrollView>
 
               <View style={styles.footer}>

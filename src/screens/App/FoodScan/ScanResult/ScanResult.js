@@ -8,34 +8,40 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import ImageResizer from 'react-native-image-resizer';
 import {appIcons, colors} from '../../../../utilities';
-import {Header, NutritionCard} from '../../../../components';
+import {Header, MedicalDisclaimer, NutritionCard} from '../../../../components';
 import styles from './styles';
 
 const ScanResult = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {scanData} = route.params || {};
+  const reduxResult = useSelector(state => state.food?.result);
+  const paramsData = route.params?.scanData;
+  // Use Redux result first (reliable), fallback to route params
+  const scanData = reduxResult || paramsData;
   console.log('scanData--->', JSON.stringify(scanData));
 
   // Hooks must be at the top
   const [fixedImageUri, setFixedImageUri] = useState(null);
   const [loadingImage, setLoadingImage] = useState(false);
 
-  // Resize/fix image when image_url changes
+  // Use image: remote URLs go directly to FastImage; local URIs can be resized
   useEffect(() => {
     if (scanData?.image_url) {
-      setLoadingImage(true);
-      ImageResizer.createResizedImage(scanData.image_url, 800, 800, 'JPEG', 100)
-        .then(resized => setFixedImageUri(resized.uri))
-        .catch(err => {
-          console.log('Image resize error:', err);
-          setFixedImageUri(scanData.image_url); // fallback
-        })
-        .finally(() => setLoadingImage(false));
+      const url = scanData.image_url;
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        setFixedImageUri(url);
+      } else {
+        setLoadingImage(true);
+        ImageResizer.createResizedImage(url, 800, 800, 'JPEG', 100)
+          .then(resized => setFixedImageUri(resized.uri))
+          .catch(() => setFixedImageUri(url))
+          .finally(() => setLoadingImage(false));
+      }
     }
   }, [scanData?.image_url]);
 
@@ -161,6 +167,8 @@ const ScanResult = () => {
               <Text style={styles.suggestionText}>{suggestion}</Text>
             </View>
           )}
+
+          <MedicalDisclaimer />
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -94,7 +94,7 @@ export default function LogIn() {
             // ✅ Dispatch login and log full API response
             const res = await dispatch(
               loginUser({
-                email: values.email,
+                email: email,
                 password: values.password,
               }),
             );

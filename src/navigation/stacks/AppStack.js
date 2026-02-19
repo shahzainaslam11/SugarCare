@@ -13,6 +13,7 @@ import ChatScreen from '../../screens/App/ChatScreen';
 import NewHbA1cReport from '../../screens/App/AddHBA1CTest/NewHbA1cReport';
 import FAQs from '../../screens/App/SettingsScreen/FAQs';
 import PrivacyPolicy from '../../screens/App/SettingsScreen/PrivacyPolicy';
+import MedicalSources from '../../screens/App/SettingsScreen/MedicalSources';
 import EditProfile from '../../screens/App/SettingsScreen/EditProfile';
 import Notification from '../../screens/App/Notification/Notification';
 import AIForecast from '../../screens/App/AIForecast/AIForecast';
@@ -38,6 +39,7 @@ function AppScreens() {
       <Stack.Screen name="NewHbA1cReport" component={NewHbA1cReport} />
       <Stack.Screen name="FAQs" component={FAQs} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
+      <Stack.Screen name="MedicalSources" component={MedicalSources} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="Notification" component={Notification} />
       <Stack.Screen name="AIForecast" component={AIForecast} />

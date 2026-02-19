@@ -28,7 +28,6 @@ import {
 const FoodScanScreen = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-
   const [capturedImage, setCapturedImage] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
@@ -221,7 +220,9 @@ const FoodScanScreen = ({route}) => {
         </View>
 
         {capturedImage && !scanning && (
-          <TouchableOpacity style={styles.scanButton} onPress={handleScanFood}>
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={handleScanFood}>
             <Text style={styles.scanButtonText}>Scan This Food</Text>
           </TouchableOpacity>
         )}

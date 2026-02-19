@@ -40,9 +40,10 @@ const PrivacyPolicy = () => {
           <Text style={styles.sectionTitle}>1. Information We Collect:</Text>
           <Text style={styles.sectionText}>
             We collect data you provide directly, such as your name, email
-            address, and health information, including blood sugar readings. We
-            may also gather data from your device, including usage patterns and
-            preferences.
+            address, and health information, including blood sugar readings,
+            meal descriptions, and activity levels. When you use the food
+            scanner, we process images you capture. We may also gather data from
+            your device, including usage patterns and preferences.
           </Text>
         </View>
 
@@ -53,15 +54,45 @@ const PrivacyPolicy = () => {
           </Text>
           <Text style={styles.sectionText}>
             Your data helps us personalize your experience, improve our
-            services, and provide you with tailored health insights. We may also
+            services, and provide you with tailored health insights and AI-based
+            predictions. We may also
             use your information for research and development purposes, ensuring
             we continue to enhance our app’s features.
           </Text>
         </View>
 
-        {/* Section 3 */}
+        {/* Section 3: Third-Party AI */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Data Protection:</Text>
+          <Text style={styles.sectionTitle}>
+            3. Third-Party AI Services & Data Sharing:
+          </Text>
+          <Text style={styles.sectionText}>
+            To provide AI features (sugar predictions, meal recommendations,
+            food analysis, risk forecasting, and chat assistance), we send
+            certain data to our secure servers (sugarcare.cloud) and may use
+            third-party AI services to process it.
+          </Text>
+          <Text style={styles.sectionText}>
+            <Text style={styles.boldText}>Data sent for AI processing:</Text>{' '}
+            Blood sugar readings, meal descriptions, food images, activity
+            levels, chat messages, and other health-related inputs you provide.
+          </Text>
+          <Text style={styles.sectionText}>
+            <Text style={styles.boldText}>Who receives the data:</Text> Our
+            backend servers and any AI service providers we use. These providers
+            are bound by contracts to protect your data and use it only to
+            deliver our services. We do not sell or rent your data.
+          </Text>
+          <Text style={styles.sectionText}>
+            <Text style={styles.boldText}>Your consent:</Text> Before we send
+            your data to AI services, we obtain your explicit permission. You
+            can decline and continue using the app without AI features.
+          </Text>
+        </View>
+
+        {/* Section 4 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>4. Data Protection:</Text>
           <Text style={styles.sectionText}>
             We implement robust security measures to protect your information
             from unauthorized access, loss, or misuse. Your data is encrypted
@@ -69,9 +100,9 @@ const PrivacyPolicy = () => {
           </Text>
         </View>
 
-        {/* Section 4 */}
+        {/* Section 5 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. Sharing Your Information:</Text>
+          <Text style={styles.sectionTitle}>5. Sharing Your Information:</Text>
           <Text style={styles.sectionText}>
             We do not sell or rent your personal information to third parties.
             We may share your data with trusted partners who assist us in
@@ -80,9 +111,9 @@ const PrivacyPolicy = () => {
           </Text>
         </View>
 
-        {/* Section 5 */}
+        {/* Section 6 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>5. Your Rights:</Text>
+          <Text style={styles.sectionTitle}>6. Your Rights:</Text>
           <Text style={styles.sectionText}>
             You have the right to access, correct, or delete your personal
             information at any time. You can also opt-out of certain data
@@ -90,9 +121,9 @@ const PrivacyPolicy = () => {
           </Text>
         </View>
 
-        {/* Section 6 */}
+        {/* Section 7 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. Changes to This Policy:</Text>
+          <Text style={styles.sectionTitle}>7. Changes to This Policy:</Text>
           <Text style={styles.sectionText}>
             We may update this privacy policy periodically. We will notify you
             of any significant changes via the app or email.
@@ -144,6 +175,10 @@ const styles = StyleSheet.create({
     fontFamily: family.inter_medium,
     color: colors.textGray || '#555',
     lineHeight: WP(5.8),
+  },
+  boldText: {
+    fontWeight: '600',
+    color: colors.b1 || '#333',
   },
   footer: {
     fontSize: size.small,

@@ -13,8 +13,10 @@ export const fetchChatHistory = createAsyncThunk(
         },
       });
 
-      // Convert API response to UI-friendly messages
-      const messages = res.data.items.flatMap(item => [
+      // Convert API response to UI-friendly messages (guard API shape, dedupe by content)
+      const items = res.data?.items ?? res.data?.data?.items ?? [];
+      const rawMessages = Array.isArray(items)
+        ? items.flatMap(item => [
         {
           id: item.id + '_user',
           sender: 'user',
@@ -27,7 +29,17 @@ export const fetchChatHistory = createAsyncThunk(
           message: item.reply,
           created_at: item.created_at,
         },
-      ]);
+      ])
+        : [];
+
+      // Dedupe: same sender + message content (API may return duplicates)
+      const seen = new Set();
+      const messages = rawMessages.filter(m => {
+        const key = `${m.sender}|${m.message}|${m.created_at}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
       return messages;
     } catch (err) {
@@ -54,11 +66,12 @@ export const sendChatMessage = createAsyncThunk(
       );
 
       // Return only bot message - user message is added optimistically via addUserMessage
+      const reply = res.data?.data?.reply ?? res.data?.reply ?? '';
       return {
         botMessage: {
           id: Date.now() + '_bot',
           sender: 'bot',
-          message: res.data.data.reply,
+          message: reply,
           created_at: new Date().toISOString(),
         },
       };
@@ -77,7 +90,8 @@ const chatSlice = createSlice({
   },
   reducers: {
     addUserMessage: (state, action) => {
-      const messageId = Date.now() + '_user_' + Math.random().toString(36).substr(2, 9);
+      const messageId =
+        Date.now() + '_user_' + Math.random().toString(36).substr(2, 9);
       state.messages.push({
         id: messageId,
         sender: 'user',
@@ -103,15 +117,24 @@ const chatSlice = createSlice({
       })
       .addCase(fetchChatHistory.fulfilled, (state, action) => {
         state.loading = false;
-        // Merge old history with existing messages without overwriting
-        const existingIds = new Set(state.messages.map(m => m.id));
-        const merged = [...state.messages];
-
-        action.payload.forEach(msg => {
-          if (!existingIds.has(msg.id)) merged.push(msg);
+        const apiMessages = action.payload ?? [];
+        // Merge: API may not have latest yet, so keep local messages and add API
+        // Dedupe by sender+message to avoid showing same exchange twice
+        const combined = [...state.messages];
+        apiMessages.forEach(apiMsg => {
+          const exists = combined.some(
+            m =>
+              m.sender === apiMsg.sender &&
+              (m.message || '') === (apiMsg.message || ''),
+          );
+          if (!exists) combined.push(apiMsg);
         });
-
-        state.messages = merged;
+        // Sort by created_at to keep order
+        combined.sort(
+          (a, b) =>
+            new Date(a.created_at || 0) - new Date(b.created_at || 0),
+        );
+        state.messages = combined;
       })
       .addCase(fetchChatHistory.rejected, (state, action) => {
         state.loading = false;
@@ -141,7 +164,10 @@ const chatSlice = createSlice({
         // Remove the most recent optimistic user message if API call failed
         // Find the last optimistic message and remove it
         for (let i = state.messages.length - 1; i >= 0; i--) {
-          if (state.messages[i].sender === 'user' && state.messages[i].isOptimistic) {
+          if (
+            state.messages[i].sender === 'user' &&
+            state.messages[i].isOptimistic
+          ) {
             state.messages.splice(i, 1);
             break;
           }
@@ -150,5 +176,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const {addUserMessage, clearChat, removeOptimisticMessage} = chatSlice.actions;
+export const {addUserMessage, clearChat, removeOptimisticMessage} =
+  chatSlice.actions;
 export default chatSlice.reducer;

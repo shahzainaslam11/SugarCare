@@ -11,7 +11,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {appImages, colors, family, size, WP, HP} from '../../../../utilities';
 import styles from './styles';
-import {Header, NutritionCard} from '../../../../components';
+import {Header, MedicalDisclaimer, NutritionCard} from '../../../../components';
 
 const Recipe = ({route}) => {
   const navigation = useNavigation();
@@ -378,6 +378,8 @@ const Recipe = ({route}) => {
               to preserve nutrients
             </Text>
           </View>
+
+          <MedicalDisclaimer />
         </View>
       </ScrollView>
     </SafeAreaView>
