@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {View, Text, ScrollView, StyleSheet} from 'react-native';
 import {
   AppButton,
@@ -86,6 +86,7 @@ const Fasting = () => {
   const [fastEnd, setFastEnd] = useState(null);
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const userEndedFastRef = useRef(false);
 
   const records = recordsByRange?.[apiRange] || [];
   const chart = graphData?.[apiRange] || {};
@@ -104,13 +105,14 @@ const Fasting = () => {
     }
   }, [user, accessToken, apiRange, dispatch]);
 
-  // Refresh whenever screen is focused
+  // Refresh records when screen is focused
   useFocusEffect(
     useCallback(() => {
       loadFastingRecords();
 
       // Handle updated fast from CustomFast screen
       if (route.params?.updatedFast) {
+        userEndedFastRef.current = false;
         const {plan, startTime, endTime} = route.params.updatedFast;
         const start = dayjs(startTime);
         const end = dayjs(endTime);
@@ -126,7 +128,7 @@ const Fasting = () => {
 
         navigation.setParams({updatedFast: null});
       }
-    }, [loadFastingRecords, route.params]),
+    }, [loadFastingRecords, route.params, navigation]),
   );
 
   // Re-fetch whenever activeRange changes
@@ -134,28 +136,37 @@ const Fasting = () => {
     loadFastingRecords();
   }, [activeRange]);
 
-  // Check ongoing fast from today's records
+  // Check ongoing fast from API records (skip if user explicitly ended)
   useEffect(() => {
     if (isFasting) return;
+    if (userEndedFastRef.current) return;
     const todayRecords = recordsByRange?.Today || [];
     const now = dayjs();
+    const todayStr = now.format('YYYY-MM-DD');
     const ongoing = todayRecords.find(record => {
-      const start = dayjs(record.start_time, 'HH:mm');
-      const end = dayjs(record.end_time, 'HH:mm');
+      const recordDate = record.date || todayStr;
+      const start = dayjs(`${recordDate} ${record.start_time}`, 'YYYY-MM-DD HH:mm');
+      let end = dayjs(`${recordDate} ${record.end_time}`, 'YYYY-MM-DD HH:mm');
+      if (end.isBefore(start)) end = end.add(1, 'day');
       return now.isAfter(start) && now.isBefore(end);
     });
 
     if (ongoing) {
-      setSelectedPlan({title: ongoing.notes, hours: ongoing.duration_hours});
-      setFastStart(dayjs(ongoing.start_time, 'HH:mm'));
-      setFastEnd(dayjs(ongoing.end_time, 'HH:mm'));
+      const hrs = typeof ongoing.duration_hours === 'number'
+        ? ongoing.duration_hours
+        : parseFloat(String(ongoing.duration_hours || 0).split(':')[0]) || 16;
+      const recordDate = ongoing.date || todayStr;
+      const start = dayjs(`${recordDate} ${ongoing.start_time}`, 'YYYY-MM-DD HH:mm');
+      let end = dayjs(`${recordDate} ${ongoing.end_time}`, 'YYYY-MM-DD HH:mm');
+      if (end.isBefore(start)) end = end.add(1, 'day');
+
+      setSelectedPlan({title: ongoing.notes, hours: hrs});
+      setFastStart(start);
+      setFastEnd(end);
       setIsFasting(true);
 
-      const total = dayjs(ongoing.end_time, 'HH:mm').diff(
-        dayjs(ongoing.start_time, 'HH:mm'),
-        'second',
-      );
-      const left = dayjs(ongoing.end_time, 'HH:mm').diff(now, 'second');
+      const total = end.diff(start, 'second');
+      const left = end.diff(now, 'second');
       setProgress(((total - left) / total) * 100 || 0);
     }
   }, [recordsByRange, isFasting]);
@@ -169,6 +180,7 @@ const Fasting = () => {
         setIsFasting(false);
         setSelectedPlan(null);
         setProgress(100);
+        loadFastingRecords();
         clearInterval(interval);
         return;
       }
@@ -177,9 +189,10 @@ const Fasting = () => {
       setProgress(((total - left) / total) * 100);
     }, 1000);
     return () => clearInterval(interval);
-  }, [isFasting, fastStart, fastEnd]);
+  }, [isFasting, fastStart, fastEnd, loadFastingRecords]);
 
   const startFasting = plan => {
+    userEndedFastRef.current = false;
     if (!user?.id || !accessToken) return showError('User not authenticated!');
     const start = dayjs();
     const end = start.add(plan.hours, 'hour');
@@ -216,20 +229,24 @@ const Fasting = () => {
   };
 
   const endFasting = () => {
+    userEndedFastRef.current = true;
     setIsFasting(false);
     setSelectedPlan(null);
+    loadFastingRecords();
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {isFasting ? (
-        <>
-          <Text style={styles.forecastTitle}>Current Fasting Progress</Text>
-          <HalfCircle
-            onPressEdit={() =>
-              navigation.navigate('AppScreens', {
-                screen: 'CustomFast',
-                params: {
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        {isFasting ? (
+          <>
+            <Text style={styles.forecastTitle}>Current Fasting Progress</Text>
+            <HalfCircle
+              onPressEdit={() =>
+                navigation.navigate('CustomFast', {
                   ongoingFast: {
                     plan: selectedPlan,
                     startTime: fastStart?.toISOString(),
@@ -237,34 +254,30 @@ const Fasting = () => {
                     durationHours: selectedPlan?.hours || 0,
                     notes: selectedPlan?.title,
                   },
-                },
-              })
-            }
-            onEndFasting={endFasting}
-            startTime={fastStart?.format('hh:mm A')}
-            endTime={fastEnd?.format('hh:mm A')}
-            remainingTime={formatTimeRemaining(fastEnd)}
-            progressPercentage={progress}
-          />
-        </>
-      ) : (
-        <>
-          <Text style={styles.forecastTitle}>Start a Fast</Text>
-          <Text style={styles.streakText}>
-            {stats?.totalFastingDays || 0}-Day Streak, Keep it up!
-          </Text>
-          <FastingPlans
-            fastingPlans={fastingPlans}
-            startFasting={startFasting}
-            navigation={navigation}
-            saving={saving}
-          />
-        </>
-      )}
+                })
+              }
+              onEndFasting={endFasting}
+              startTime={fastStart?.format('hh:mm A')}
+              endTime={fastEnd?.format('hh:mm A')}
+              remainingTime={formatTimeRemaining(fastEnd)}
+              progressPercentage={progress}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.forecastTitle}>Start a Fast</Text>
+            <Text style={styles.streakText}>
+              {stats?.totalFastingDays || 0}-Day Streak, Keep it up!
+            </Text>
+            <FastingPlans
+              fastingPlans={fastingPlans}
+              startFasting={startFasting}
+              navigation={navigation}
+              saving={saving}
+            />
+          </>
+        )}
 
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}>
         <Text style={styles.forecastTitle}>Fasting progress at a glance</Text>
 
         {loading ? (
@@ -289,20 +302,17 @@ const Fasting = () => {
             <Text style={styles.emptyText}>No records found</Text>
           )}
         </View>
-      </ScrollView>
 
-      {!isFasting && (
-        <View style={styles.buttonContainer}>
-          <AppButton
-            title="Add New Record"
-            onPress={() =>
-              navigation.navigate('AppScreens', {screen: 'CustomFast'})
-            }
-            // style={styles.addButton}
-            icon={appIcons.plus}
-          />
-        </View>
-      )}
+        {!isFasting && (
+          <View style={styles.buttonContainer}>
+            <AppButton
+              title="Add New Record"
+              onPress={() => navigation.navigate('CustomFast')}
+              icon={appIcons.plus}
+            />
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };

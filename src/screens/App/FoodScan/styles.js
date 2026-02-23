@@ -1,94 +1,216 @@
-import {StyleSheet} from 'react-native';
+import {Platform, StyleSheet} from 'react-native';
 import {colors, family, HP, size, WP} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
+    backgroundColor: colors.g13,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  },
+  scrollContent: {
     paddingHorizontal: WP(5),
+    paddingTop: HP(2),
+    paddingBottom: HP(14),
+    alignItems: 'center',
+  },
+  heroSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: HP(2),
+  },
+  illustrationCard: {
+    width: WP(85),
+    aspectRatio: 1.1,
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: WP(4),
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   scannerImage: {
-    width: WP(70),
-    height: HP(25),
-    marginBottom: HP(3),
+    width: '100%',
+    height: '100%',
   },
-  imagePreviewContainer: {
+  loadingPlaceholder: {
+    width: WP(85),
+    aspectRatio: 1.1,
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  loadingText: {
+    marginTop: HP(1.5),
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: colors.g3,
+  },
+  imagePreviewWrapper: {
+    width: WP(85),
     position: 'relative',
-    marginBottom: HP(3),
   },
   capturedImage: {
-    width: WP(70),
-    height: HP(25),
-    borderRadius: 15,
-    borderWidth: 2,
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 20,
+    borderWidth: 3,
     borderColor: colors.p1,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   clearImageButton: {
     position: 'absolute',
-    top: -10,
-    right: -10,
-    backgroundColor: colors.red,
-    width: WP(6),
-    height: WP(6),
-    borderRadius: WP(3),
+    top: -8,
+    right: -8,
+    width: WP(10),
+    height: WP(10),
+    borderRadius: WP(5),
+    backgroundColor: colors.r2,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.white,
   },
+  clearImageButtonPressed: {
+    opacity: 0.9,
+  },
   clearImageText: {
     color: colors.white,
-    fontSize: size.large,
-    fontWeight: 'bold',
-    lineHeight: WP(5),
+    fontSize: size.h4,
+    fontFamily: family.inter_bold,
+    lineHeight: size.h4,
   },
   title: {
-    fontSize: size.h1,
+    fontSize: size.h3,
     fontFamily: family.inter_bold,
-    color: colors.black,
+    color: colors.b4,
     textAlign: 'center',
-    marginBottom: HP(1),
+    marginBottom: HP(0.8),
   },
   subtitle: {
-    fontSize: size.normal,
+    fontSize: size.small,
     fontFamily: family.inter_regular,
-    color: colors.gray,
+    color: colors.g3,
     textAlign: 'center',
-    lineHeight: HP(2.8),
-    marginBottom: HP(5),
+    lineHeight: 22,
+    marginBottom: HP(4),
   },
   buttonContainer: {
     width: '100%',
-    gap: HP(2),
     marginBottom: HP(2),
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.p1,
+    paddingVertical: HP(1.8),
+    paddingHorizontal: WP(4),
+    borderRadius: 16,
+    marginBottom: HP(1.2),
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    paddingVertical: HP(1.8),
+    paddingHorizontal: WP(4),
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.p1,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+  },
+  buttonIcon: {
+    width: WP(5),
+    height: WP(5),
+    marginRight: WP(2),
+    tintColor: colors.white,
+  },
+  buttonIconSecondary: {
+    tintColor: colors.p1,
+  },
+  primaryButtonText: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.white,
+  },
+  secondaryButtonText: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.p1,
   },
   scanButton: {
     backgroundColor: colors.p1,
-    paddingVertical: HP(1.5),
-    paddingHorizontal: WP(8),
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: colors.white,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    paddingVertical: HP(1.8),
+    paddingHorizontal: WP(10),
+    borderRadius: 16,
+    alignSelf: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  scanButtonPressed: {
+    opacity: 0.92,
   },
   scanButtonText: {
     color: colors.white,
-    fontSize: size.normal,
+    fontSize: size.medium,
     fontFamily: family.inter_bold,
-    textAlign: 'center',
+  },
+  scanningOverlay: {
+    marginTop: HP(2),
+    alignItems: 'center',
+  },
+  scanningText: {
+    marginTop: HP(1),
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: colors.g3,
   },
 });
 

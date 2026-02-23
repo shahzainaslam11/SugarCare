@@ -59,7 +59,7 @@ const TrackSugar = () => {
   }, [error]);
 
   const handleAddSugarRecord = () => {
-    navigation.navigate('AppScreens', {screen: 'NewSugarRecord'});
+    navigation.navigate('NewSugarRecord');
   };
 
   // Full screen loader while fetching data

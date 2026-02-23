@@ -23,7 +23,7 @@ const SplashScreen = () => {
       if (isInitialized !== undefined) {
         // or use a specific initialization flag
         if (accessToken) {
-          navigation.replace('BottomTabs');
+          navigation.replace('MainDrawer');
         } else {
           navigation.replace('Auth');
         }

@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Text, StyleSheet, Image} from 'react-native';
+import {View, Text, StyleSheet, Image, Platform} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
 import {appIcons, colors, family, HP, size, WP} from '../../utilities';
 
@@ -20,13 +21,6 @@ const getNextDayDate = isoDate => {
   const date = dayjs(isoDate).add(1, 'day');
   return date.format('YYYY-MM-DD');
 };
-
-const PRIMARY_BLUE = '#4A4CFF';
-const DURATION_TEXT_COLOR = '#333333';
-const GRAY_TEXT = '#8C8C8C';
-const COMPLETED_BG = '#E5FFEE';
-const COMPLETED_TEXT_COLOR = '#00CC66';
-const CARD_BG = '#FFFFFF';
 
 const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
   if (!record) {
@@ -50,11 +44,12 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
     );
   }
 
-  const totalDuration = record.duration_hours || 0;
-  const durationHours = Math.trunc(totalDuration).toString();
-  const durationMinutes = Math.round(
-    (totalDuration - durationHours) * 60,
-  ).toString();
+  const rawDuration = record.duration_hours ?? 0;
+  const totalDuration =
+    typeof rawDuration === 'number'
+      ? rawDuration
+      : parseFloat(String(rawDuration).split(':')[0]) || 0;
+  const durationHrs = Math.trunc(totalDuration);
 
   const isOvernight = dayjs(record.start_time, 'HH:mm').isAfter(
     dayjs(record.end_time, 'HH:mm'),
@@ -69,144 +64,220 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
   const notes = record.notes || '---';
 
   return (
-    <View style={styles.cardContainer}>
-      <View style={styles.headerRow}>
-        <View style={styles.durationContainer}>
-          <Image source={iconSource} style={styles.icon} resizeMode="contain" />
-          <Text style={styles.durationText}>
-            <Text style={styles.timeValue}>{totalDuration}</Text>
+    <View style={styles.cardWrapper}>
+      <LinearGradient
+        colors={[colors.p1, colors.p9]}
+        start={{x: 0, y: 0}}
+        end={{x: 0, y: 1}}
+        style={styles.cardAccent}
+      />
+      <View style={styles.cardContent}>
+        <View style={styles.headerRow}>
+          <View style={styles.durationContainer}>
+            <View style={styles.iconWrapper}>
+              <Image
+                source={iconSource}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </View>
+            <View>
+              <Text style={styles.durationValue}>
+                {durationHrs}
+                <Text style={styles.durationUnit}> hrs</Text>
+              </Text>
+              <Text style={styles.durationLabel}>fast</Text>
+            </View>
+          </View>
+          <View
+            style={[
+              styles.statusPill,
+              isCompleted ? styles.completedPill : styles.inProgressPill,
+            ]}>
+            <Text
+              style={isCompleted ? styles.completedText : styles.inProgressText}>
+              {isCompleted ? 'Completed' : 'In Progress'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.detailsRow}>
+          <View style={styles.timeBlock}>
+            <Text style={styles.timeLabel}>Started</Text>
+            <Text style={styles.timeValue}>{displayStartDate}</Text>
+            <Text style={styles.timeSub}>{displayStartTime}</Text>
+          </View>
+          <View style={styles.timeBlock}>
+            <Text style={styles.timeLabel}>Ends at</Text>
+            <Text style={styles.timeValue}>{displayEndDate}</Text>
+            <Text style={styles.timeSub}>{displayEndTime}</Text>
+          </View>
+        </View>
+
+        <View style={styles.notesRow}>
+          <Text style={styles.notesLabel}>Notes</Text>
+          <Text style={styles.notesText} numberOfLines={1}>
+            {notes}
           </Text>
         </View>
-
-        <View
-          style={[
-            styles.statusPill,
-            isCompleted ? styles.completedPill : styles.inProgressPill,
-          ]}>
-          <Text
-            style={isCompleted ? styles.completedText : styles.inProgressText}>
-            {isCompleted ? 'Completed' : 'In Progress'}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.detailsSection}>
-        <View style={styles.timeDetail}>
-          <Text style={styles.label}>Started:</Text>
-          <Text
-            style={
-              styles.dateTime
-            }>{`${displayStartDate}, ${displayStartTime}`}</Text>
-        </View>
-
-        <View style={styles.timeDetail}>
-          <Text style={styles.label}>Ends at:</Text>
-          <Text
-            style={
-              styles.dateTime
-            }>{`${displayEndDate}, ${displayEndTime}`}</Text>
-        </View>
-      </View>
-
-      <View style={styles.notesSection}>
-        <Text style={styles.label}>
-          Notes: <Text style={styles.noteContent}>{notes}</Text>
-        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    backgroundColor: CARD_BG,
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+  cardWrapper: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    marginBottom: HP(1.5),
+    overflow: 'hidden',
+    flexDirection: 'row',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  cardAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  },
+  cardContent: {
+    flex: 1,
+    paddingVertical: HP(1.5),
+    paddingHorizontal: WP(4),
+    paddingLeft: WP(4.5),
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: WP('4'),
   },
   durationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconWrapper: {
+    width: WP(11),
+    height: WP(11),
+    borderRadius: WP(5.5),
+    backgroundColor: colors.p6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: WP(2.5),
+  },
   icon: {
-    width: WP('5'),
-    height: HP('3'),
-    marginRight: 8,
-    tintColor: PRIMARY_BLUE,
+    width: WP(5),
+    height: HP(2.5),
+    tintColor: colors.p1,
   },
-  durationText: {
-    fontSize: size.medium,
-    fontFamily: family.inter_medium,
-    color: DURATION_TEXT_COLOR,
+  durationValue: {
+    fontFamily: family.inter_bold,
+    fontSize: size.h5,
+    color: colors.b4,
+    letterSpacing: -0.3,
   },
-  timeValue: {
-    fontWeight: '700',
-    fontSize: size.medium,
+  durationUnit: {
     fontFamily: family.inter_medium,
-    color: DURATION_TEXT_COLOR,
+    fontSize: size.normal,
+    color: colors.g3,
+  },
+  durationLabel: {
+    fontFamily: family.inter_regular,
+    fontSize: size.xxsmall,
+    color: colors.g3,
+    marginTop: 1,
   },
   statusPill: {
-    borderRadius: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderRadius: 12,
+    paddingHorizontal: WP(2.5),
+    paddingVertical: HP(0.5),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.12,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   completedPill: {
-    backgroundColor: COMPLETED_BG,
+    backgroundColor: '#E5FFEE',
   },
   completedText: {
-    color: COMPLETED_TEXT_COLOR,
-    fontWeight: '600',
-    fontSize: size.xsmall,
-    fontFamily: family.inter_regular,
+    color: '#00CC66',
+    fontFamily: family.inter_bold,
+    fontSize: size.xxsmall,
+    letterSpacing: 0.2,
   },
   inProgressPill: {
-    backgroundColor: PRIMARY_BLUE,
+    backgroundColor: colors.p1,
   },
   inProgressText: {
-    color: '#FFFFFF',
-    fontSize: size.xsmall,
-    fontFamily: family.inter_regular,
+    color: colors.white,
+    fontFamily: family.inter_bold,
+    fontSize: size.xxsmall,
+    letterSpacing: 0.2,
   },
   divider: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
-    marginBottom: WP('4'),
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.g15,
+    marginVertical: HP(1),
   },
-  detailsSection: {
+  detailsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: WP('4'),
+    gap: WP(4),
   },
-  timeDetail: {},
-  label: {
-    fontSize: size.small,
-    fontFamily: family.inter_regular,
-    color: GRAY_TEXT,
-    marginBottom: 4,
-    fontWeight: '500',
+  timeBlock: {
+    flex: 1,
   },
-  dateTime: {
-    fontSize: size.small,
-    fontFamily: family.inter_regular,
-    color: DURATION_TEXT_COLOR,
-    fontWeight: '600',
+  timeLabel: {
+    fontFamily: family.inter_medium,
+    fontSize: size.xxsmall,
+    color: colors.g3,
+    marginBottom: 2,
   },
-  notesSection: {},
-  noteContent: {
-    color: DURATION_TEXT_COLOR,
-    fontWeight: '600',
+  timeValue: {
+    fontFamily: family.inter_bold,
     fontSize: size.small,
+    color: colors.b4,
+  },
+  timeSub: {
     fontFamily: family.inter_regular,
+    fontSize: size.xxsmall,
+    color: colors.g3,
+    marginTop: 1,
+  },
+  notesRow: {
+    marginTop: HP(0.8),
+  },
+  notesLabel: {
+    fontFamily: family.inter_medium,
+    fontSize: size.xxsmall,
+    color: colors.g3,
+    marginBottom: 2,
+  },
+  notesText: {
+    fontFamily: family.inter_regular,
+    fontSize: size.small,
+    color: colors.b1,
   },
 });
 

@@ -15,6 +15,8 @@ import {
 import Modal from 'react-native-modal';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
+
+import {logoutUser} from '../../redux/slices/authSlice';
 import {
   colors,
   family,
@@ -25,7 +27,6 @@ import {
   showError,
   appIcons,
 } from '../../utilities';
-import {logoutUser} from '../../redux/slices/authSlice';
 
 const {width} = Dimensions.get('window');
 const DRAWER_WIDTH = WP(80);
