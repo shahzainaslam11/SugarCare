@@ -14,6 +14,7 @@ import {
   AppButton,
   CustomDropdown,
   MedicalDisclaimer,
+  AIConsentModal,
 } from '../../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
@@ -24,10 +25,12 @@ import {
   fetchRecentSugarReadings,
   predictSugarAlert,
 } from '../../../../redux/slices/sugarAlertSlice';
+import {useAIConsentGate} from '../../../../hooks/useAIConsentGate';
 
 const PredictInputs = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const {accessToken, user} = useSelector(state => state.auth);
@@ -109,6 +112,9 @@ const PredictInputs = () => {
      SUBMIT HANDLER
   ===================================================== */
   const handleFormSubmit = async values => {
+    const ok = await gateAIAction();
+    if (!ok) return;
+
     try {
       // Get prepared recent readings
       const recentReadingsForAPI = prepareReadingsForPrediction();
@@ -287,6 +293,12 @@ const PredictInputs = () => {
           )}
         </Formik>
       </KeyboardAvoidingView>
+
+      <AIConsentModal
+        visible={showModal}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
     </SafeAreaView>
   );
 };

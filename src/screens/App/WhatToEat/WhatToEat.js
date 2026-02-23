@@ -17,6 +17,7 @@ import {
   AppInput,
   MedicalDisclaimer,
   SmallLoader,
+  AIConsentModal,
 } from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
@@ -28,10 +29,12 @@ import {
   generateMealRecommendations,
   fetchMealHistory,
 } from '../../../redux/slices/mealRecommendationsSlice';
+import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 
 const WhatToEat = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
 
   const {accessToken, user} = useSelector(state => state.auth);
   const {recommendations, history, loading, error} = useSelector(
@@ -124,6 +127,9 @@ const WhatToEat = () => {
       Alert.alert('Error', 'User information not available');
       return;
     }
+
+    const ok = await gateAIAction();
+    if (!ok) return;
 
     setIsSubmitting(true);
 
@@ -505,6 +511,12 @@ const WhatToEat = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <AIConsentModal
+        visible={showModal}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
     </SafeAreaView>
   );
 };

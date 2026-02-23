@@ -14,8 +14,9 @@ import React, {useState, useRef, useEffect} from 'react';
 import {Animated} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header} from '../../../components';
+import {Header, AIConsentModal} from '../../../components';
 import {colors, appIcons} from '../../../utilities';
+import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 import styles from './styles';
 
 // Redux
@@ -29,6 +30,7 @@ import {
 const ChatScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
   const scrollViewRef = useRef(null);
 
   const [inputMessage, setInputMessage] = useState('');
@@ -93,9 +95,12 @@ const ChatScreen = () => {
     scrollViewRef.current?.scrollToEnd({animated: true});
   }, [messages.length]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = inputMessage.trim();
     if (!text) return;
+
+    const ok = await gateAIAction();
+    if (!ok) return;
 
     // 1) show user message immediately
     dispatch(addUserMessage(text));
@@ -375,6 +380,12 @@ const ChatScreen = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <AIConsentModal
+        visible={showModal}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
     </SafeAreaView>
   );
 };

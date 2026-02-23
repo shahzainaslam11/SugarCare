@@ -1,7 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {store} from '../store'; // Import the store to dispatch logout
+import {store} from '../store';
 import {refreshAccessToken} from '../slices/authSlice';
+import {clearSecureCredentials} from '../../services/secureStorage';
+import {triggerSessionExpired} from '../../services/sessionManager';
 
 const api = axios.create({
   baseURL: 'https://sugarcare.cloud/api/v1', // 👈 your base API URL
@@ -102,26 +104,20 @@ api.interceptors.response.use(
             throw new Error('Token refresh failed');
           }
         } catch (refreshError) {
-          // Refresh failed, clear auth data and logout
           processQueue(refreshError, null);
           isRefreshing = false;
-          
-          await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
+          await clearSecureCredentials();
+          await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user', 'aiConsent']);
           store.dispatch({type: 'auth/logout'});
-          
-          // Force navigation to login screen
-          if (store.getState().auth?.accessToken === null) {
-            // Navigation will be handled by MainAppNav useEffect
-          }
-          
+          triggerSessionExpired();
           return Promise.reject(refreshError);
         }
       } else {
-        // No refresh token, just logout
         isRefreshing = false;
-        await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
+        await clearSecureCredentials();
+        await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user', 'aiConsent']);
         store.dispatch({type: 'auth/logout'});
-        
+        triggerSessionExpired();
         return Promise.reject(error);
       }
     }

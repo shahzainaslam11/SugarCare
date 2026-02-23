@@ -1,4 +1,4 @@
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, CommonActions} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React, {useEffect, useRef} from 'react';
 import {useSelector} from 'react-redux';
@@ -6,6 +6,7 @@ import Splash from '../screens/Auth/Splash';
 import AuthStack from './stacks/AuthStack';
 import BottomNavigator from './BottomNavigator/BottomNavigator';
 import AppScreens from './stacks/AppStack';
+import {setOnSessionExpired, clearSessionExpiredCallback} from '../services/sessionManager';
 
 const config = {
   screens: {
@@ -22,17 +23,34 @@ const MainAppNav = () => {
   const navigationRef = useRef(null);
   const {accessToken, isInitialized} = useSelector(state => state.auth);
 
-  // Global session handling - redirect to login if token is null
   useEffect(() => {
-    if (isInitialized && !accessToken && navigationRef.current?.isReady()) {
-      const currentRoute = navigationRef.current.getCurrentRoute();
-      // Only redirect if not already on Auth or Splash screens
-      if (currentRoute?.name !== 'Auth' && currentRoute?.name !== 'Splash') {
-        navigationRef.current.reset({
+    const resetToAuth = () => {
+      if (!navigationRef.current?.isReady()) return;
+      const state = navigationRef.current.getRootState();
+      const currentRoute = state?.routes[state?.index];
+      if (currentRoute?.name === 'Auth') return;
+      navigationRef.current.dispatch(
+        CommonActions.reset({
           index: 0,
           routes: [{name: 'Auth'}],
-        });
-      }
+        }),
+      );
+    };
+    setOnSessionExpired(resetToAuth);
+    return () => clearSessionExpiredCallback();
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized && !accessToken && navigationRef.current?.isReady()) {
+      const state = navigationRef.current.getRootState();
+      const currentRoute = state?.routes[state?.index];
+      if (currentRoute?.name === 'Auth' || currentRoute?.name === 'Splash') return;
+      navigationRef.current.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'Auth'}],
+        }),
+      );
     }
   }, [accessToken, isInitialized]);
 

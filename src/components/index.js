@@ -37,6 +37,15 @@ export * from './Card/NutritionCard';
 //MedicalDisclaimer
 export * from './MedicalDisclaimer';
 
+//DeleteAccountModal
+export * from './DeleteAccountModal';
+
+//AIConsentModal
+export * from './AIConsentModal';
+
+//ProtectedRoute
+export * from './ProtectedRoute';
+
 //Tabs
 
 //DropDown

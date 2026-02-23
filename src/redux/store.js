@@ -28,14 +28,12 @@ import communityInsightsReducer from './slices/communityInsightsSlice';
 import sugarAlertReducer from './slices/sugarAlertSlice';
 import riskForecastReducer from './slices/riskForecastSlice';
 
-// Persist configuration
+// Persist configuration - auth tokens are in Keychain (secure), not persisted here
 const persistConfig = {
   key: 'root',
   version: 1,
   storage: AsyncStorage,
-  whitelist: ['auth'], // Only persist auth state
-  // Optional: blacklist reducers you don't want to persist
-  // blacklist: ['home', 'sugarForecast', 'chat', 'food'],
+  whitelist: [], // Tokens in Keychain; session restored via initializeAuth
 };
 
 // Combine all reducers

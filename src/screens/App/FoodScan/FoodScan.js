@@ -14,7 +14,8 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import ImageResizer from 'react-native-image-resizer';
 
 import {appIcons, colors, showError, showSuccess} from '../../../utilities';
-import {AppButton, Header} from '../../../components';
+import {AppButton, Header, AIConsentModal} from '../../../components';
+import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 import styles from './styles';
 
 // Redux
@@ -28,6 +29,7 @@ import {
 const FoodScanScreen = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
   const [capturedImage, setCapturedImage] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
@@ -126,6 +128,9 @@ const FoodScanScreen = ({route}) => {
       showError('User not found');
       return;
     }
+
+    const ok = await gateAIAction();
+    if (!ok) return;
 
     setScanning(true);
 
@@ -234,6 +239,12 @@ const FoodScanScreen = ({route}) => {
           </View>
         )}
       </View>
+
+      <AIConsentModal
+        visible={showModal}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
     </SafeAreaView>
   );
 };
