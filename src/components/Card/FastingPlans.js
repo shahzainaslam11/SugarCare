@@ -5,10 +5,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
 } from 'react-native';
-import {HP} from '../../utilities';
+import {colors, family, HP, size, WP} from '../../utilities';
 
-const FastingPlans = ({fastingPlans, startFasting, isFasting, navigation}) => {
+const FastingPlans = ({
+  fastingPlans,
+  startFasting,
+  isFasting,
+  navigation,
+  saving,
+}) => {
   if (!fastingPlans || fastingPlans.length === 0) {
     return (
       <View
@@ -40,36 +47,46 @@ const FastingPlans = ({fastingPlans, startFasting, isFasting, navigation}) => {
           <View
             key={plan.id}
             style={[
+              styles.planCardWrapper,
               styles.planCard,
               {
                 backgroundColor: plan.bgColor,
                 borderColor: plan.bordercolor,
               },
             ]}>
-            <Text style={styles.planTitle}>{plan.title}</Text>
-            <Text style={styles.planDescription}>{plan.description}</Text>
+              <Text style={styles.planTitle}>{plan.title}</Text>
+              <Text style={styles.planDescription}>{plan.description}</Text>
 
-            <TouchableOpacity
-              style={[
-                styles.planButton,
-                isFasting && plan.id !== 'custom' && styles.disabledButton,
-              ]}
-              onPress={() => {
-                if (plan.id === 'custom') {
-                  navigation.navigate('AppScreens', {screen: 'CustomFast'});
-                } else if (!isFasting) {
-                  startFasting(plan);
-                }
-              }}
-              disabled={isFasting && plan.id !== 'custom'}>
-              <Text style={styles.planButtonText}>
-                {plan.id === 'custom'
-                  ? 'Customize'
-                  : isFasting
-                  ? 'Active'
-                  : 'Start Now'}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.planButton,
+                  (isFasting || saving) && plan.id !== 'custom' &&
+                    styles.disabledButton,
+                ]}
+                onPress={() => {
+                  if (plan.id === 'custom') {
+                    navigation.navigate('CustomFast');
+                  } else if (!isFasting && !saving) {
+                    startFasting(plan);
+                  }
+                }}
+                disabled={(isFasting || saving) && plan.id !== 'custom'}
+                activeOpacity={0.8}>
+                <Text
+                  style={[
+                    styles.planButtonText,
+                    (isFasting || saving) && plan.id !== 'custom' &&
+                      styles.planButtonTextDisabled,
+                  ]}>
+                  {plan.id === 'custom'
+                    ? 'Customize'
+                    : isFasting
+                    ? 'Active'
+                    : saving
+                    ? 'Starting...'
+                    : 'Start Now'}
+                </Text>
+              </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -82,47 +99,65 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   carouselContainer: {
-    paddingVertical: HP(2),
+    paddingVertical: HP(1.5),
+  },
+  planCardWrapper: {
+    marginRight: WP(3),
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   planCard: {
-    width: 224.67,
-    height: 156,
-    padding: 20,
-    borderRadius: 28,
+    width: WP(58),
+    minWidth: 200,
+    height: 140,
+    padding: WP(4),
     borderWidth: 2,
-    marginRight: 16,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   planTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#191A26',
+    fontSize: size.large,
+    fontFamily: family.inter_bold,
+    color: colors.b4,
   },
   planDescription: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: size.xsmall,
+    fontFamily: family.inter_regular,
+    color: colors.g3,
     textAlign: 'center',
   },
   planButton: {
-    width: 184.67,
-    height: 43,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#4252FF',
-    backgroundColor: '#FFFFFF',
+    width: '100%',
+    paddingVertical: HP(1.2),
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.p1,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
   },
   disabledButton: {
-    backgroundColor: '#ccc',
-    borderColor: '#ccc',
+    backgroundColor: colors.g15,
+    borderColor: colors.g11,
   },
   planButtonText: {
-    color: '#4252FF',
-    textAlign: 'center',
-    fontWeight: '600',
+    color: colors.p1,
+    fontFamily: family.inter_bold,
+    fontSize: size.small,
+  },
+  planButtonTextDisabled: {
+    color: colors.g3,
   },
 });
 

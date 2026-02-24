@@ -7,14 +7,16 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  ScrollView,
+  Pressable,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ImageResizer from 'react-native-image-resizer';
 
-import {appIcons, colors, showError, showSuccess} from '../../../utilities';
-import {AppButton, Header, AIConsentModal} from '../../../components';
+import {appIcons, colors, family, HP, size, showError, showSuccess} from '../../../utilities';
+import {Header, AIConsentModal} from '../../../components';
 import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 import styles from './styles';
 
@@ -152,14 +154,13 @@ const FoodScanScreen = ({route}) => {
         showSuccess(
           analysisResult.message || 'Food analysis completed successfully',
         );
+        setCapturedImage(null);
+        dispatch(clearFoodResult());
       } else {
         showError(analysisResult.message || 'Food analysis failed');
       }
 
-      navigation.navigate('AppScreens', {
-        screen: 'ScanResult',
-        params: {scanData: analysisResult},
-      });
+      navigation.navigate('ScanResult', {scanData: analysisResult});
     } catch (error) {
       console.log('Scan Error:', error);
       showError('Scan failed. Please try again.');
@@ -170,7 +171,7 @@ const FoodScanScreen = ({route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.g13} />
       <Header
         title="Smart Food Scanner"
         isBack={false}
@@ -179,66 +180,98 @@ const FoodScanScreen = ({route}) => {
         }
       />
 
-      <View style={styles.content}>
-        {processingImage ? (
-          <ActivityIndicator size="large" color={colors.p1} />
-        ) : capturedImage ? (
-          <View style={styles.imagePreviewContainer}>
-            <Image
-              source={{uri: capturedImage.uri}}
-              style={styles.capturedImage}
-              resizeMode="cover"
-            />
-            <TouchableOpacity
-              style={styles.clearImageButton}
-              onPress={clearImage}>
-              <Text style={styles.clearImageText}>×</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <Image
-            source={appIcons.scanImg}
-            style={styles.scannerImage}
-            resizeMode="contain"
-          />
-        )}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        <View style={styles.heroSection}>
+          {processingImage ? (
+            <View style={styles.loadingPlaceholder}>
+              <ActivityIndicator size="large" color={colors.p1} />
+              <Text style={styles.loadingText}>Processing image...</Text>
+            </View>
+          ) : capturedImage ? (
+            <View style={styles.imagePreviewWrapper}>
+              <Image
+                source={{uri: capturedImage.uri}}
+                style={styles.capturedImage}
+                resizeMode="cover"
+              />
+              <Pressable
+                style={({pressed}) => [
+                  styles.clearImageButton,
+                  pressed && styles.clearImageButtonPressed,
+                ]}
+                onPress={clearImage}>
+                <Text style={styles.clearImageText}>×</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.illustrationCard}>
+              <Image
+                source={appIcons.scanImg}
+                style={styles.scannerImage}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+        </View>
 
         <Text style={styles.title}>Food Scan</Text>
         <Text style={styles.subtitle}>
-          Scan your meal to get nutrition details and{'\n'}
-          predicted impact on blood sugar
+          Scan your meal to get nutrition details and predicted impact on blood
+          sugar
         </Text>
 
         <View style={styles.buttonContainer}>
-          <AppButton
-            title="Take a Photo"
-            icon={appIcons.camera}
-            onPress={handleTakePhoto}
-          />
-          <AppButton
-            title="Pick from Gallery"
-            icon={appIcons.gallery}
-            backgroundColor={colors.g11}
-            titleStyle={{color: colors.p1}}
-            onPress={handlePickFromGallery}
-          />
+          <Pressable
+            style={({pressed}) => [
+              styles.primaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleTakePhoto}>
+            <Image
+              source={appIcons.camera}
+              style={styles.buttonIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.primaryButtonText}>Take a Photo</Text>
+          </Pressable>
+
+          <Pressable
+            style={({pressed}) => [
+              styles.secondaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handlePickFromGallery}>
+            <Image
+              source={appIcons.gallery}
+              style={[styles.buttonIcon, styles.buttonIconSecondary]}
+              resizeMode="contain"
+            />
+            <Text style={styles.secondaryButtonText}>Pick from Gallery</Text>
+          </Pressable>
         </View>
 
         {capturedImage && !scanning && (
-          <TouchableOpacity
-            style={styles.scanButton}
+          <Pressable
+            style={({pressed}) => [
+              styles.scanButton,
+              pressed && styles.scanButtonPressed,
+            ]}
             onPress={handleScanFood}>
             <Text style={styles.scanButtonText}>Scan This Food</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
 
         {scanning && (
-          <View style={{marginTop: 20, alignItems: 'center'}}>
+          <View style={styles.scanningOverlay}>
             <ActivityIndicator size="large" color={colors.p1} />
-            <Text style={{marginTop: 8}}>Analyzing Food...</Text>
+            <Text style={styles.scanningText}>Analyzing Food...</Text>
           </View>
         )}
-      </View>
+      </ScrollView>
 
       <AIConsentModal
         visible={showModal}

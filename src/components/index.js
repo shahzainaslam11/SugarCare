@@ -19,7 +19,6 @@ export * from './AppHeader/Header';
 //Modal
 
 export * from './AppModal/AppLoader';
-export * from './AppModal/MenuModal';
 
 //TextContainer
 

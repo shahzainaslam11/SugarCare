@@ -101,9 +101,12 @@ export default function LogIn() {
             console.log('Login API Response:', JSON.stringify(res));
             if (res.meta.requestStatus === 'fulfilled') {
               showSuccess(`Welcome ${res.payload?.data?.name || 'User'}`);
-              navigation.reset({
+              // Reset root navigator to MainDrawer (Login is nested in Auth stack)
+              let rootNav = navigation;
+              while (rootNav.getParent?.()) rootNav = rootNav.getParent();
+              rootNav.reset({
                 index: 0,
-                routes: [{name: 'BottomTabs'}],
+                routes: [{name: 'MainDrawer'}],
               });
             } else {
               showError(res.payload?.message || 'Login failed');

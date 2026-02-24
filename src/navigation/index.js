@@ -4,8 +4,7 @@ import React, {useEffect, useRef} from 'react';
 import {useSelector} from 'react-redux';
 import Splash from '../screens/Auth/Splash';
 import AuthStack from './stacks/AuthStack';
-import BottomNavigator from './BottomNavigator/BottomNavigator';
-import AppScreens from './stacks/AppStack';
+import MainDrawer from './MainDrawer';
 import {setOnSessionExpired, clearSessionExpiredCallback} from '../services/sessionManager';
 
 const config = {
@@ -74,11 +73,9 @@ const MainAppNav = () => {
           headerShown: false,
           animation: 'slide_from_right',
         }}>
-        <AppStack.Screen name={'Splash'} component={Splash} />
-        <AppStack.Screen name={'BottomTabs'} component={BottomNavigator} />
-
-        <AppStack.Screen name={'Auth'} component={AuthStack} />
-        <AppStack.Screen name={'AppScreens'} component={AppScreens} />
+        <AppStack.Screen name="Splash" component={Splash} />
+        <AppStack.Screen name="MainDrawer" component={MainDrawer} />
+        <AppStack.Screen name="Auth" component={AuthStack} />
       </AppStack.Navigator>
     </NavigationContainer>
   );

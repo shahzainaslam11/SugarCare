@@ -11,7 +11,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
-import {ChartComponent, MenuModal} from '../../../components';
+import {ChartComponent} from '../../../components';
 import {fetchProfile} from '../../../redux/slices/profileSlice';
 import {appIcons} from '../../../utilities';
 import styles from './styles';
@@ -30,13 +30,10 @@ export default function Home() {
   const navigation = useNavigation();
   const {accessToken, user} = useSelector(state => state.auth);
   const {sugarRecords, loading} = useSelector(state => state.home);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const {data: profile} = useSelector(state => state.profile);
   const [activeRange, setActiveRange] = useState('Today');
   const appState = useRef(AppState.currentState);
   const [shouldRedirect, setShouldRedirect] = useState(false);
-  console.log('User---->', accessToken);
-
   const {
     graphData: sugarGraphData,
     stats: sugarStats,
@@ -125,49 +122,18 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [accessToken]);
 
-  // Close menu when screen loses focus (prevents menu from appearing on other screens)
-  useFocusEffect(
-    React.useCallback(() => {
-      // Ensure menu is closed when screen gains focus (if somehow left open)
-      setIsMenuVisible(false);
-
-      // Cleanup: close menu when screen loses focus
-      return () => {
-        setIsMenuVisible(false);
-      };
-    }, []),
-  );
-
-  // Listen to navigation state changes - close menu immediately when navigating away
-  useEffect(() => {
-    // Close menu before navigation completes to prevent blinking
-    const unsubscribeBeforeRemove = navigation.addListener(
-      'beforeRemove',
-      () => {
-        setIsMenuVisible(false);
-      },
-    );
-
-    const unsubscribeState = navigation.addListener('state', () => {
-      // Close menu immediately on any navigation state change
-      setIsMenuVisible(false);
-    });
-
-    return () => {
-      unsubscribeBeforeRemove();
-      unsubscribeState();
-    };
-  }, [navigation]);
-
-  const toggleMenu = () => {
+  const openDrawer = () => {
     if (!checkTokenValidity()) return;
-    setIsMenuVisible(!isMenuVisible);
+    let nav = navigation;
+    while (nav && typeof nav.openDrawer !== 'function') {
+      nav = nav.getParent?.();
+    }
+    nav?.openDrawer?.();
   };
 
-  // Handle navigation with token check
   const handleNavigation = screenName => {
     if (!checkTokenValidity()) return;
-    navigation.navigate('AppScreens', {screen: screenName});
+    navigation.navigate(screenName);
   };
 
   // If token is null, don't render anything or return null
@@ -181,7 +147,7 @@ export default function Home() {
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={toggleMenu} style={styles.iconButton}>
+          <TouchableOpacity onPress={openDrawer} style={styles.iconButton}>
             <Text style={styles.icon}>☰</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{profile?.name}</Text>
@@ -333,15 +299,6 @@ export default function Home() {
             </View>
           </View>
         </View>
-        {/* Only render MenuModal when actually visible - prevents any blinking */}
-        {isMenuVisible && (
-          <MenuModal
-            updatedName={profile?.name}
-            visible={isMenuVisible}
-            onClose={() => setIsMenuVisible(false)}
-            navigation={navigation}
-          />
-        )}
       </ScrollView>
     </SafeAreaView>
   );

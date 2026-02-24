@@ -1,7 +1,8 @@
 import React, {useEffect} from 'react';
-import {View, Text, Image, FlatList} from 'react-native';
+import {View, Text, Image, FlatList, Pressable} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {appIcons, colors, WP} from '../../../utilities';
+import {appIcons, colors, family, HP, size, WP} from '../../../utilities';
 import {AppButton, Header} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import styles from './styles';
@@ -32,39 +33,55 @@ const AddHBA1CTest = () => {
       case 'Prediabetes':
         return styles.prediabetesStatus;
       case 'Type 1':
-      case 'Type 2':
         return styles.type1Status;
+      case 'Type 2':
+        return styles.type2Status;
       default:
         return styles.normalStatus;
     }
   };
 
   const renderItem = ({item}) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.valueContainer}>
-          <Image
-            source={appIcons.hba1c}
-            style={styles.icon}
-            resizeMode="contain"
-          />
-          <Text style={styles.valueText}>{item.value}% HbA1c</Text>
-        </View>
-        <View style={[styles.statusContainer, getStatusStyle(item.status)]}>
-          <Text style={styles.statusText}>{item.status}</Text>
+    <Pressable
+      style={({pressed}) => [styles.cardWrapper, pressed && styles.cardPressed]}
+      android_ripple={null}>
+      <View style={styles.card}>
+        <LinearGradient
+          colors={[colors.p1, colors.p9]}
+          start={{x: 0, y: 0}}
+          end={{x: 0, y: 1}}
+          style={styles.cardAccent}
+        />
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <View style={styles.valueContainer}>
+              <View style={styles.iconWrapper}>
+                <Image
+                  source={appIcons.hba1c}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+              </View>
+              <View>
+                <Text style={styles.valueText}>{item.value}%</Text>
+                <Text style={styles.valueLabel}>HbA1c</Text>
+              </View>
+            </View>
+            <View style={[styles.statusPill, getStatusStyle(item.status)]}>
+              <Text style={styles.statusText}>{item.status}</Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
+          <Text style={styles.dateText}>
+            {item.time} • {item.date}
+          </Text>
+          <Text style={styles.notesText} numberOfLines={2}>
+            <Text style={styles.notesLabel}>Notes: </Text>
+            {item.notes || '—'}
+          </Text>
         </View>
       </View>
-
-      <View style={styles.divider} />
-
-      <Text style={styles.dateText}>
-        {item.time} | {item.date}
-      </Text>
-      <Text style={styles.notesText}>
-        <Text style={styles.notesLabel}>Notes: </Text>
-        {item.notes}
-      </Text>
-    </View>
+    </Pressable>
   );
 
   return (
@@ -79,9 +96,19 @@ const AddHBA1CTest = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           !loading && (
-            <Text style={{textAlign: 'center', marginTop: 20}}>
-              No HbA1c records found.
-            </Text>
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconBg}>
+                <Image
+                  source={appIcons.hba1c}
+                  style={styles.emptyIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.emptyTitle}>No reports yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Tap "Add Record" to log your first HbA1c test
+              </Text>
+            </View>
           )
         }
       />

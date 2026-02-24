@@ -1,8 +1,15 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Platform,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle} from 'react-native-svg';
-import {appIcons, HP, WP, family, size} from '../../utilities';
-import {Fonts} from '../../assets/fonts';
+import {appIcons, colors, HP, WP, family, size} from '../../utilities';
 
 const HalfCircle = ({
   onPressEdit,
@@ -31,7 +38,14 @@ const HalfCircle = ({
   };
 
   return (
-    <View style={styles.card}>
+    <View style={styles.cardWrapper}>
+      <LinearGradient
+        colors={[colors.p1, colors.p9]}
+        start={{x: 0, y: 0}}
+        end={{x: 0, y: 1}}
+        style={styles.cardAccent}
+      />
+      <View style={styles.card}>
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.label}>Started</Text>
@@ -52,7 +66,7 @@ const HalfCircle = ({
             cx={radius + 10}
             cy={radius + 10}
             r={radius}
-            stroke="#E6E9F5"
+            stroke={colors.g15}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={`${halfCircumference}, ${circumference}`}
@@ -67,7 +81,7 @@ const HalfCircle = ({
             cx={radius + 10}
             cy={radius + 10}
             r={radius}
-            stroke="#4252FF"
+            stroke={colors.p1}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={`${halfCircumference}, ${circumference}`}
@@ -105,25 +119,44 @@ const HalfCircle = ({
           />
         </TouchableOpacity>
       </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // ... keep all your existing HalfCircle styles exactly as they were ...
+  cardWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginVertical: HP(1),
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  cardAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  },
   card: {
-    borderRadius: WP(5),
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
+    borderRadius: 16,
     paddingVertical: HP(2),
     paddingHorizontal: WP(4),
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingLeft: WP(5),
     alignItems: 'center',
-    width: '98%',
-    alignSelf: 'center',
-    marginVertical: HP(1),
   },
   headerRow: {
     flexDirection: 'row',
@@ -132,14 +165,14 @@ const styles = StyleSheet.create({
     marginBottom: HP(2),
   },
   label: {
-    fontSize: size.medium,
-    color: '#555',
-    fontFamily: Fonts.interMedium,
+    fontSize: size.xxsmall,
+    color: colors.g3,
+    fontFamily: family.inter_medium,
   },
   value: {
-    fontSize: size.small,
-    fontFamily: Fonts.interSemiBold,
-    color: '#000',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.b4,
   },
   progressContainer: {
     alignItems: 'center',
@@ -153,18 +186,18 @@ const styles = StyleSheet.create({
   },
   percentage: {
     fontSize: size.h1,
-    fontFamily: Fonts.interSemiBold,
-    color: '#000',
+    fontFamily: family.inter_bold,
+    color: colors.b4,
   },
   remaining: {
     fontSize: size.small,
-    fontFamily: Fonts.interRegular,
-    color: '#333',
+    fontFamily: family.inter_regular,
+    color: colors.g3,
     marginTop: HP(0.5),
   },
   remainingTime: {
-    color: '#4252FF',
-    fontFamily: Fonts.interSemiBold,
+    color: colors.p1,
+    fontFamily: family.inter_bold,
   },
   footerRow: {
     flexDirection: 'row',
@@ -177,33 +210,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    borderRadius: WP(3),
-    borderWidth: 1,
-    borderColor: '#D9E0FF',
-    backgroundColor: '#F7F9FF',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.p1,
+    backgroundColor: colors.p6,
     paddingVertical: HP(1.5),
     marginRight: WP(2),
   },
   endBtnText: {
-    fontSize: WP(3.8),
-    color: '#4252FF',
-    fontFamily: Fonts.interSemiBold,
+    fontSize: size.small,
+    color: colors.p1,
+    fontFamily: family.inter_bold,
     marginLeft: WP(1.5),
   },
   editBtn: {
-    borderRadius: WP(3),
-    borderWidth: 1,
-    borderColor: '#D9E0FF',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.p1,
     padding: HP(1.5),
-    backgroundColor: '#F7F9FF',
+    backgroundColor: colors.p6,
   },
   icon: {
     width: WP(4.5),
     height: WP(4.5),
+    tintColor: colors.p1,
   },
   iconOnly: {
     width: WP(4.5),
     height: WP(4.5),
+    tintColor: colors.p1,
   },
 });
 
