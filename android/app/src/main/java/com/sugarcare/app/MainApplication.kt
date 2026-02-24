@@ -1,4 +1,4 @@
-package com.sugarcare
+package com.sugarcare.app
 
 import android.app.Application
 import com.facebook.react.PackageList

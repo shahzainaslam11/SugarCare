@@ -1,4 +1,4 @@
-package com.sugarcare
+package com.sugarcare.app
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
