@@ -9,6 +9,25 @@
       "client_info": {
         "mobilesdk_app_id": "1:256319073943:android:c0f354cf5ef182d71843d2",
         "android_client_info": {
+          "package_name": "com.sugarcare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChRpvF1nA_xCyercH8VCHjAGobBdwyxE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256319073943:android:2133526afe7e74501843d2",
+        "android_client_info": {
           "package_name": "com.sugarcare.app"
         }
       },

@@ -1,6 +1,6 @@
 // components/common/CustomDropdown.js
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Platform} from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import PropTypes from 'prop-types';
 import {colors, family, HP, size, WP} from '../../utilities';
@@ -12,10 +12,12 @@ const CustomDropdown = ({
   value,
   setValue,
   items,
-  setItems,
+  setItems = () => {},
   placeholder,
   errorMessage,
   onChangeValue,
+  zIndex,
+  zIndexInverse,
 }) => {
   return (
     <View style={styles.mainContainer}>
@@ -30,6 +32,12 @@ const CustomDropdown = ({
         setOpen={setOpen}
         setValue={setValue}
         setItems={setItems}
+        listMode="SCROLLVIEW"
+        zIndex={zIndex}
+        zIndexInverse={zIndexInverse}
+        scrollViewProps={
+          Platform.OS === 'android' ? {nestedScrollEnabled: true} : {}
+        }
         placeholder={placeholder}
         placeholderStyle={{color: colors.g3}}
         style={[
@@ -75,6 +83,8 @@ const styles = StyleSheet.create({
     borderColor: '#E3E3E3',
     borderRadius: 12,
     backgroundColor: colors.white,
+    zIndex: 9999,
+    elevation: 9999,
   },
   dropdownText: {
     color: colors.black,
@@ -97,10 +107,12 @@ CustomDropdown.propTypes = {
   value: PropTypes.any,
   setValue: PropTypes.func.isRequired,
   items: PropTypes.array.isRequired,
-  setItems: PropTypes.func.isRequired,
+  setItems: PropTypes.func,
   placeholder: PropTypes.string,
   errorMessage: PropTypes.string,
-  onChangeValue: PropTypes.func, // new
+  onChangeValue: PropTypes.func,
+  zIndex: PropTypes.number,
+  zIndexInverse: PropTypes.number,
 };
 
 export {CustomDropdown};

@@ -185,7 +185,14 @@ const FoodScanScreen = ({route}) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Food Scan</Text>
+        <Text style={styles.subtitle}>
+          Scan your meal to get nutrition details and predicted impact on blood
+          sugar
+        </Text>
+
         <View style={styles.heroSection}>
+          <Text style={styles.sectionLabel}>Photo</Text>
           {processingImage ? (
             <View style={styles.loadingPlaceholder}>
               <ActivityIndicator size="large" color={colors.p1} />
@@ -214,61 +221,69 @@ const FoodScanScreen = ({route}) => {
                 style={styles.scannerImage}
                 resizeMode="contain"
               />
+              <Text style={styles.illustrationHint}>
+                Take a photo or choose from gallery
+              </Text>
             </View>
           )}
         </View>
 
-        <Text style={styles.title}>Food Scan</Text>
-        <Text style={styles.subtitle}>
-          Scan your meal to get nutrition details and predicted impact on blood
-          sugar
-        </Text>
+        <View style={styles.actionsSection}>
+          <Text style={styles.stepLabel}>Get started</Text>
+          <View style={styles.buttonContainer}>
+            <Pressable
+              style={({pressed}) => [
+                styles.primaryButton,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleTakePhoto}>
+              <Image
+                source={appIcons.camera}
+                style={styles.buttonIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.primaryButtonText}>Take a Photo</Text>
+            </Pressable>
 
-        <View style={styles.buttonContainer}>
-          <Pressable
-            style={({pressed}) => [
-              styles.primaryButton,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={handleTakePhoto}>
-            <Image
-              source={appIcons.camera}
-              style={styles.buttonIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.primaryButtonText}>Take a Photo</Text>
-          </Pressable>
-
-          <Pressable
-            style={({pressed}) => [
-              styles.secondaryButton,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={handlePickFromGallery}>
-            <Image
-              source={appIcons.gallery}
-              style={[styles.buttonIcon, styles.buttonIconSecondary]}
-              resizeMode="contain"
-            />
-            <Text style={styles.secondaryButtonText}>Pick from Gallery</Text>
-          </Pressable>
+            <Pressable
+              style={({pressed}) => [
+                styles.secondaryButton,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handlePickFromGallery}>
+              <Image
+                source={appIcons.gallery}
+                style={[styles.buttonIcon, styles.buttonIconSecondary]}
+                resizeMode="contain"
+              />
+              <Text style={styles.secondaryButtonText}>Pick from Gallery</Text>
+            </Pressable>
+          </View>
         </View>
 
         {capturedImage && !scanning && (
-          <Pressable
-            style={({pressed}) => [
-              styles.scanButton,
-              pressed && styles.scanButtonPressed,
-            ]}
-            onPress={handleScanFood}>
-            <Text style={styles.scanButtonText}>Scan This Food</Text>
-          </Pressable>
+          <View style={styles.scanSection}>
+            <Pressable
+              style={({pressed}) => [
+                styles.scanButton,
+                pressed && styles.scanButtonPressed,
+              ]}
+              onPress={handleScanFood}>
+              <Image
+                source={appIcons.activeScan}
+                style={styles.scanButtonIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.scanButtonText}>Scan This Food</Text>
+            </Pressable>
+            <Text style={styles.scanHint}>AI-powered analysis</Text>
+          </View>
         )}
 
         {scanning && (
           <View style={styles.scanningOverlay}>
             <ActivityIndicator size="large" color={colors.p1} />
-            <Text style={styles.scanningText}>Analyzing Food...</Text>
+            <Text style={styles.scanningText}>Analyzing food...</Text>
           </View>
         )}
       </ScrollView>

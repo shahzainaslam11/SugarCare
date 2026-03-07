@@ -1,62 +1,88 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform} from 'react-native';
 import {colors, family, HP, size, WP} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: WP(4),
-    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
+    backgroundColor: '#F8FAFC',
   },
-  statusBar: {
-    height: 44,
-    backgroundColor: '#f8f9fa',
+  wrapper: {
+    flex: 1,
+    paddingHorizontal: WP(2),
   },
   scrollView: {
-    // padding: 16,
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: HP(1),
+    paddingBottom: HP(14),
+  },
+  buttonContainer: {
+    paddingHorizontal: WP(4),
+    paddingTop: HP(1.5),
+    paddingBottom: HP(2),
+    backgroundColor: '#F8FAFC',
+    borderTopWidth: 1,
+    borderTopColor: colors.g15,
   },
   title: {
-    fontSize: size.large,
-    fontFamily: family.inter_medium,
-    fontWeight: 'bold',
+    fontSize: size.xlarge,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
+    marginTop: HP(1),
     marginBottom: HP(2),
-    color: '#1a1a1a',
+    paddingHorizontal: WP(0.5),
   },
 
   /* ===== REPORT TABS (Sugar/Fasting) ===== */
   reportTabContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.white,
+    borderRadius: 14,
     padding: 4,
-    marginBottom: HP(2),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: HP(1.5),
+    borderWidth: 1,
+    borderColor: colors.g15,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: {elevation: 2},
+    }),
   },
   reportTab: {
     flex: 1,
-    paddingVertical: HP(1.5),
+    paddingVertical: HP(1.2),
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 10,
-    marginHorizontal: 2,
+    marginHorizontal: 3,
   },
   activeReportTab: {
-    backgroundColor: '#4b66ea',
+    backgroundColor: colors.p1,
   },
   reportTabText: {
-    color: '#666',
-    fontWeight: '600',
+    color: colors.g9,
     fontSize: size.small,
     fontFamily: family.inter_medium,
   },
   activeReportTabText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: size.small,
+    fontFamily: family.inter_bold,
+  },
+  sectionLabel: {
+    fontSize: size.xtiny,
     fontFamily: family.inter_medium,
+    color: colors.g9,
+    marginTop: HP(2),
+    marginBottom: HP(1),
+    marginLeft: WP(0.5),
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
 
   /* ===== RANGE TABS (Today/1W/1M/Custom) ===== */
@@ -80,7 +106,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   activeRangeTab: {
-    backgroundColor: '#4b66ea',
+    backgroundColor: colors.p1,
   },
   rangeTabText: {
     color: '#666',
@@ -100,78 +126,93 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 
-  /* ===== CARDS ===== */
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  halfCard: {
-    width: '48%',
-  },
+  /* ===== STATS CARDS ===== */
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: HP(2),
+    marginBottom: HP(2),
   },
-  cardTitle: {
-    fontSize: size.small,
-    fontFamily: family.inter_medium,
-    // fontWeight: 'bold',
-    color: colors.b1,
-    marginBottom: HP(0.5),
+  statCard: {
+    flex: 1,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    paddingVertical: HP(1.2),
+    paddingHorizontal: WP(3),
+    paddingLeft: WP(3.5),
+    marginHorizontal: WP(0.5),
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.g15,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: {elevation: 2},
+    }),
   },
-  value: {
-    fontSize: size.small,
-    fontFamily: family.inter_medium,
-    // fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 4,
+  statCardLeft: {
+    marginRight: WP(1),
   },
-  change: {
-    fontSize: size.small,
-    fontFamily: family.inter_medium,
-    color: '#4caf50',
-    marginBottom: 16,
+  statCardRight: {
+    marginLeft: WP(1),
+  },
+  statAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: colors.p1,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  statLabel: {
+    fontSize: size.xtiny,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
+    marginBottom: HP(0.3),
   },
   statValue: {
-    fontSize: size.large,
-    fontFamily: family.inter_medium,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
   },
 
   /* ===== DOWNLOAD BUTTON ===== */
   downloadButton: {
-    backgroundColor: '#4b66ea',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: colors.p1,
+    borderRadius: 14,
+    paddingVertical: HP(1.5),
+    paddingHorizontal: WP(4),
     alignItems: 'center',
-    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'center',
-    position: 'absolute',
-    bottom: HP(2),
-    left: WP(4),
-    right: WP(4),
+    borderWidth: 1,
+    borderColor: colors.p1,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {elevation: 4},
+    }),
   },
   downloadIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-    tintColor: '#fff',
+    width: 20,
+    height: 20,
+    marginRight: WP(2),
+    tintColor: colors.white,
   },
   downloadButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: size.small,
-    fontFamily: family.inter_medium,
-    fontWeight: 'bold',
+    fontFamily: family.inter_bold,
   },
 
   /* ===== MODAL ===== */
@@ -217,7 +258,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   applyButton: {
-    backgroundColor: '#4b66ea',
+    backgroundColor: colors.p1,
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -242,14 +283,14 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.g13,
     borderRadius: 12,
     marginVertical: 16,
     padding: 20,
   },
   selectDatesText: {
-    fontSize: 16,
-    color: '#6c757d',
+    fontSize: size.small,
+    color: colors.g9,
     textAlign: 'center',
   },
   disabledButton: {

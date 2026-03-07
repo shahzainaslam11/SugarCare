@@ -1,0 +1,201 @@
+import {StyleSheet, Platform} from 'react-native';
+import {colors, family, HP, size, WP} from '../../../utilities';
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  headerWrapper: {
+    backgroundColor: colors.white,
+    paddingHorizontal: WP(4),
+    paddingBottom: HP(0.8),
+    borderBottomWidth: 1,
+    borderBottomColor: colors.g15,
+  },
+  scrollContent: {
+    paddingHorizontal: WP(2),
+    paddingTop: HP(1.2),
+    paddingBottom: HP(4),
+  },
+  profileCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    marginBottom: HP(1.2),
+    paddingVertical: HP(1.5),
+    paddingHorizontal: WP(3),
+    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(66, 82, 255, 0.12)',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {elevation: 3},
+    }),
+  },
+  profileAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: colors.p6,
+    backgroundColor: colors.g13,
+  },
+  name: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
+    marginTop: HP(0.6),
+  },
+  email: {
+    fontSize: size.xtiny,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
+    marginTop: HP(0.2),
+  },
+  editHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: HP(0.5),
+  },
+  editHintText: {
+    fontSize: size.xtiny,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
+    marginLeft: 4,
+  },
+  contentContainer: {
+    paddingHorizontal: WP(0.5),
+  },
+  sectionTitle: {
+    fontSize: size.xtiny,
+    fontFamily: family.inter_medium,
+    color: colors.g9,
+    marginTop: HP(1.2),
+    marginBottom: HP(0.5),
+    marginLeft: WP(1),
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  sectionTitleFirst: {
+    marginTop: 0,
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginBottom: HP(1),
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.g15,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 5,
+      },
+      android: {elevation: 2},
+    }),
+  },
+  cardAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: HP(1.1),
+    paddingHorizontal: WP(3),
+    paddingLeft: WP(3.5),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.g15,
+  },
+  itemLast: {
+    borderBottomWidth: 0,
+  },
+  itemIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.p6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: WP(2.5),
+  },
+  itemIconWrapDanger: {
+    backgroundColor: 'rgba(255, 59, 48, 0.12)',
+  },
+  itemTitle: {
+    flex: 1,
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: colors.b1,
+  },
+  itemTitleDanger: {
+    color: '#FF3B30',
+    fontFamily: family.inter_medium,
+  },
+  chevron: {
+    marginLeft: WP(1),
+  },
+  signOutButton: {
+    backgroundColor: colors.white,
+    paddingVertical: HP(1.3),
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: HP(2),
+    flexDirection: 'row',
+    borderWidth: 2,
+    borderColor: colors.p1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {elevation: 2},
+    }),
+  },
+  logOutIcon: {
+    width: 20,
+    height: 20,
+    tintColor: colors.p1,
+    marginRight: WP(2),
+  },
+  signOutText: {
+    color: colors.p1,
+    fontSize: size.small,
+    fontFamily: family.inter_bold,
+  },
+  loaderWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: HP(2),
+    paddingVertical: HP(1.5),
+  },
+});
+
+export default styles;

@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {
   View,
   Text,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
+import notifee from '@notifee/react-native';
 import {
   fetchNotifications,
   markNotificationRead,
@@ -23,6 +25,13 @@ import {SmallLoader} from '../../../components';
 const Notifications = ({navigation}) => {
   const [activeTab, setActiveTab] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Clear app icon badge when user views the Notifications screen
+  useFocusEffect(
+    useCallback(() => {
+      notifee.setBadgeCount(0).catch(() => {});
+    }, []),
+  );
 
   const dispatch = useDispatch();
   const {items, loading, markLoading} = useSelector(state => state.notifications);
@@ -75,13 +84,7 @@ const Notifications = ({navigation}) => {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications Center</Text>
-        <TouchableOpacity onPress={() => Alert.alert('Coming Soon!')}>
-          <Image
-            source={appIcons.setting}
-            style={styles.settingsIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+       <View />
       </View>
 
       {/* Tabs */}

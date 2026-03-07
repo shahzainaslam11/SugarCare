@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {TimePicker, DatePicker, Header} from '../../../components';
 import {styles} from './styles';
-import {appIcons, WP, showSuccess, showError} from '../../../utilities';
+import {appIcons, colors, WP, showSuccess, showError} from '../../../utilities';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -99,7 +99,7 @@ const NewSugarRecord = () => {
             selectedTime={startTime}
             onTimeChange={handleStartTimeChange}
             containerStyle={styles.pickerContainer}
-            width={WP('42')}
+            width={WP(42)}
           />
         </View>
 
@@ -157,20 +157,23 @@ const NewSugarRecord = () => {
             style={styles.notesInput}
             value={notes}
             onChangeText={setNotes}
+            placeholder="Optional: e.g. before lunch, after exercise"
+            placeholderTextColor={colors.g9}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
             maxLength={100}
           />
+          <Text style={styles.notesCounter}>{notes.length}/100</Text>
         </View>
-        <Text style={styles.notesCounter}>{notes.length}/100</Text>
         </ScrollView>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.saveButton}
+            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
             onPress={handleSave}
-            disabled={loading}>
+            disabled={loading}
+            activeOpacity={0.8}>
             <Text style={styles.saveButtonText}>
               {loading ? 'Saving...' : 'Save'}
             </Text>

@@ -1,3 +1,6 @@
+# Use CDN for specs (faster than full repo clone). Only run 'pod install' when Podfile or native deps change.
+source 'https://cdn.cocoapods.org/'
+
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
     "react-native/scripts/react_native_pods.rb",
@@ -6,6 +9,9 @@ require Pod::Executable.execute_command('node', ['-p',
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
+
+# Ensure generated dir exists so CpHeader for ReactAppDependencyProvider etc. can write into it
+FileUtils.mkdir_p(File.join(__dir__, 'build', 'generated', 'ios'))
 
 $RNFirebaseAsStaticFramework = true
 
@@ -20,7 +26,7 @@ target 'SugarCare' do
     :hermes_enabled => false
   )
 
-  # Manual Firebase Pods
+  # Firebase (Messaging is included in Firebase umbrella; use_native_modules adds RNFBMessaging)
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
@@ -41,6 +47,10 @@ target 'SugarCare' do
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+        # Required for React-Core and other framework pods with Xcode 16+ (avoids "non-modular include in framework module" errors)
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        # Avoid "Explicit modules is enabled but the compiler was not recognized" (Xcode 16+ / ccache)
+        config.build_settings['CLANG_ENABLE_EXPLICIT_MODULES'] = 'NO'
 
         # Build speed: Debug-only optimizations
         if config.name == 'Debug'

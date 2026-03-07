@@ -236,15 +236,17 @@ const Fasting = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        {isFasting ? (
-          <>
-            <Text style={styles.forecastTitle}>Current Fasting Progress</Text>
-            <HalfCircle
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <View style={styles.wrapper}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          {isFasting ? (
+            <>
+              <Text style={styles.sectionTitle}>Current Fasting Progress</Text>
+              <HalfCircle
               onPressEdit={() =>
                 navigation.navigate('CustomFast', {
                   ongoingFast: {
@@ -265,7 +267,7 @@ const Fasting = () => {
           </>
         ) : (
           <>
-            <Text style={styles.forecastTitle}>Start a Fast</Text>
+            <Text style={styles.sectionTitle}>Start a Fast</Text>
             <Text style={styles.streakText}>
               {stats?.totalFastingDays || 0}-Day Streak, Keep it up!
             </Text>
@@ -278,20 +280,19 @@ const Fasting = () => {
           </>
         )}
 
-        <Text style={styles.forecastTitle}>Fasting progress at a glance</Text>
-
-        {loading ? (
-          <SmallLoader overlay />
-        ) : (
-          <ChartComponent
-            activeRange={activeRange}
-            onChangeRange={setActiveRange}
-            chart={chart}
-          />
-        )}
+          {loading ? (
+            <SmallLoader overlay />
+          ) : (
+            <ChartComponent
+              title="Fasting Overview"
+              activeRange={activeRange}
+              onChangeRange={setActiveRange}
+              chart={chart}
+            />
+          )}
 
         <View style={styles.recordsContainer}>
-          <Text style={styles.sectionTitle}>Recent Records</Text>
+          <Text style={styles.recordsSectionTitle}>Recent Records</Text>
           {loading ? (
             <SmallLoader overlay />
           ) : records.length ? (
@@ -302,6 +303,7 @@ const Fasting = () => {
             <Text style={styles.emptyText}>No records found</Text>
           )}
         </View>
+        </ScrollView>
 
         {!isFasting && (
           <View style={styles.buttonContainer}>
@@ -312,7 +314,7 @@ const Fasting = () => {
             />
           </View>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };

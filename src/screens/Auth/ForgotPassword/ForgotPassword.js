@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import * as yup from 'yup';
@@ -32,6 +33,7 @@ export default function ForgotPassword() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
+      <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
         <Formik
@@ -115,6 +117,7 @@ export default function ForgotPassword() {
           )}
         </Formik>
       </KeyboardAwareScrollView>
+      </SafeAreaView>
     </ImageBackground>
   );
 }

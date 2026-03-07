@@ -31,6 +31,8 @@ export const signUpFormFields = {
   height: '',
   weight: '',
   diabetesType: '',
+  diet_type: '',
+  activity_level: '',
   cholesterol: '',
   usingInsulin: false,
   password: '',
@@ -87,6 +89,16 @@ export const signUpVS = yup.object().shape({
       ['Type 1', 'Type 2', 'Prediabetes', 'Gestational', 'None'],
       'Invalid diabetes type',
     ),
+
+  diet_type: yup
+    .string()
+    .required('Diet Type Required')
+    .oneOf(['balanced', 'high_carb', 'low_carb'], 'Invalid diet type'),
+
+  activity_level: yup
+    .string()
+    .required('Activity Level Required')
+    .oneOf(['low', 'moderate', 'high'], 'Invalid activity level'),
 
   cholesterol: yup
     .number()

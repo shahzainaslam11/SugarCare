@@ -115,7 +115,10 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        // Merge response with existing state so fields like diet_type aren't lost if API returns partial data
+        state.data = state.data
+          ? {...state.data, ...action.payload}
+          : action.payload;
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
@@ -129,7 +132,11 @@ const profileSlice = createSlice({
       })
       .addCase(uploadProfileImage.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload; // Assuming API returns full profile
+        if (action.payload && state.data) {
+          state.data = {...state.data, ...action.payload};
+        } else if (action.payload) {
+          state.data = action.payload;
+        }
       })
       .addCase(uploadProfileImage.rejected, (state, action) => {
         state.loading = false;
@@ -144,7 +151,13 @@ const profileSlice = createSlice({
       })
       .addCase(deleteProfileImage.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        if (action.payload && state.data) {
+          state.data = {...state.data, ...action.payload};
+        } else if (action.payload) {
+          state.data = action.payload;
+        } else if (state.data) {
+          state.data = {...state.data, profile_image: null};
+        }
       })
       .addCase(deleteProfileImage.rejected, (state, action) => {
         state.loading = false;

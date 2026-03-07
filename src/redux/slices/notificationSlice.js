@@ -3,6 +3,35 @@ import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import api from '../api/axiosInstance';
 
 // =======================
+// Register FCM device token (for push notifications)
+// =======================
+export const registerDeviceToken = createAsyncThunk(
+  'notifications/registerDeviceToken',
+  async ({fcm_token}, {rejectWithValue, getState}) => {
+    try {
+      const token = getState().auth?.accessToken;
+      if (!token) {
+        return rejectWithValue({message: 'Not authenticated'});
+      }
+      const res = await api.post(
+        '/notifications/device_token',
+        {fcm_token},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data);
+    }
+  },
+);
+
+// =======================
 // Fetch Notifications
 // =======================
 export const fetchNotifications = createAsyncThunk(

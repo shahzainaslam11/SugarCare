@@ -24,8 +24,8 @@ const HalfCircle = ({
   const start = startTime || '08:00 PM';
   const end = endTime || '04:00 PM';
 
-  const radius = 100;
-  const strokeWidth = 12;
+  const radius = 88;
+  const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
   const halfCircumference = circumference / 2;
 
@@ -37,6 +37,9 @@ const HalfCircle = ({
     }
   };
 
+  const cx = radius + 10;
+  const cy = radius + 10;
+
   return (
     <View style={styles.cardWrapper}>
       <LinearGradient
@@ -46,79 +49,82 @@ const HalfCircle = ({
         style={styles.cardAccent}
       />
       <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.label}>Started</Text>
-          <Text style={styles.value}>{start}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.timeBlock}>
+            <Text style={styles.label}>Started</Text>
+            <Text style={styles.value}>{start}</Text>
+          </View>
+          <View style={[styles.timeBlock, styles.timeBlockEnd]}>
+            <Text style={styles.label}>Ends at</Text>
+            <Text style={styles.value}>{end}</Text>
+          </View>
         </View>
-        <View style={{alignItems: 'flex-end'}}>
-          <Text style={styles.label}>Ends at</Text>
-          <Text style={styles.value}>{end}</Text>
+
+        <View style={styles.progressContainer}>
+          <Svg
+            width={radius * 2 + 20}
+            height={radius + 16}
+            style={styles.svgWrap}>
+            <Circle
+              cx={cx}
+              cy={cy}
+              r={radius}
+              stroke={colors.g15}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={`${halfCircumference}, ${circumference}`}
+              strokeDashoffset={0}
+              rotation="180"
+              originX={cx}
+              originY={cy}
+              fill="none"
+            />
+            <Circle
+              cx={cx}
+              cy={cy}
+              r={radius}
+              stroke={colors.p1}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={`${halfCircumference}, ${circumference}`}
+              strokeDashoffset={halfCircumference - progressLength}
+              rotation="180"
+              originX={cx}
+              originY={cy}
+              fill="none"
+            />
+          </Svg>
+          <View style={styles.centerText}>
+            <Text style={styles.percentage}>{Math.round(percentage)}%</Text>
+            <Text style={styles.remaining}>
+              <Text style={styles.remainingTime}>{remaining}</Text> left
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.progressContainer}>
-        <Svg
-          width={radius * 2 + 20}
-          height={radius + 20}
-          style={{backgroundColor: 'transparent'}}>
-          <Circle
-            cx={radius + 10}
-            cy={radius + 10}
-            r={radius}
-            stroke={colors.g15}
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={`${halfCircumference}, ${circumference}`}
-            strokeDashoffset={0}
-            rotation="180"
-            originX={radius + 10}
-            originY={radius + 10}
-            fill="none"
-          />
-
-          <Circle
-            cx={radius + 10}
-            cy={radius + 10}
-            r={radius}
-            stroke={colors.p1}
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={`${halfCircumference}, ${circumference}`}
-            strokeDashoffset={halfCircumference - progressLength}
-            rotation="180"
-            originX={radius + 10}
-            originY={radius + 10}
-            fill="none"
-          />
-        </Svg>
-
-        <View style={styles.centerText}>
-          <Text style={styles.percentage}>{Math.round(percentage)}%</Text>
-          <Text style={styles.remaining}>
-            Remaining: <Text style={styles.remainingTime}>{remaining}</Text>
-          </Text>
+        <View style={styles.footerRow}>
+          <TouchableOpacity
+            style={styles.endBtn}
+            onPress={handleEndFasting}
+            activeOpacity={0.85}>
+            <Image
+              source={appIcons.pause}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+            <Text style={styles.endBtnText}>End Fast</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onPressEdit}
+            style={styles.editBtn}
+            activeOpacity={0.85}>
+            <Image
+              source={appIcons.edit}
+              style={styles.iconOnly}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.footerRow}>
-        <TouchableOpacity style={styles.endBtn} onPress={handleEndFasting}>
-          <Image
-            source={appIcons.pause}
-            style={styles.icon}
-            resizeMode="contain"
-          />
-          <Text style={styles.endBtnText}>End Fasting</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={onPressEdit} style={styles.editBtn}>
-          <Image
-            source={appIcons.edit}
-            style={styles.iconOnly}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
       </View>
     </View>
   );
@@ -126,19 +132,19 @@ const HalfCircle = ({
 
 const styles = StyleSheet.create({
   cardWrapper: {
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
-    marginVertical: HP(1),
+    marginVertical: HP(0.6),
+    borderWidth: 1,
+    borderColor: 'rgba(66, 82, 255, 0.1)',
     ...Platform.select({
       ios: {
         shadowColor: colors.p1,
-        shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
+        shadowOffset: {width: 0, height: 3},
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
       },
-      android: {
-        elevation: 5,
-      },
+      android: {elevation: 4},
     }),
   },
   cardAccent: {
@@ -147,53 +153,64 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
   },
   card: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    paddingVertical: HP(2),
-    paddingHorizontal: WP(4),
-    paddingLeft: WP(5),
+    borderRadius: 14,
+    paddingVertical: HP(1.2),
+    paddingHorizontal: WP(3),
+    paddingLeft: WP(4),
     alignItems: 'center',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: HP(2),
+    marginBottom: HP(0.8),
+  },
+  timeBlock: {
+    flex: 1,
+  },
+  timeBlockEnd: {
+    alignItems: 'flex-end',
   },
   label: {
-    fontSize: size.xxsmall,
-    color: colors.g3,
+    fontSize: size.xtiny,
+    color: colors.g9,
     fontFamily: family.inter_medium,
+    marginBottom: 2,
   },
   value: {
-    fontSize: size.medium,
+    fontSize: size.small,
     fontFamily: family.inter_bold,
     color: colors.b4,
   },
   progressContainer: {
     alignItems: 'center',
-    marginVertical: HP(1.5),
+    marginVertical: HP(0.6),
+    position: 'relative',
+  },
+  svgWrap: {
+    backgroundColor: 'transparent',
   },
   centerText: {
     position: 'absolute',
-    top: '40%',
+    top: '38%',
     alignItems: 'center',
     width: '100%',
   },
   percentage: {
-    fontSize: size.h1,
+    fontSize: size.h3,
     fontFamily: family.inter_bold,
-    color: colors.b4,
+    color: colors.p1,
   },
   remaining: {
-    fontSize: size.small,
+    fontSize: size.xtiny,
     fontFamily: family.inter_regular,
     color: colors.g3,
-    marginTop: HP(0.5),
+    marginTop: 2,
   },
   remainingTime: {
     color: colors.p1,
@@ -203,41 +220,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: HP(2),
+    marginTop: HP(0.6),
+    gap: WP(2),
   },
   endBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.p1,
     backgroundColor: colors.p6,
-    paddingVertical: HP(1.5),
-    marginRight: WP(2),
+    paddingVertical: HP(1),
+    marginRight: 0,
   },
   endBtnText: {
-    fontSize: size.small,
+    fontSize: size.xtiny,
     color: colors.p1,
     fontFamily: family.inter_bold,
-    marginLeft: WP(1.5),
+    marginLeft: WP(1.2),
   },
   editBtn: {
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.p1,
-    padding: HP(1.5),
+    padding: HP(1),
     backgroundColor: colors.p6,
   },
   icon: {
-    width: WP(4.5),
-    height: WP(4.5),
+    width: WP(3.8),
+    height: WP(3.8),
     tintColor: colors.p1,
   },
   iconOnly: {
-    width: WP(4.5),
-    height: WP(4.5),
+    width: WP(3.8),
+    height: WP(3.8),
     tintColor: colors.p1,
   },
 });

@@ -1,8 +1,17 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
+import {Platform, StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import {appIcons} from '../../utilities';
+
+const iosCenterModalStyles =
+  Platform.OS === 'ios'
+    ? {
+        // keep default bottom-sheet layout; only center picker content
+        pickerContainerStyleIOS: {alignItems: 'center'},
+        pickerStyleIOS: {alignSelf: 'center'},
+      }
+    : {};
 
 const DatePicker = ({
   title,
@@ -49,9 +58,10 @@ const DatePicker = ({
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
-        date={modalDate} // Set the initial date of the modal to the selected date
+        date={modalDate}
         onConfirm={handleConfirm}
         onCancel={hideDatePicker}
+        {...iosCenterModalStyles}
       />
     </View>
   );

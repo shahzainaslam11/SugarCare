@@ -7,22 +7,33 @@ import {
   StatusBar,
   Image,
   AppState,
+  Platform,
+  StyleSheet,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
 import {ChartComponent} from '../../../components';
 import {fetchProfile} from '../../../redux/slices/profileSlice';
-import {appIcons} from '../../../utilities';
+import {fetchNotifications} from '../../../redux/slices/notificationSlice';
+import {appIcons, colors, size, HP, WP} from '../../../utilities';
 import styles from './styles';
 import {fetchSugarRecords} from '../../../redux/slices/sugarForecastSlice';
-import {showError} from '../../../utilities';
 
 const RANGE_MAP = {
   Today: 'Today',
   '1W': 'OneWeek',
   '1M': 'OneMonth',
   'All Time': 'AllTime',
+};
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 };
 
 export default function Home() {
@@ -40,6 +51,9 @@ export default function Home() {
     loading: sugarLoading,
     error: sugarError,
   } = useSelector(state => state.sugarForecast);
+  const unreadCount = useSelector(
+    state => state.notifications?.items?.unread_count || 0,
+  );
   const chartData = sugarGraphData?.[RANGE_MAP[activeRange]] || {};
 
   // Function to redirect to login screen
@@ -101,6 +115,21 @@ export default function Home() {
     }
   }, [dispatch, user, accessToken, activeRange]);
 
+  // Fetch notifications when Home is focused (for unread badge on bell icon)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id && accessToken) {
+        dispatch(
+          fetchNotifications({
+            user_id: user.id,
+            token: accessToken,
+            type_filter: 'all',
+          }),
+        );
+      }
+    }, [dispatch, user?.id, accessToken]),
+  );
+
   // Handle API error responses
   useEffect(() => {
     if (
@@ -143,39 +172,91 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={openDrawer} style={styles.iconButton}>
-            <Text style={styles.icon}>☰</Text>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Platform.OS === 'android' ? colors.white : colors.g13}
+      />
+      <View style={styles.headerWrapper}>
+        <LinearGradient
+          colors={[colors.white, colors.white]}
+          style={StyleSheet.absoluteFill}
+          start={{x: 0, y: 0}}
+          end={{x: 0, y: 1}}
+        />
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={openDrawer}
+              style={styles.iconButton}
+              activeOpacity={0.7}>
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="menu" size={size.h6} color={colors.white} />
+              </View>
+            </TouchableOpacity>
+            <View style={styles.greetingBlock}>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                {profile?.name || 'User'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => handleNavigation('Notification')}
+            style={styles.iconButton}
+            activeOpacity={0.7}>
+            <View style={styles.bellIconWrap}>
+              {Platform.OS === 'ios' ? (
+                <Ionicons
+                  name="notifications-outline"
+                  size={size.h6}
+                  color={colors.white}
+                />
+              ) : (
+                <Image
+                  source={appIcons.bellIcon}
+                  style={styles.bellIcon}
+                  resizeMode="contain"
+                />
+              )}
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
-          <Text style={styles.title}>{profile?.name}</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => handleNavigation('Notification')}
-          style={styles.iconButton}>
-          <Text style={styles.icon}>🔔</Text>
-        </TouchableOpacity>
       </View>
+
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <ChartComponent
+          title="Blood Sugar Overview"
           activeRange={activeRange}
           onChangeRange={setActiveRange}
           chart={chartData}
         />
 
+        <Text style={[styles.sectionLabel, styles.sectionLabelFirst]}>
+          Quick actions
+        </Text>
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity
             onPress={() => handleNavigation('NewSugarRecord')}
-            style={styles.actionButton}>
-            <Image
-              source={appIcons.trackSugar}
-              style={styles.actionIcon}
-              resizeMode="contain"
-            />
+            style={styles.actionButton}
+            activeOpacity={0.85}>
+            <View style={styles.actionIconWrap}>
+              <Image
+                source={appIcons.trackSugar}
+                style={styles.actionIcon}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.actionText}>Add Sugar</Text>
           </TouchableOpacity>
 
@@ -184,118 +265,158 @@ export default function Home() {
               if (!checkTokenValidity()) return;
               navigation.navigate('Scan');
             }}
-            style={styles.actionButton}>
-            <Image
-              source={appIcons.activeScan}
-              style={styles.actionIcon}
-              resizeMode="contain"
-            />
+            style={styles.actionButton}
+            activeOpacity={0.85}>
+            <View style={styles.actionIconWrap}>
+              <Image
+                source={appIcons.activeScan}
+                style={styles.actionIcon}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.actionText}>Scan Food</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => handleNavigation('ChatScreen')}
-            style={styles.actionButton}>
-            <Image
-              source={appIcons.aiIcon}
-              style={styles.actionIcon}
-              resizeMode="contain"
-            />
+            style={styles.actionButton}
+            activeOpacity={0.85}>
+            <View style={styles.actionIconWrap}>
+              <Image
+                source={appIcons.aiIcon}
+                style={styles.actionIcon}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.actionText}>Ask AI</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.spikeCard}>
-          <View style={styles.spikeHeader}>
-            <Text style={styles.spikeTitle}>Blood Sugar Spike Expected</Text>
-            <Image
-              source={appIcons.spike}
-              style={styles.spikeIcon}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.spikeDescription}>
-            Based on your recent activity, your sugar may spike in next 2hrs
-          </Text>
-          <TouchableOpacity
-            onPress={() => handleNavigation('PredictInputs')}
-            style={styles.seeSuggestionsButton}>
-            <Text style={styles.seeSuggestionsText}>See AI suggestions</Text>
-            <Image
-              source={appIcons.forwardArrow}
-              style={styles.arrowIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* AI Risk Forecasting */}
-        <View style={styles.riskCard}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>AI Risk Forecasting</Text>
-            <Image
-              source={appIcons.aistars}
-              style={styles.sparklesIcon}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.lastChecked}>Last Checked: 1 month ago</Text>
-          <View style={styles.riskLevelContainer}>
-            <Text style={styles.riskLabel}>Risk Status</Text>
-            <View style={styles.safeBadge}>
-              <Text style={styles.safeText}>Safe</Text>
+        <Text style={styles.sectionLabel}>Alerts & insights</Text>
+        <TouchableOpacity
+          onPress={() => handleNavigation('PredictInputs')}
+          style={styles.spikeCard}
+          activeOpacity={0.9}>
+          <LinearGradient
+            colors={[colors.warning, colors.s4]}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
+            style={styles.spikeAccent}
+          />
+          <View style={styles.spikeContent}>
+            <View style={styles.spikeHeader}>
+              <Image
+                source={appIcons.spike}
+                style={styles.spikeIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.spikeTitle}>Spike Alert</Text>
+            </View>
+            <Text style={styles.spikeDescription}>
+              Sugar may spike in next 2hrs — See AI suggestions
+            </Text>
+            <View style={styles.spikeCta}>
+              <Text style={styles.spikeCtaText}>View suggestions</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={size.normal}
+                color={colors.p1}
+                style={styles.ctaChevron}
+              />
             </View>
           </View>
-          <TouchableOpacity
-            onPress={() => handleNavigation('AIForecast')}
-            style={styles.seeDetailButton}>
-            <Text style={styles.seeDetailText}>See in detail</Text>
-            <Image
-              source={appIcons.forwardArrow}
-              style={styles.arrowIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
 
-        {/* Suggested Meal */}
+        <TouchableOpacity
+          onPress={() => handleNavigation('AIForecast')}
+          style={styles.riskCard}
+          activeOpacity={0.9}>
+          <LinearGradient
+            colors={[colors.p1, colors.p9]}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
+            style={styles.riskAccent}
+          />
+          <View style={styles.riskContent}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>AI Risk Forecasting</Text>
+              <Image
+                source={appIcons.aistars}
+                style={styles.sparklesIcon}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.riskRow}>
+              <Text style={styles.lastChecked}>Last checked: 1 month ago</Text>
+              <View style={styles.safeBadge}>
+                <Text style={styles.safeText}>Safe</Text>
+              </View>
+            </View>
+            <View style={styles.spikeCta}>
+              <Text style={styles.spikeCtaText}>See in detail</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={size.normal}
+                color={colors.p1}
+                style={styles.ctaChevron}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionLabel}>For you</Text>
         <View style={styles.mealCard}>
-          <View style={styles.mealHeader}>
-            <Text style={styles.mealTitle}>Suggested Meal</Text>
-            <TouchableOpacity onPress={() => handleNavigation('WhatToEat')}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-
+          <LinearGradient
+            colors={[colors.lightGreen, colors.green]}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
+            style={styles.mealAccent}
+          />
           <View style={styles.mealContent}>
-            <Image
-              source={appIcons.bowl}
-              style={styles.mealImage}
-              resizeMode="contain"
-            />
-            <View style={styles.mealDetails}>
-              <Text style={styles.mealName}>
-                Quinoa Salad with Chickpeas and Avocado
-              </Text>
-              <Text style={styles.mealDesc}>
-                Rich in omega-3 and low glycemic index suitable for your current
-                levels.
-              </Text>
+            <View style={styles.mealHeader}>
+              <Text style={styles.mealTitle}>Suggested Meal</Text>
+              <TouchableOpacity
+                onPress={() => handleNavigation('WhatToEat')}
+                hitSlop={{
+                  top: HP(1),
+                  bottom: HP(1),
+                  left: WP(2),
+                  right: WP(2),
+                }}>
+                <Text style={styles.viewAllText}>View All</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <View style={styles.nutritionRow}>
-            <View style={styles.nutritionBadge}>
-              <Text style={[styles.nutritionText, {color: '#E55C13FF'}]}>
-                8g Carbs
-              </Text>
-            </View>
-            <View style={styles.nutritionBadgeProtein}>
-              <Text style={styles.nutritionText}>27g Protein</Text>
-            </View>
-            <View style={styles.nutritionBadgeFiber}>
-              <Text style={[styles.nutritionText, {color: '#027A48'}]}>
-                10g Fiber
-              </Text>
+            <View style={styles.mealRow}>
+              <Image
+                source={appIcons.bowl}
+                style={styles.mealImage}
+                resizeMode="contain"
+              />
+              <View style={styles.mealDetails}>
+                <Text style={styles.mealName} numberOfLines={2}>
+                  Quinoa Salad with Chickpeas and Avocado
+                </Text>
+                <Text style={styles.mealDesc} numberOfLines={2}>
+                  Low glycemic, rich in omega-3
+                </Text>
+                <View style={styles.nutritionRow}>
+                  <View
+                    style={[styles.nutritionBadge, styles.nutritionBadgeCarbs]}>
+                    <Text style={styles.nutritionText}>8g Carbs</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.nutritionBadge,
+                      styles.nutritionBadgeProtein,
+                    ]}>
+                    <Text style={styles.nutritionText}>27g Protein</Text>
+                  </View>
+                  <View
+                    style={[styles.nutritionBadge, styles.nutritionBadgeFiber]}>
+                    <Text style={styles.nutritionText}>10g Fiber</Text>
+                  </View>
+                </View>
+              </View>
             </View>
           </View>
         </View>

@@ -33,6 +33,7 @@ const CommunityInsight = () => {
       title: insight.title,
       description: insight.description || 'No description available',
       image: insight.image,
+      read_time: insight.read_time,
     });
   };
 

@@ -1,125 +1,233 @@
 import React from 'react';
-import {View, Text, StyleSheet, Image} from 'react-native';
-import {appIcons, family, size} from '../../utilities';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {appIcons, colors, family, HP, size, WP} from '../../utilities';
 
-const SugarRecordCard = ({record}) => {
-  if (!record) {
+const SugarRecordCard = ({record, empty, onPress}) => {
+  if (empty || !record) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: 120,
-        }}>
-        <Text style={{textAlign: 'center', color: '#888', fontSize: 16}}>
-          No sugar record available
+      <View style={styles.emptyCard}>
+        <View style={styles.emptyIconWrapper}>
+          <Ionicons name="water-outline" size={32} color={colors.g9} />
+        </View>
+        <Text style={styles.emptyTitle}>No records yet</Text>
+        <Text style={styles.emptySubtitle}>
+          Tap "Add New Record" to log your first blood sugar reading
         </Text>
       </View>
     );
   }
 
-  const getStatusStyle = value => {
-    if (value < 70) return styles.lowStatus;
-    if (value > 180) return styles.highStatus;
-    return styles.normalStatus;
+  const getStatusConfig = value => {
+    if (value < 70)
+      return {
+        label: 'Low',
+        bg: colors.warning,
+        light: '#FFF8E6',
+        icon: 'arrow-down-circle',
+      };
+    if (value > 180)
+      return {
+        label: 'High',
+        bg: colors.danger,
+        light: '#FEF2F2',
+        icon: 'arrow-up-circle',
+      };
+    return {
+      label: 'Normal',
+      bg: colors.gr1,
+      light: '#ECFDF5',
+      icon: 'checkmark-circle',
+    };
   };
 
-  const getStatusText = value => {
-    if (value < 70) return 'Low';
-    if (value > 180) return 'High';
-    return 'Normal';
-  };
+  const status = getStatusConfig(record.value);
+  const CardWrapper = onPress ? TouchableOpacity : View;
+
+  const metaLine = [record.tag || 'Reading', record.date, record.time]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <View style={styles.recordCard}>
-      <View style={styles.recordHeader}>
-        <View style={styles.valueContainer}>
-          <Image source={appIcons.bloodIcon} style={styles.image} />
-          <Text style={styles.recordValue}>{record.value} mg/dL</Text>
+    <CardWrapper
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.82 : 1}>
+      <View style={[styles.accentBar, {backgroundColor: status.bg}]} />
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <View style={styles.valueBlock}>
+            <Image source={appIcons.bloodIcon} style={styles.bloodIcon} />
+            <Text style={styles.value}>{record.value}</Text>
+            <Text style={styles.unit}>mg/dL</Text>
+          </View>
+          <View style={[styles.statusBadge, {backgroundColor: status.bg}]}>
+            <Ionicons
+              name={status.icon}
+              size={12}
+              color={colors.white}
+              style={styles.statusIcon}
+            />
+            <Text style={styles.statusText}>{status.label}</Text>
+          </View>
         </View>
-        <View style={[styles.status, getStatusStyle(record.value)]}>
-          <Text style={styles.statusText}>{getStatusText(record.value)}</Text>
+        <View style={[styles.metaRow, record.notes && styles.metaRowWithNotes]}>
+          <Text style={styles.metaText} numberOfLines={1}>
+            {metaLine}
+          </Text>
         </View>
+        {record.notes ? (
+          <View style={styles.notesRow}>
+            <Text style={styles.notesLabel}>Notes: </Text>
+            <Text style={styles.notesText} numberOfLines={1}>
+              {record.notes}
+            </Text>
+          </View>
+        ) : null}
       </View>
-
-      {/* Tag */}
-      <Text style={styles.recordTag}>{record.tag}</Text>
-
-      {/* Date & Time */}
-      <Text style={styles.recordTime}>
-        {record.date} {record.time}
-      </Text>
-
-      {/* Notes */}
-      {record.notes && <Text style={styles.notes}>Notes: {record.notes}</Text>}
-    </View>
+    </CardWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  recordCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    marginBottom: HP(1.4),
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {elevation: 3},
+    }),
   },
-  recordHeader: {
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  content: {
+    paddingVertical: HP(1.6),
+    paddingHorizontal: WP(3),
+    paddingLeft: WP(4) + 6,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: HP(0.6),
   },
-  valueContainer: {
+  valueBlock: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  bloodIcon: {
+    width: 20,
+    height: 20,
+    marginRight: WP(1.5),
+  },
+  value: {
+    fontSize: 22,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
+    letterSpacing: -0.3,
+  },
+  unit: {
+    fontSize: size.xsmall,
+    fontFamily: family.inter_medium,
+    color: colors.g9,
+    marginLeft: 3,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: WP(2),
+    paddingVertical: HP(0.35),
+    borderRadius: 14,
+  },
+  statusIcon: {
+    marginRight: 4,
+  },
+  statusText: {
+    color: colors.white,
+    fontSize: size.xxsmall,
+    fontFamily: family.inter_bold,
+  },
+  metaRow: {},
+  metaRowWithNotes: {
+    marginBottom: HP(0.5),
+  },
+  metaText: {
+    fontSize: size.xxsmall,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
+  },
+  notesRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  image: {
-    width: 20,
-    height: 20,
-    marginRight: 5,
-  },
-  recordValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  status: {
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#fff',
-  },
-  normalStatus: {
-    backgroundColor: '#2ecc71',
-  },
-  highStatus: {
-    backgroundColor: '#e74c3c',
-  },
-  lowStatus: {
-    backgroundColor: '#f39c12',
-  },
-  recordTag: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
-    fontWeight: '500',
-  },
-  recordTime: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 5,
-  },
-  notes: {
-    fontSize: size.small,
-    fontFamily: family.inter_medium,
-    color: '#555',
+  notesLabel: {
+    fontSize: size.xxsmall,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
     fontStyle: 'italic',
+  },
+  notesText: {
+    flex: 1,
+    fontSize: size.xxsmall,
+    fontFamily: family.inter_regular,
+    color: colors.g7,
+    fontStyle: 'italic',
+  },
+  emptyCard: {
+    backgroundColor: colors.g13,
+    borderRadius: 14,
+    paddingVertical: HP(4),
+    paddingHorizontal: WP(5),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: HP(1.6),
+    borderWidth: 2,
+    borderColor: colors.g11,
+    borderStyle: 'dashed',
+  },
+  emptyIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: HP(1.5),
+  },
+  emptyTitle: {
+    fontSize: size.medium,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
+    marginBottom: HP(0.5),
+  },
+  emptySubtitle: {
+    fontSize: size.small,
+    fontFamily: family.inter_regular,
+    color: colors.g9,
+    textAlign: 'center',
+    lineHeight: size.small * 1.45,
   },
 });
 

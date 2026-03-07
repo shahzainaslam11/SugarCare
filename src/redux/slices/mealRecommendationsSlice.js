@@ -2,22 +2,26 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import api from '../api/axiosInstance';
 
+// Old UI used Small/Medium/Large; new UI uses Light/Medium/Large. Backend expects Small/Medium/Large.
+const PORTION_UI_TO_API = { Light: 'Small', Medium: 'Medium', Large: 'Large' };
+
 export const generateMealRecommendations = createAsyncThunk(
   'meals/generateMealRecommendations',
   async ({payload, token}, {rejectWithValue}) => {
-    console.log('API Payload:', payload);
+    const portion = PORTION_UI_TO_API[payload.portion_size] ?? payload.portion_size;
+
+    const body = {
+      current_glucose: Number(payload.current_glucose),
+      diabetes_control_level: payload.diabetes_control_level,
+      meal_description: (payload.meal_description ?? '').trim(),
+      portion_size: portion,
+      time: payload.time,
+      user_id: payload.user_id,
+    };
+    console.log('API Payload:', body);
 
     try {
-      const response = await api.post(
-        '/meals/recommend',
-        {
-          current_glucose: Number(payload.current_glucose),
-          diabetes_control_level: payload.diabetes_control_level, // Should be string
-          meal_description: payload.meal_description,
-          portion_size: payload.portion_size,
-          time: payload.time,
-          user_id: payload.user_id,
-        },
+      const response = await api.post('/meals/recommend', body,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,9 +38,14 @@ export const generateMealRecommendations = createAsyncThunk(
       console.error('API Error:', err.response?.data || err.message);
 
       let errorMessage = 'Failed to generate meal recommendations';
+      const detail = err.response?.data?.detail;
 
-      if (err.response?.data?.detail) {
-        errorMessage = err.response.data.detail;
+      if (Array.isArray(detail) && detail.length > 0) {
+        // FastAPI validation errors: [{loc, msg}, ...]
+        const msgs = detail.map(d => d.msg || d.message || JSON.stringify(d)).join('; ');
+        errorMessage = msgs || (typeof detail[0] === 'string' ? detail[0] : errorMessage);
+      } else if (typeof detail === 'string') {
+        errorMessage = detail;
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.error) {

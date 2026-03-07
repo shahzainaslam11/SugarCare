@@ -4,13 +4,17 @@ import {colors, family, HP, size, WP} from '../../../utilities';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.g13,
-    paddingHorizontal: WP(4),
-    paddingTop: HP(1.5),
-    paddingBottom: 0,
+    backgroundColor: colors.g13 || '#F5F5F5',
+  },
+  wrapper: {
+    flex: 1,
+    paddingHorizontal: WP(2),
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
-    paddingTop: HP(2),
+    paddingTop: HP(1.5),
     paddingBottom: HP(14),
   },
   header: {
@@ -41,11 +45,12 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     marginVertical: HP(4),
   },
-  forecastTitle: {
+  sectionTitle: {
     fontSize: size.large,
     fontFamily: family.inter_bold,
-    color: colors.b4,
+    color: colors.b1,
     marginBottom: HP(1.2),
+    marginTop: HP(0.5),
   },
   readingText: {
     fontSize: size.h2,
@@ -120,13 +125,14 @@ export const styles = StyleSheet.create({
   },
   recordsContainer: {
     marginBottom: HP(2),
-    marginTop: HP(1.5),
+    marginTop: HP(1),
+    paddingHorizontal: WP(1),
   },
-  sectionTitle: {
+  recordsSectionTitle: {
     fontSize: size.medium,
     fontFamily: family.inter_bold,
-    color: colors.b4,
-    marginBottom: HP(1.5),
+    color: colors.b1,
+    marginBottom: HP(1.2),
   },
   streakText: {
     fontSize: size.small,
@@ -139,7 +145,11 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.p1,
   },
   buttonContainer: {
-    paddingTop: HP(2),
+    paddingHorizontal: WP(4),
+    paddingTop: HP(1.5),
     paddingBottom: HP(2),
+    backgroundColor: colors.g13,
+    borderTopWidth: 1,
+    borderTopColor: colors.g15,
   },
 });

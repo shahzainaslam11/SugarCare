@@ -51,12 +51,12 @@ bundle exec pod install
 For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
 
 ```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
 yarn ios
+# OR
+npm run ios
 ```
+
+**First-time iOS / push notifications:** See **[docs/IOS_XCODE_SETUP.md](docs/IOS_XCODE_SETUP.md)** for Xcode setup (Push Notifications, GoogleService-Info.plist, APNs key).
 
 If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
 

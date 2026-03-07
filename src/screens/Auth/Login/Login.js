@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import CheckBox from '@react-native-community/checkbox';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
@@ -20,6 +21,8 @@ import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import {loginUser, clearAuthError} from '../../../redux/slices/authSlice';
 import {clearSugarForecastError} from '../../../redux/slices/sugarForecastSlice';
+import {registerDeviceToken} from '../../../redux/slices/notificationSlice';
+import {FCM_TOKEN_STORAGE_KEY} from '../../../utilities/NotificationsService/FCMService';
 
 export default function LogIn() {
   const navigation = useNavigation();
@@ -77,6 +80,7 @@ export default function LogIn() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
+      <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
         showsVerticalScrollIndicator={false}
@@ -101,7 +105,10 @@ export default function LogIn() {
             console.log('Login API Response:', JSON.stringify(res));
             if (res.meta.requestStatus === 'fulfilled') {
               showSuccess(`Welcome ${res.payload?.data?.name || 'User'}`);
-              // Reset root navigator to MainDrawer (Login is nested in Auth stack)
+              const fcmToken = await AsyncStorage.getItem(FCM_TOKEN_STORAGE_KEY);
+              if (fcmToken) {
+                dispatch(registerDeviceToken({fcm_token: fcmToken}));
+              }
               let rootNav = navigation;
               while (rootNav.getParent?.()) rootNav = rootNav.getParent();
               rootNav.reset({
@@ -187,6 +194,7 @@ export default function LogIn() {
           )}
         </Formik>
       </KeyboardAwareScrollView>
+      </SafeAreaView>
     </ImageBackground>
   );
 }
