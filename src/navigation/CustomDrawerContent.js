@@ -28,14 +28,14 @@ const DRAWER_WIDTH = WP(80);
 
 const MENU_ITEMS = [
   {id: 'WhatToEat', title: 'What to Eat?', icon: appIcons.eat},
+  {id: 'PredictInputs', title: 'Predict Sugar Alert', icon: appIcons.aiRisk},
+  {id: 'AIForecast', title: 'AI Risk Forecasting', icon: appIcons.aiRisk},
   {
     id: 'CommunityInsight',
     title: 'Community Insights',
     icon: appIcons.communityInsights,
   },
   {id: 'AddHBA1CTest', title: 'Add HBA1C Test Record', icon: appIcons.User},
-  {id: 'AIForecast', title: 'AI Risk Foecasting', icon: appIcons.aiRisk},
-  {id: 'PredictInputs', title: 'Predict Sugar Alert', icon: appIcons.aiRisk},
   {id: 'SettingsScreen', title: 'App Settings', icon: appIcons.setting},
 ];
 
@@ -153,7 +153,7 @@ function CustomDrawerContentInner(props) {
         </View>
 
         <View style={styles.bottomSection}>
-          <Text style={styles.versionText}>Version: 0.0.0</Text>
+          <Text style={styles.versionText}>Version: 2.0.0</Text>
         </View>
       </View>
     </DrawerContentScrollView>

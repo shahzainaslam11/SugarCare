@@ -1,10 +1,11 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import OTPTextInput from 'react-native-otp-textinput';
-import {appImages, showError, showSuccess} from '../../../utilities';
+import {appImages, colors, showError, showSuccess} from '../../../utilities';
 import {AppButton} from '../../../components';
 import {sendOtp, verifyOtp} from '../../../redux/slices/authSlice'; // Changed from forgotPassword to sendOtp
 import styles from './styles';
@@ -130,41 +131,53 @@ export default function VerifyOTP() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
+      <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
         showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
-          <Text style={styles.title}>Enter OTP</Text>
+          <Text style={styles.title}>Verify your email</Text>
           <Text style={styles.subtitle}>
-            A 6-digit OTP code has been sent to your email:
+            We've sent a 6-digit code to your email. Enter it below.
           </Text>
-          <Text style={styles.email}>{email || 'user@sugarcare.com'}</Text>
 
-          {/* OTP Input */}
-          <OTPTextInput
-            ref={otpInputRef}
-            inputCount={6}
-            tintColor="#3b82f6"
-            offTintColor="#e5e7eb"
-            textInputStyle={styles.otpBox}
-            containerStyle={{marginVertical: 30}}
-            handleTextChange={setCode}
-            inputCellLength={1}
-            keyboardType="number-pad"
-          />
+          <View style={styles.emailPill}>
+            <Text style={styles.email} numberOfLines={1}>
+              {email || 'user@sugarcare.com'}
+            </Text>
+          </View>
+
+          <View style={styles.otpWrapper}>
+            <OTPTextInput
+              ref={otpInputRef}
+              inputCount={6}
+              tintColor={colors.p1}
+              offTintColor={colors.g4}
+              textInputStyle={styles.otpBox}
+              containerStyle={{}}
+              handleTextChange={setCode}
+              inputCellLength={1}
+              keyboardType="number-pad"
+            />
+          </View>
 
           <View style={styles.resendRow}>
             <Text style={styles.resendText}>
               Didn't receive the code?{' '}
               <Text
                 style={[styles.resendLink, !canResend && styles.disabledLink]}
-                onPress={canResend ? handleResend : null}>
+                onPress={canResend ? handleResend : undefined}
+                disabled={!canResend}>
                 Resend OTP
               </Text>
             </Text>
-            <Text style={styles.timerText}>
-              Time Remaining: 00:{String(timer).padStart(2, '0')}s
-            </Text>
+            <View style={styles.timerBadge}>
+              <Text style={styles.timerText}>
+                {timer > 0
+                  ? `00:${String(timer).padStart(2, '0')}`
+                  : 'Code expired'}
+              </Text>
+            </View>
           </View>
 
           <AppButton
@@ -182,6 +195,7 @@ export default function VerifyOTP() {
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
+      </SafeAreaView>
     </ImageBackground>
   );
 }

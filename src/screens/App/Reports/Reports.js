@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   Platform,
+  StatusBar,
 } from 'react-native';
 import {ChartComponent, SmallLoader} from '../../../components';
 import {appIcons, showError, showSuccess} from '../../../utilities';
@@ -230,13 +231,15 @@ const Reports = () => {
       ? sugarStats?.totalSugarDays ?? '--'
       : fastingStats?.totalFastingDays ?? '--';
 
+  const chartTitle =
+    activeReport === 'Sugar' ? 'Blood Sugar Overview' : 'Fasting Overview';
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       {loading && <SmallLoader />}
 
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        showsVerticalScrollIndicator={false}>
+      <View style={styles.wrapper}>
         <Text style={styles.title}>Reports</Text>
 
         {/* ===== REPORT TYPE SWITCH ===== */}
@@ -248,7 +251,8 @@ const Reports = () => {
                 styles.reportTab,
                 activeReport === tab.key && styles.activeReportTab,
               ]}
-              onPress={() => handleReportSwitch(tab.key)}>
+              onPress={() => handleReportSwitch(tab.key)}
+              activeOpacity={0.8}>
               <Text
                 style={[
                   styles.reportTabText,
@@ -260,40 +264,49 @@ const Reports = () => {
           ))}
         </View>
 
-        {/* ===== CHART ===== */}
-        <Text style={styles.cardTitle}>
-          {activeReport === 'Sugar' ? 'Sugar Report' : 'Fast Report'} Overview
-        </Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <ChartComponent
+            title={chartTitle}
+            activeRange={activeTab}
+            onChangeRange={handleRangeChange}
+            chart={chartData}
+          />
 
-        <ChartComponent
-          activeRange={activeTab}
-          onChangeRange={handleRangeChange}
-          chart={chartData}
-        />
+          {/* ===== STATS ===== */}
+          <Text style={styles.sectionLabel}>Summary</Text>
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, styles.statCardLeft]}>
+              <View style={styles.statAccent} />
+              <Text style={styles.statLabel}>{averageLabel}</Text>
+              <Text style={styles.statValue}>{average}</Text>
+            </View>
 
-        {/* ===== STATS ===== */}
-        <View style={styles.statsRow}>
-          <View style={[styles.card, styles.halfCard]}>
-            <Text style={styles.cardTitle}>{averageLabel}</Text>
-            <Text style={styles.statValue}>{average}</Text>
+            <View style={[styles.statCard, styles.statCardRight]}>
+              <View style={styles.statAccent} />
+              <Text style={styles.statLabel}>{totalRecordsLabel}</Text>
+              <Text style={styles.statValue}>{totalRecords}</Text>
+            </View>
           </View>
+        </ScrollView>
 
-          <View style={[styles.card, styles.halfCard]}>
-            <Text style={styles.cardTitle}>{totalRecordsLabel}</Text>
-            <Text style={styles.statValue}>{totalRecords}</Text>
-          </View>
+        {/* ===== DOWNLOAD BUTTON (fixed above bottom tabs) ===== */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.downloadButton}
+            onPress={handleDownload}
+            activeOpacity={0.85}>
+            <Image source={appIcons.download} style={styles.downloadIcon} />
+            <Text style={styles.downloadButtonText}>
+              {activeReport === 'Sugar'
+                ? 'Download Sugar Report'
+                : 'Download Fast Report'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-
-      {/* ===== DOWNLOAD BUTTON ===== */}
-      <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-        <Image source={appIcons.download} style={styles.downloadIcon} />
-        <Text style={styles.downloadButtonText}>
-          {activeReport === 'Sugar'
-            ? 'Download Sugar Report'
-            : 'Download Fast Report'}
-        </Text>
-      </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };

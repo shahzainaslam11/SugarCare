@@ -24,6 +24,7 @@ import styles from './styles';
 import {
   fetchRecentSugarReadings,
   predictSugarAlert,
+  setUserInput,
 } from '../../../../redux/slices/sugarAlertSlice';
 import {useAIConsentGate} from '../../../../hooks/useAIConsentGate';
 
@@ -146,13 +147,15 @@ const PredictInputs = () => {
       console.log('Sending Real:', JSON.stringify(result));
 
       if (result?.success) {
+        const userInputData = {
+          recentReading: values.recentReading,
+          lastMeal: values.lastMeal,
+          activityLevel: values.activityLevel,
+        };
+        dispatch(setUserInput(userInputData));
         navigation.navigate('PredictSugarAlert', {
-          predictionResult: result.data, // The actual prediction data
-          userInput: {
-            recentReading: values.recentReading,
-            lastMeal: values.lastMeal,
-            activityLevel: values.activityLevel,
-          },
+          predictionResult: result.data,
+          userInput: userInputData,
         });
       } else {
         Alert.alert(

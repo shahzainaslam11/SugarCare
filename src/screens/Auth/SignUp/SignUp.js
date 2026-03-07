@@ -8,6 +8,8 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import {useDispatch, useSelector} from 'react-redux';
@@ -23,6 +25,8 @@ import {
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import {registerUser} from '../../../redux/slices/authSlice';
+import {registerDeviceToken} from '../../../redux/slices/notificationSlice';
+import {FCM_TOKEN_STORAGE_KEY} from '../../../utilities/NotificationsService/FCMService';
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -35,7 +39,44 @@ export default function SignUp() {
   const [genderValue, setGenderValue] = useState(null);
   const [diabetesOpen, setDiabetesOpen] = useState(false);
   const [diabetesValue, setDiabetesValue] = useState(null);
+  const [dietTypeOpen, setDietTypeOpen] = useState(false);
+  const [dietTypeValue, setDietTypeValue] = useState(null);
+  const [activityLevelOpen, setActivityLevelOpen] = useState(false);
+  const [activityLevelValue, setActivityLevelValue] = useState(null);
   const [usingInsulin, setUsingInsulin] = useState(false);
+
+  const setGenderOpenSafe = v => {
+    setGenderOpen(v);
+    if (v) {
+      setDiabetesOpen(false);
+      setDietTypeOpen(false);
+      setActivityLevelOpen(false);
+    }
+  };
+  const setDiabetesOpenSafe = v => {
+    setDiabetesOpen(v);
+    if (v) {
+      setGenderOpen(false);
+      setDietTypeOpen(false);
+      setActivityLevelOpen(false);
+    }
+  };
+  const setDietTypeOpenSafe = v => {
+    setDietTypeOpen(v);
+    if (v) {
+      setGenderOpen(false);
+      setDiabetesOpen(false);
+      setActivityLevelOpen(false);
+    }
+  };
+  const setActivityLevelOpenSafe = v => {
+    setActivityLevelOpen(v);
+    if (v) {
+      setGenderOpen(false);
+      setDiabetesOpen(false);
+      setDietTypeOpen(false);
+    }
+  };
 
   const genderItems = [
     {label: 'Male', value: 'male'},
@@ -51,6 +92,18 @@ export default function SignUp() {
     {label: 'None', value: 'None'},
   ];
 
+  const dietTypeItems = [
+    {label: 'Balanced', value: 'balanced'},
+    {label: 'High Carb', value: 'high_carb'},
+    {label: 'Low Carb', value: 'low_carb'},
+  ];
+
+  const activityLevelItems = [
+    {label: 'Low', value: 'low'},
+    {label: 'Moderate', value: 'moderate'},
+    {label: 'High', value: 'high'},
+  ];
+
   const initialValues = {
     email: '',
     name: '',
@@ -59,6 +112,8 @@ export default function SignUp() {
     height: '',
     weight: '',
     diabetesType: '',
+    diet_type: '',
+    activity_level: '',
     cholesterol: '',
     hba1c: '',
     usingInsulin: false,
@@ -71,7 +126,7 @@ export default function SignUp() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
-      <View style={{flex: 1}}>
+      <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
         <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -83,7 +138,7 @@ export default function SignUp() {
             onSubmit={async (values, {setSubmitting}) => {
               const email = normalizeEmail(values.email);
 
-              // Prepare payload matching backend API
+              // Payload matching Sign Up API: full_name, email, password, confirm_password, gender, age, height_cm, weight_kg, diabetes_type, diet_type, activity_level, cholesterol_mg_dl, using_insulin, hba1c
               const payload = {
                 email,
                 password: values.password,
@@ -94,8 +149,10 @@ export default function SignUp() {
                 height_cm: Number(values.height),
                 weight_kg: Number(values.weight),
                 diabetes_type: values.diabetesType,
+                diet_type: values.diet_type,
+                activity_level: values.activity_level,
                 cholesterol_mg_dl: Number(values.cholesterol),
-                hba1c_percent: Number(values.hba1c),
+                hba1c: Number(values.hba1c),
                 using_insulin: values.usingInsulin,
               };
 
@@ -104,6 +161,10 @@ export default function SignUp() {
 
                 if (res.meta.requestStatus === 'fulfilled') {
                   showSuccess('Signup successful! Please login.');
+                  const fcmToken = await AsyncStorage.getItem(FCM_TOKEN_STORAGE_KEY);
+                  if (fcmToken) {
+                    dispatch(registerDeviceToken({fcm_token: fcmToken}));
+                  }
                   navigation.navigate('LogIn', {email: values.email});
                 } else if (res.payload?.error) {
                   // Show the exact backend error message from the "error" field
@@ -176,7 +237,7 @@ export default function SignUp() {
                     <CustomDropdown
                       title="Select Gender"
                       open={genderOpen}
-                      setOpen={setGenderOpen}
+                      setOpen={setGenderOpenSafe}
                       value={genderValue}
                       setValue={v => {
                         setGenderValue(v);
@@ -185,6 +246,8 @@ export default function SignUp() {
                       items={genderItems}
                       placeholder="Select Gender"
                       errorMessage={touched.gender && errors.gender}
+                      zIndex={4000}
+                      zIndexInverse={1000}
                     />
                   </View>
                   <View style={[styles.half, isSmall && styles.halfSmall]}>
@@ -255,7 +318,7 @@ export default function SignUp() {
                 <CustomDropdown
                   title="Your Diabetes Type"
                   open={diabetesOpen}
-                  setOpen={setDiabetesOpen}
+                  setOpen={setDiabetesOpenSafe}
                   value={diabetesValue}
                   setValue={v => {
                     setDiabetesValue(v);
@@ -264,7 +327,49 @@ export default function SignUp() {
                   items={diabetesItems}
                   placeholder="Select"
                   errorMessage={touched.diabetesType && errors.diabetesType}
+                  zIndex={3000}
+                  zIndexInverse={2000}
                 />
+
+                {/* Diet Type + Activity Level */}
+                <View style={[styles.row, isSmall && styles.rowSmall]}>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <CustomDropdown
+                      title="Diet Type"
+                      open={dietTypeOpen}
+                      setOpen={setDietTypeOpenSafe}
+                      value={dietTypeValue}
+                      setValue={v => {
+                        setDietTypeValue(v);
+                        setFieldValue('diet_type', v);
+                      }}
+                      items={dietTypeItems}
+                      placeholder="Select"
+                      errorMessage={touched.diet_type && errors.diet_type}
+                      zIndex={2000}
+                      zIndexInverse={3000}
+                    />
+                  </View>
+                  <View style={[styles.half, isSmall && styles.halfSmall]}>
+                    <CustomDropdown
+                      title="Activity Level"
+                      open={activityLevelOpen}
+                      setOpen={setActivityLevelOpenSafe}
+                      value={activityLevelValue}
+                      setValue={v => {
+                        setActivityLevelValue(v);
+                        setFieldValue('activity_level', v);
+                      }}
+                      items={activityLevelItems}
+                      placeholder="Select"
+                      errorMessage={
+                        touched.activity_level && errors.activity_level
+                      }
+                      zIndex={1000}
+                      zIndexInverse={4000}
+                    />
+                  </View>
+                </View>
 
                 {/* Using Insulin */}
                 <View style={styles.checkboxContainer}>
@@ -325,7 +430,7 @@ export default function SignUp() {
             )}
           </Formik>
         </KeyboardAwareScrollView>
-      </View>
+      </SafeAreaView>
     </ImageBackground>
   );
 }

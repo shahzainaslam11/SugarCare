@@ -66,25 +66,20 @@ const TrackSugar = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-      <View style={{flex: 1}}>
+      <View style={styles.wrapper}>
         <ScrollView
-          contentContainerStyle={[styles.contentContainer, {flexGrow: 1}]}
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}>
-          <Text style={styles.forecastTitle}>Blood Sugar Forecast</Text>
-          <Text style={styles.readingText}>
-            {records[0]?.value ?? '--'} mg/dL
-          </Text>
-          <Text style={styles.trendText}>
-            Next 3 hours {records[0]?.trend ?? '--'}
-          </Text>
           {loading && <SmallLoader />}
 
-          {/* Chart */}
           <ChartComponent
+            title="Blood Sugar Overview"
             activeRange={activeRange}
             onChangeRange={setActiveRange}
             chart={chart}
           />
+
           <View style={styles.recordsContainer}>
             <Text style={styles.sectionTitle}>Recent Records</Text>
 
@@ -95,6 +90,7 @@ const TrackSugar = () => {
             ))}
           </View>
         </ScrollView>
+
         <View style={styles.buttonContainer}>
           <AppButton
             title="Add New Record"

@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Formik} from 'formik';
 import * as yup from 'yup';
@@ -38,6 +39,7 @@ export default function SetNewPassword() {
       source={appImages.bgImage}
       style={styles.container}
       resizeMode="cover">
+      <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
         showsVerticalScrollIndicator={false}>
@@ -71,12 +73,15 @@ export default function SetNewPassword() {
 
               if (res.meta.requestStatus === 'fulfilled') {
                 showSuccess('Password changed successfully!');
-                // Navigate to login with success message
-                navigation.replace('LogIn', {
-                  email: email,
-                  message:
-                    'Password reset successful! Please login with your new password.',
-                });
+                if (setShow) {
+                  navigation.goBack();
+                } else {
+                  navigation.replace('LogIn', {
+                    email: email,
+                    message:
+                      'Password reset successful! Please login with your new password.',
+                  });
+                }
               } else {
                 // Handle validation errors
                 if (res.payload?.details?.validation_errors) {
@@ -141,7 +146,13 @@ export default function SetNewPassword() {
                   // textStyle={styles.confirmBtnText}
                   disabled={!email}
                 />
-                {setShow ? null : (
+                {setShow ? (
+                  <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={styles.backLink}>
+                    <Text style={styles.backText}>← Back to Settings</Text>
+                  </TouchableOpacity>
+                ) : (
                   <View style={styles.actionsRow}>
                     <TouchableOpacity
                       onPress={() => navigation.goBack()}
@@ -161,6 +172,7 @@ export default function SetNewPassword() {
           </Formik>
         </View>
       </KeyboardAwareScrollView>
+      </SafeAreaView>
     </ImageBackground>
   );
 }

@@ -129,6 +129,7 @@ const sugarAlertSlice = createSlice({
   initialState: {
     recentReadings: [],
     prediction: null,
+    userInput: null,
     loading: false,
     error: null,
     lastFetched: null,
@@ -136,7 +137,11 @@ const sugarAlertSlice = createSlice({
   reducers: {
     clearPrediction: state => {
       state.prediction = null;
+      state.userInput = null;
       state.error = null;
+    },
+    setUserInput: (state, action) => {
+      state.userInput = action.payload;
     },
     clearError: state => {
       state.error = null;
@@ -198,6 +203,6 @@ const sugarAlertSlice = createSlice({
   },
 });
 
-export const {clearPrediction, clearError, addManualReading} =
+export const {clearPrediction, clearError, addManualReading, setUserInput} =
   sugarAlertSlice.actions;
 export default sugarAlertSlice.reducer;

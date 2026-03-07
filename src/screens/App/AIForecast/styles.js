@@ -282,7 +282,22 @@ const styles = StyleSheet.create({
     color: '#616161',
     lineHeight: HP(2.4),
   },
-  // Add this to your StyleSheet
+  errorCard: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: WP(4),
+    padding: WP(4),
+    marginBottom: HP(2),
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  errorCardText: {
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: '#E65100',
+    lineHeight: HP(2.2),
+    textAlign: 'center',
+  },
+
   noDataText: {
     textAlign: 'center',
     marginVertical: HP(2),

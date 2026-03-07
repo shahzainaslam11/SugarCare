@@ -118,6 +118,20 @@ export const colors = {
   gr2: '#248A00',
   gr3: '#159600',
 
+  // Home card & badge backgrounds (semantic)
+  spikeCardBg: '#FFFBEB',
+  riskCardBg: '#EFF6FF',
+  mealCardBg: '#F0FDF4',
+  safeBadgeBg: '#D1FAE5',
+  safeBadgeText: '#059669',
+  nutritionCarbsBg: '#FEF3C7',
+  nutritionProteinBg: '#DBEAFE',
+  nutritionFiberBg: '#D1FAE5',
+  spikeCardBorder: 'rgba(245, 158, 11, 0.2)',
+  riskCardBorder: 'rgba(66, 82, 255, 0.12)',
+  mealCardBorder: 'rgba(16, 185, 129, 0.2)',
+  safeBadgeBorder: 'rgba(16, 185, 129, 0.3)',
+
   //Black colors#F59695
   drakBlack: '#000000',
   black: '#353534', //#353534

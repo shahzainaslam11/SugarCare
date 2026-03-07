@@ -5,7 +5,7 @@
 
 import * as Keychain from 'react-native-keychain';
 
-const SERVICE_NAME = 'com.sugarcare.auth';
+const SERVICE_NAME = 'com.sugarcare.app.auth';
 const KEYS = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',

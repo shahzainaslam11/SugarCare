@@ -1,47 +1,21 @@
 import {StyleSheet} from 'react-native';
-import {colors, HP, WP} from '../../../utilities';
+import {colors, family, HP, size, WP} from '../../../utilities';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-    paddingHorizontal: WP(4),
-    paddingBottom: 0, // Remove bottom padding to avoid pushing up tab bar
+    backgroundColor: colors.g13 || '#F5F5F5',
+  },
+  wrapper: {
+    flex: 1,
+    paddingHorizontal: WP(2),
+  },
+  scrollView: {
+    flex: 1,
   },
   contentContainer: {
-    paddingTop: HP(4),
-    paddingBottom: HP(2),
-  },
-  header: {
-    fontSize: WP(5.5),
-    fontWeight: 'bold',
-    marginBottom: HP(2.5),
-    color: colors.p1,
-  },
-  forecastContainer: {
-    marginBottom: HP(2.5),
-  },
-  timeText: {
-    fontSize: WP(4),
-    color: '#666',
-    marginBottom: HP(0.6),
-  },
-  forecastTitle: {
-    fontSize: WP(4.5),
-    fontWeight: '600',
-    marginBottom: HP(0.6),
-    marginTop: HP(0.5),
-  },
-  readingText: {
-    fontSize: WP(6),
-    fontWeight: 'bold',
-    marginBottom: HP(1.2),
-    color: colors.p1,
-  },
-  trendText: {
-    fontSize: WP(3.5),
-    color: '#666',
-    marginBottom: HP(2.5),
+    paddingTop: HP(1.5),
+    paddingBottom: HP(14),
   },
   chartContainer: {
     flexDirection: 'row',
@@ -103,21 +77,22 @@ export const styles = StyleSheet.create({
     marginVertical: HP(2.5),
   },
   recordsContainer: {
-    marginBottom: HP(3.8),
+    paddingHorizontal: WP(2),
+    marginBottom: HP(2),
   },
   sectionTitle: {
-    fontSize: WP(5),
-    fontWeight: 'bold',
-    marginBottom: HP(1.9),
-  },
-  addButton: {
-    marginBottom: HP(2.5),
-    backgroundColor: colors.p1,
-    marginHorizontal: WP(6), // Match the container padding
+    fontSize: size.large,
+    fontFamily: family.inter_bold,
+    color: colors.b1,
+    marginBottom: HP(1.5),
+    marginTop: HP(0.5),
   },
   buttonContainer: {
-    paddingHorizontal: WP(6),
-    paddingBottom: 0, // Remove extra bottom padding
-    backgroundColor: 'transparent',
+    paddingHorizontal: WP(4),
+    paddingTop: HP(1.5),
+    paddingBottom: HP(2),
+    backgroundColor: colors.g13,
+    borderTopWidth: 1,
+    borderTopColor: colors.g15,
   },
 });

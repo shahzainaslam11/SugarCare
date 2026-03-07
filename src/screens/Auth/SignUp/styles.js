@@ -13,13 +13,10 @@ const styles = StyleSheet.create({
 
   inner: {
     borderRadius: 20,
-    paddingHorizontal: HP(3),
-    paddingVertical: HP(3),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    paddingHorizontal: 25,
+    marginHorizontal: 10,
+    paddingVertical: 20,
+    alignItems: 'stretch',
   },
 
   title: {

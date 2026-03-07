@@ -8,24 +8,29 @@ export const fetchRiskForecast = createAsyncThunk(
   'riskForecast/fetchRiskForecast',
   async ({token, user_id}, {rejectWithValue}) => {
     try {
-      const res = await api.get(`/health/history?user_id=${user_id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          accept: 'application/json',
+      const res = await api.post(
+        '/health/risk_forecast',
+        {user_id},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: 'application/json',
+          },
         },
-      });
+      );
 
-      const firstItem = res.data?.items?.[0];
-      const responseJson = firstItem?.response_json || {};
+      const data = res.data?.data ?? res.data;
+      const risks = data?.risk_areas ?? data?.risks ?? [];
+      const overallStatus = data?.overall_risk_status ?? data?.overallStatus ?? null;
 
       return {
-        risks: responseJson?.risk_areas || [],
-        overallStatus: responseJson?.overall_risk_status || null,
+        risks: Array.isArray(risks) ? risks : [],
+        overallStatus,
       };
     } catch (err) {
-      return rejectWithValue(
-        err.response?.data || {message: 'Failed to fetch risk forecast'},
-      );
+      const payload =
+        err.response?.data || {message: 'Failed to fetch risk forecast'};
+      return rejectWithValue(payload);
     }
   },
 );
@@ -57,6 +62,7 @@ const riskForecastSlice = createSlice({
       })
       .addCase(fetchRiskForecast.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
         state.risks = action.payload?.risks || [];
         state.overallStatus = action.payload?.overallStatus || null;
       })
@@ -64,8 +70,13 @@ const riskForecastSlice = createSlice({
         state.loading = false;
         state.risks = [];
         state.overallStatus = null;
+        const p = action.payload;
         state.error =
-          action.payload?.message || 'Failed to fetch risk forecast';
+          (typeof p === 'string' ? p : null) ||
+          p?.message ||
+          p?.error?.message ||
+          p?.msg ||
+          'Failed to fetch risk forecast';
       });
   },
 });

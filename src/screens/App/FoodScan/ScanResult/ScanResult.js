@@ -104,8 +104,13 @@ const ScanResult = () => {
     data: [1],
   };
 
-  console.log('nutritionData (final):', JSON.stringify(nutritionData, null, 2));
-  console.log('========================');
+  const allNutritionZero =
+    (nutrition_facts?.carbohydrates_g ?? 0) === 0 &&
+    (nutrition_facts?.fats_g ?? 0) === 0 &&
+    (nutrition_facts?.proteins_g ?? 0) === 0 &&
+    (nutrition_facts?.sugar_g ?? 0) === 0 &&
+    (nutrition_facts?.fiber_g ?? 0) === 0 &&
+    (glycemic_index?.value ?? 0) === 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -132,25 +137,29 @@ const ScanResult = () => {
         </View>
 
         <View style={styles.content}>
-          <View style={styles.titleSection}>
-            <Text style={styles.foodName}>
-              {food_item?.charAt(0).toUpperCase() + food_item?.slice(1)}
-            </Text>
+       {!allNutritionZero && (
+           <View style={styles.titleSection}>
+           <Text style={styles.foodName}>
+             {food_item?.charAt(0).toUpperCase() + food_item?.slice(1)}
+           </Text>
 
-            <View style={styles.caloriesContainer}>
-              <Image source={appIcons.fire} style={styles.fireIcon} />
-              <Text style={styles.calories}>{estimated_calories} kcal</Text>
+           <View style={styles.caloriesContainer}>
+             <Image source={appIcons.fire} style={styles.fireIcon} />
+             <Text style={styles.calories}>{estimated_calories} kcal</Text>
+           </View>
+         </View>
+       )}
+
+          {!allNutritionZero && (
+            <View style={styles.predictedImpact}>
+              <Text style={styles.impactMessage}>
+                {predicted_impact?.message}
+              </Text>
+              <Text style={styles.impactNote}>
+                {predicted_impact?.confidence_note}
+              </Text>
             </View>
-          </View>
-
-          <View style={styles.predictedImpact}>
-            <Text style={styles.impactMessage}>
-              {predicted_impact?.message}
-            </Text>
-            <Text style={styles.impactNote}>
-              {predicted_impact?.confidence_note}
-            </Text>
-          </View>
+          )}
           {/* 
           {confidence_score && (
             <View style={styles.confidenceBox}>
@@ -160,7 +169,7 @@ const ScanResult = () => {
             </View>
           )} */}
 
-          <NutritionCard {...nutritionData} />
+          {!allNutritionZero && <NutritionCard {...nutritionData} />}
 
           {suggestion && (
             <View style={styles.suggestionBox}>

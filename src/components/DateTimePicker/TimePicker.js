@@ -1,9 +1,18 @@
 // TimePicker.js
 import React, {useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
+import {Platform, StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import {appIcons} from '../../utilities';
+
+const iosCenterModalStyles =
+  Platform.OS === 'ios'
+    ? {
+        // keep default bottom-sheet layout; only center picker content
+        pickerContainerStyleIOS: {alignItems: 'center'},
+        pickerStyleIOS: {alignSelf: 'center'},
+      }
+    : {};
 
 // Import your clock icon
 const clockIcon = require('../../assets/icons/clock.png'); // Update with your actual path
@@ -61,8 +70,10 @@ const TimePicker = ({
       <DateTimePickerModal
         isVisible={isTimePickerVisible}
         mode="time"
+        date={selectedTime ? new Date(selectedTime) : new Date()}
         onConfirm={handleConfirm}
         onCancel={hideTimePicker}
+        {...iosCenterModalStyles}
       />
     </View>
   );

@@ -72,8 +72,8 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
         style={styles.cardAccent}
       />
       <View style={styles.cardContent}>
-        <View style={styles.headerRow}>
-          <View style={styles.durationContainer}>
+        <View style={styles.topRow}>
+          <View style={styles.durationBlock}>
             <View style={styles.iconWrapper}>
               <Image
                 source={iconSource}
@@ -81,47 +81,37 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
                 resizeMode="contain"
               />
             </View>
-            <View>
-              <Text style={styles.durationValue}>
-                {durationHrs}
-                <Text style={styles.durationUnit}> hrs</Text>
-              </Text>
-              <Text style={styles.durationLabel}>fast</Text>
-            </View>
+            <Text style={styles.durationValue}>
+              {durationHrs}
+              <Text style={styles.durationUnit}>h</Text>
+            </Text>
           </View>
           <View
             style={[
               styles.statusPill,
               isCompleted ? styles.completedPill : styles.inProgressPill,
             ]}>
+            <View style={[styles.pillDot, isCompleted && styles.pillDotCompleted]} />
             <Text
               style={isCompleted ? styles.completedText : styles.inProgressText}>
-              {isCompleted ? 'Completed' : 'In Progress'}
+              {isCompleted ? 'Done' : 'Active'}
             </Text>
           </View>
         </View>
-
-        <View style={styles.divider} />
-
         <View style={styles.detailsRow}>
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeLabel}>Started</Text>
-            <Text style={styles.timeValue}>{displayStartDate}</Text>
-            <Text style={styles.timeSub}>{displayStartTime}</Text>
-          </View>
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeLabel}>Ends at</Text>
-            <Text style={styles.timeValue}>{displayEndDate}</Text>
-            <Text style={styles.timeSub}>{displayEndTime}</Text>
-          </View>
+          <Text style={styles.timeChip}>
+            {displayStartDate} · {displayStartTime}
+          </Text>
+          <Text style={styles.timeArrow}>→</Text>
+          <Text style={styles.timeChip}>
+            {displayEndDate} · {displayEndTime}
+          </Text>
         </View>
-
-        <View style={styles.notesRow}>
-          <Text style={styles.notesLabel}>Notes</Text>
+        {notes !== '---' && (
           <Text style={styles.notesText} numberOfLines={1}>
             {notes}
           </Text>
-        </View>
+        )}
       </View>
     </View>
   );
@@ -130,20 +120,20 @@ const FastingRecordCard = ({record, iconSource = appIcons.fastIcon}) => {
 const styles = StyleSheet.create({
   cardWrapper: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    marginBottom: HP(1.5),
+    borderRadius: 12,
+    marginBottom: HP(1),
     overflow: 'hidden',
     flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: 'rgba(66, 82, 255, 0.08)',
     ...Platform.select({
       ios: {
         shadowColor: colors.p1,
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
       },
-      android: {
-        elevation: 4,
-      },
+      android: {elevation: 3},
     }),
   },
   cardAccent: {
@@ -152,79 +142,76 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
   },
   cardContent: {
     flex: 1,
-    paddingVertical: HP(1.5),
-    paddingHorizontal: WP(4),
-    paddingLeft: WP(4.5),
+    paddingVertical: HP(1),
+    paddingHorizontal: WP(3),
+    paddingLeft: WP(3.8),
   },
-  headerRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: HP(0.5),
   },
-  durationContainer: {
+  durationBlock: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconWrapper: {
-    width: WP(11),
-    height: WP(11),
-    borderRadius: WP(5.5),
+    width: WP(8),
+    height: WP(8),
+    borderRadius: WP(4),
     backgroundColor: colors.p6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: WP(2.5),
+    marginRight: WP(1.8),
   },
   icon: {
-    width: WP(5),
-    height: HP(2.5),
+    width: WP(3.5),
+    height: HP(1.8),
     tintColor: colors.p1,
   },
   durationValue: {
     fontFamily: family.inter_bold,
-    fontSize: size.h5,
+    fontSize: size.medium,
     color: colors.b4,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   durationUnit: {
     fontFamily: family.inter_medium,
-    fontSize: size.normal,
+    fontSize: size.xsmall,
     color: colors.g3,
-  },
-  durationLabel: {
-    fontFamily: family.inter_regular,
-    fontSize: size.xxsmall,
-    color: colors.g3,
-    marginTop: 1,
+    marginLeft: 2,
   },
   statusPill: {
-    borderRadius: 12,
-    paddingHorizontal: WP(2.5),
-    paddingVertical: HP(0.5),
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.12,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: WP(2.2),
+    paddingVertical: HP(0.35),
+    gap: 5,
+  },
+  pillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: colors.white,
+  },
+  pillDotCompleted: {
+    backgroundColor: '#00CC66',
   },
   completedPill: {
-    backgroundColor: '#E5FFEE',
+    backgroundColor: '#D4F5E3',
   },
   completedText: {
-    color: '#00CC66',
+    color: '#00A65A',
     fontFamily: family.inter_bold,
-    fontSize: size.xxsmall,
-    letterSpacing: 0.2,
+    fontSize: size.xtiny,
+    letterSpacing: 0.3,
   },
   inProgressPill: {
     backgroundColor: colors.p1,
@@ -232,52 +219,33 @@ const styles = StyleSheet.create({
   inProgressText: {
     color: colors.white,
     fontFamily: family.inter_bold,
-    fontSize: size.xxsmall,
-    letterSpacing: 0.2,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.g15,
-    marginVertical: HP(1),
+    fontSize: size.xtiny,
+    letterSpacing: 0.3,
   },
   detailsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: WP(4),
+    alignItems: 'center',
+    marginTop: HP(0.3),
+    flexWrap: 'wrap',
+    gap: 4,
   },
-  timeBlock: {
-    flex: 1,
-  },
-  timeLabel: {
+  timeChip: {
     fontFamily: family.inter_medium,
-    fontSize: size.xxsmall,
+    fontSize: size.xtiny,
     color: colors.g3,
-    marginBottom: 2,
   },
-  timeValue: {
-    fontFamily: family.inter_bold,
-    fontSize: size.small,
-    color: colors.b4,
-  },
-  timeSub: {
+  timeArrow: {
     fontFamily: family.inter_regular,
-    fontSize: size.xxsmall,
-    color: colors.g3,
-    marginTop: 1,
-  },
-  notesRow: {
-    marginTop: HP(0.8),
-  },
-  notesLabel: {
-    fontFamily: family.inter_medium,
-    fontSize: size.xxsmall,
-    color: colors.g3,
-    marginBottom: 2,
+    fontSize: size.xtiny,
+    color: colors.g9,
+    marginHorizontal: 2,
   },
   notesText: {
     fontFamily: family.inter_regular,
-    fontSize: size.small,
-    color: colors.b1,
+    fontSize: size.xtiny,
+    color: colors.g7,
+    marginTop: HP(0.4),
+    fontStyle: 'italic',
   },
 });
 

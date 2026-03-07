@@ -20,21 +20,30 @@ import {
   AIConsentModal,
 } from '../../../components';
 import {useNavigation} from '@react-navigation/native';
+import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
 import {useDispatch, useSelector} from 'react-redux';
-import {appImages} from '../../../utilities';
+import LinearGradient from 'react-native-linear-gradient';
+import {appImages, colors, family, size} from '../../../utilities';
 import styles from './styles';
 import {
   generateMealRecommendations,
   fetchMealHistory,
 } from '../../../redux/slices/mealRecommendationsSlice';
-import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
+
+const MEAL_TABS = [
+  {id: 'breakfast', label: 'Breakfast'},
+  {id: 'lunch', label: 'Lunch'},
+  {id: 'dinner', label: 'Dinner'},
+  {id: 'snacks', label: 'Snacks'},
+];
 
 const WhatToEat = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
+  const {gateAIAction, showModal, handleAccept, handleDecline} =
+    useAIConsentGate();
 
   const {accessToken, user} = useSelector(state => state.auth);
   const {recommendations, history, loading, error} = useSelector(
@@ -47,6 +56,22 @@ const WhatToEat = () => {
   const [currentMeal, setCurrentMeal] = useState(null);
   const [apiRecommendations, setApiRecommendations] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpeningModal, setIsOpeningModal] = useState(false);
+
+  // AI consent first, then open form modal (delay lets AI modal close before opening form)
+  const handleOpenPersonalizeModal = async () => {
+    if (isSubmitting || isOpeningModal) return;
+    setIsOpeningModal(true);
+    try {
+      const ok = await gateAIAction();
+      if (ok) {
+        setTimeout(() => setModalVisible(true), 350);
+      }
+    } finally {
+      setIsOpeningModal(false);
+    }
+  };
+
   console.log('currentMeal', JSON.stringify(currentMeal));
 
   // Validation schema
@@ -69,7 +94,7 @@ const WhatToEat = () => {
     mealDescription: Yup.string()
       .trim()
       .required('Meal description is required')
-      .min(3, 'Description too short (min 3 characters)')
+      .min(5, 'Description too short (min 5 characters)')
       .max(100, 'Description too long (max 100 characters)'),
 
     portionSize: Yup.string()
@@ -121,15 +146,12 @@ const WhatToEat = () => {
     }
   }, [apiRecommendations, activeMealType]);
 
-  // Handle form submission
+  // Handle form submission (AI consent already obtained when modal opened)
   const handleFormSubmit = async (values, {resetForm}) => {
     if (!user?.id) {
       Alert.alert('Error', 'User information not available');
       return;
     }
-
-    const ok = await gateAIAction();
-    if (!ok) return;
 
     setIsSubmitting(true);
 
@@ -212,38 +234,47 @@ const WhatToEat = () => {
     <SafeAreaView style={styles.container}>
       <Header title="What to Eat?" onPress={() => navigation.goBack()} />
 
-      {/* Personalize Button */}
+      {/* Personalize Button - AI consent first, then form modal (no blocking) */}
       <View style={styles.personalizeContainer}>
         <TouchableOpacity
           style={styles.personalizeButton}
-          onPress={() => setModalVisible(true)}
-          disabled={isSubmitting}>
+          onPress={handleOpenPersonalizeModal}
+          disabled={isSubmitting || isOpeningModal}>
           <Text style={styles.personalizeText}>
-            {isSubmitting ? 'Processing...' : 'Get Personalize My Meal'}
+            {isOpeningModal
+              ? 'Please wait...'
+              : isSubmitting
+              ? 'Processing...'
+              : 'Get Personalize My Meal'}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Meal Type Tabs */}
-      <View style={styles.mealTypeContainer}>
-        {['breakfast', 'lunch', 'dinner', 'snacks'].map(type => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.mealTypeButton,
-              activeMealType === type && styles.activeButton,
-            ]}
-            onPress={() => setActiveMealType(type)}>
-            <Text
-              style={[
-                styles.mealTypeText,
-                activeMealType === type && styles.mealTypeTextActive,
-              ]}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Meal Type Tabs - horizontal scroll, explicit labels */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.mealTypeScrollContent}
+        style={styles.mealTypeScroll}>
+        {MEAL_TABS.map(({id, label}) => {
+          const isActive = activeMealType === id;
+          return (
+            <TouchableOpacity
+              key={id}
+              style={[styles.mealTypeButton, isActive && styles.activeButton]}
+              onPress={() => setActiveMealType(id)}
+              activeOpacity={0.7}>
+              <Text
+                style={[
+                  styles.mealTypeText,
+                  isActive && styles.mealTypeTextActive,
+                ]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading && !apiRecommendations ? (
@@ -255,26 +286,40 @@ const WhatToEat = () => {
         {/* Suggested Meal Section */}
         {currentMeal ? (
           <View style={styles.suggestedMealSection}>
-            <Text style={styles.sectionTitle}>Suggested Meal</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>Suggested Meal</Text>
+            </View>
             <TouchableOpacity
               style={styles.mealCard}
               onPress={() => handleMealPress(currentMeal)}
-              activeOpacity={0.8}>
-              <Image
-                source={
-                  currentMeal.image_url
-                    ? {uri: currentMeal.image_url}
-                    : appImages.p11
-                }
-                style={styles.mealImage}
-                resizeMode="cover"
-                defaultSource={appImages.p11}
-              />
-              <Text style={styles.mealName}>{currentMeal.name}</Text>
-              <Text style={styles.mealDescription}>
-                {currentMeal.description ||
-                  'A healthy and balanced option for you.'}
-              </Text>
+              activeOpacity={0.85}>
+              <View style={styles.mealImageContainer}>
+                <Image
+                  source={
+                    currentMeal.image_url
+                      ? {uri: currentMeal.image_url}
+                      : appImages.p11
+                  }
+                  style={styles.mealImage}
+                  resizeMode="cover"
+                  defaultSource={appImages.p11}
+                />
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.4)']}
+                  style={styles.mealImageGradient}
+                />
+                <View style={styles.mealBadge}>
+                  <Text style={styles.mealBadgeText}>Suggested</Text>
+                </View>
+              </View>
+              <View style={styles.mealCardContent}>
+                <Text style={styles.mealName}>{currentMeal.name}</Text>
+                <Text style={styles.mealDescription}>
+                  {currentMeal.description ||
+                    'A healthy and balanced option for you.'}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         ) : apiRecommendations ? (
@@ -298,13 +343,17 @@ const WhatToEat = () => {
         {/* Healthier Alternatives Section */}
         {alternativeMeals.length > 0 && (
           <View style={styles.alternativesSection}>
-            <Text style={styles.sectionTitle}>Healthier Alternatives</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>Healthier Alternatives</Text>
+            </View>
             {alternativeMeals.map((alternative, index) => (
               <TouchableOpacity
                 key={index}
                 style={styles.alternativeCard}
                 onPress={() => handleMealPress(alternative)}
-                activeOpacity={0.8}>
+                activeOpacity={0.85}>
+                <View style={styles.alternativeAccent} />
                 <Image
                   source={
                     alternative.image_url
@@ -319,13 +368,17 @@ const WhatToEat = () => {
                 />
                 <View style={styles.alternativeText}>
                   <Text style={styles.alternativeName}>{alternative.name}</Text>
+                  <Text style={styles.alternativeHint}>Tap to view recipe</Text>
                 </View>
+                <Text style={styles.alternativeChevron}>›</Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
 
-        <MedicalDisclaimer />
+        <View style={styles.disclaimerContainer}>
+          <MedicalDisclaimer />
+        </View>
       </ScrollView>
 
       {/* Personalization Modal */}
@@ -432,7 +485,7 @@ const WhatToEat = () => {
 
                     <AppInput
                       title="Meal Description"
-                      placeholder="e.g. craving something sweet"
+                      placeholder="e.g. craving something sweet (min 5 characters)"
                       value={values.mealDescription}
                       onChangeText={handleChange('mealDescription')}
                       onBlur={handleBlur('mealDescription')}

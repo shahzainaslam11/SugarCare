@@ -2,6 +2,7 @@ import React from 'react';
 import {View, Text, TouchableOpacity, Image, ScrollView} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
 import {AreaChart, Grid, YAxis} from 'react-native-svg-charts';
 import {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import * as shape from 'd3-shape';
@@ -12,12 +13,14 @@ import styles from './styles';
 export default function PredictiveSugarAlert() {
   const navigation = useNavigation();
   const route = useRoute();
+  const {prediction: reduxPrediction, userInput: reduxUserInput} =
+    useSelector(state => state.sugarAlert) || {};
 
-  // Get prediction data from navigation params
-  const {predictionResult, userInput} = route.params || {};
+  const {predictionResult, userInput: paramsUserInput} = route.params || {};
 
-  // Use the data directly (predictionResult is already the data object)
-  const predictionData = predictionResult || {};
+  const predictionData =
+    predictionResult || reduxPrediction?.data || reduxPrediction || {};
+  const userInput = paramsUserInput || reduxUserInput;
 
   // Extract data from API response
   const {
@@ -34,14 +37,26 @@ export default function PredictiveSugarAlert() {
   const hasData =
     predictionData && last_reading && predicted_value && prediction;
 
-  // Calculate change values
+  const currentReadingValue = userInput?.recentReading
+    ? Number(userInput.recentReading)
+    : last_reading?.value;
+
   const changeValue =
-    last_reading && predicted_value
-      ? predicted_value.value - last_reading.value
-      : 0;
-  const changePercent = last_reading?.value
-    ? ((changeValue / last_reading.value) * 100).toFixed(1)
-    : '0.0';
+    currentReadingValue != null && predicted_value
+      ? predicted_value.value - currentReadingValue
+      : last_reading && predicted_value
+        ? predicted_value.value - last_reading.value
+        : 0;
+  const changePercent =
+    (currentReadingValue || last_reading?.value)
+      ? ((changeValue / (currentReadingValue || last_reading.value)) * 100).toFixed(1)
+      : '0.0';
+
+  const formatGlucose = val => {
+    if (val == null || val === '' || Number.isNaN(Number(val))) return '—';
+    const n = Number(val);
+    return n % 1 === 0 ? String(n) : n.toFixed(2);
+  };
 
   // Determine alert status based on values
   const getAlertStatus = () => {
@@ -50,7 +65,7 @@ export default function PredictiveSugarAlert() {
     }
 
     const predValue = predicted_value.value;
-    const lastValue = last_reading.value;
+    const lastValue = currentReadingValue ?? last_reading.value;
     const difference = predValue - lastValue;
 
     if (predValue >= 180)
@@ -156,20 +171,23 @@ export default function PredictiveSugarAlert() {
 
   const getTrendText = () => {
     if (!hasData) return 'No data';
-    if (changeValue > 15) return `Rising ${Math.abs(changeValue)} mg/dL`;
-    if (changeValue < -15) return `Dropping ${Math.abs(changeValue)} mg/dL`;
-    return `Stable (±${Math.abs(changeValue)} mg/dL)`;
+    const abs = Math.abs(changeValue);
+    const formatted = abs % 1 === 0 ? String(abs) : abs.toFixed(2);
+    if (changeValue > 15) return `Rising ${formatted} mg/dL`;
+    if (changeValue < -15) return `Dropping ${formatted} mg/dL`;
+    return `Stable (±${formatted} mg/dL)`;
   };
 
   const getStatusMessage = () => {
     if (!hasData) return 'No prediction data available';
-    if (last_reading.value >= 180 && predicted_value.value < 140) {
+    const currentVal = currentReadingValue ?? last_reading?.value;
+    if (currentVal >= 180 && predicted_value.value < 140) {
       return 'Your glucose is expected to improve significantly';
     }
-    if (last_reading.value >= 180) {
+    if (currentVal >= 180) {
       return 'Your glucose is high and needs attention';
     }
-    if (last_reading.value <= 70) {
+    if (currentVal <= 70) {
       return 'Your glucose is low, consider a snack';
     }
     return explanation || 'Based on your recent readings and activity level';
@@ -212,17 +230,20 @@ export default function PredictiveSugarAlert() {
                   <Text
                     style={[
                       styles.readingValue,
-                      last_reading.value >= 180
+                      currentReadingValue >= 180
                         ? {color: '#ef4444'}
-                        : last_reading.value <= 70
+                        : currentReadingValue <= 70
                         ? {color: '#f59e0b'}
                         : {},
                     ]}>
-                    {last_reading.value}
-                    <Text style={styles.readingUnit}> {last_reading.unit}</Text>
+                    {formatGlucose(currentReadingValue)}
+                    <Text style={styles.readingUnit}>
+                      {' '}
+                      {last_reading?.unit || 'mg/dL'}
+                    </Text>
                   </Text>
                   <Text style={styles.currentStatus}>
-                    {getCurrentStatus(last_reading.value)}
+                    {getCurrentStatus(currentReadingValue)}
                   </Text>
                 </View>
 
@@ -239,7 +260,7 @@ export default function PredictiveSugarAlert() {
                   <Text style={styles.readingLabel}>Predicted</Text>
                   <Text
                     style={[styles.readingValue, {color: alertStatus.color}]}>
-                    {predicted_value.value}
+                    {formatGlucose(predicted_value.value)}
                     <Text style={styles.readingUnit}>
                       {' '}
                       {predicted_value.unit}
@@ -304,6 +325,38 @@ export default function PredictiveSugarAlert() {
               )}
             </View>
 
+            {/* Your Inputs Summary - always show when available */}
+            {userInput && (
+              <View style={styles.inputSummary}>
+                <Text style={styles.summaryTitle}>Your inputs</Text>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Blood Sugar</Text>
+                    <Text style={styles.summaryValue}>
+                      {formatGlucose(userInput.recentReading)} mg/dL
+                    </Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Recent Meal</Text>
+                    <Text style={styles.summaryValue} numberOfLines={2}>
+                      {userInput.lastMeal || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Activity</Text>
+                    <Text style={styles.summaryValue}>
+                      {userInput.activityLevel
+                        ? userInput.activityLevel.charAt(0).toUpperCase() +
+                          userInput.activityLevel.slice(1)
+                        : 'N/A'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
             {/* AI Suggestion Card */}
             {suggestion && (
               <View style={styles.suggestionCard}>
@@ -316,42 +369,6 @@ export default function PredictiveSugarAlert() {
                   <Text style={styles.suggestionTitle}>Recommendation</Text>
                 </View>
                 <Text style={styles.suggestionText}>{suggestion}</Text>
-
-                {/* User Input Summary */}
-                {userInput && (
-                  <View style={styles.inputSummary}>
-                    <Text style={styles.summaryTitle}>
-                      Based on your inputs:
-                    </Text>
-                    <View style={styles.summaryGrid}>
-                      <View style={styles.summaryItem}>
-                        <Text style={styles.summaryLabel}>Reading</Text>
-                        <Text style={styles.summaryValue}>
-                          {userInput.recentReading}
-                        </Text>
-                      </View>
-                      <View style={styles.summaryDivider} />
-                      <View style={styles.summaryItem}>
-                        <Text style={styles.summaryLabel}>Meal</Text>
-                        <Text style={styles.summaryValue} numberOfLines={1}>
-                          {userInput.lastMeal && userInput.lastMeal.length > 12
-                            ? userInput.lastMeal.substring(0, 12) + '...'
-                            : userInput.lastMeal || 'N/A'}
-                        </Text>
-                      </View>
-                      <View style={styles.summaryDivider} />
-                      <View style={styles.summaryItem}>
-                        <Text style={styles.summaryLabel}>Activity</Text>
-                        <Text style={styles.summaryValue}>
-                          {userInput.activityLevel
-                            ? userInput.activityLevel.charAt(0).toUpperCase() +
-                              userInput.activityLevel.slice(1).substring(0, 3)
-                            : 'N/A'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
 
                 {/* Reminder Button */}
                 {/* <TouchableOpacity
@@ -371,7 +388,7 @@ export default function PredictiveSugarAlert() {
             <View style={styles.rangesCard}>
               <View style={styles.rangesHeader}>
                 <Text style={styles.rangesTitle}>Glucose Ranges (mg/dL)</Text>
-                {last_reading && (
+                {(currentReadingValue != null || last_reading) && (
                   <View style={styles.currentIndicator}>
                     <View
                       style={[
@@ -380,7 +397,7 @@ export default function PredictiveSugarAlert() {
                       ]}
                     />
                     <Text style={styles.indicatorText}>
-                      Current: {last_reading.value}
+                      Current: {formatGlucose(currentReadingValue ?? last_reading?.value)}
                     </Text>
                   </View>
                 )}
@@ -391,9 +408,8 @@ export default function PredictiveSugarAlert() {
                     style={[styles.rangeColor, {backgroundColor: '#10b981'}]}
                   />
                   <Text style={styles.rangeText}>Normal: 70-140</Text>
-                  {last_reading &&
-                    last_reading.value >= 70 &&
-                    last_reading.value <= 140 && (
+                  {(currentReadingValue ?? last_reading?.value) >= 70 &&
+                    (currentReadingValue ?? last_reading?.value) <= 140 && (
                       <Text style={styles.rangeCurrent}>✓ Current</Text>
                     )}
                 </View>
@@ -402,9 +418,8 @@ export default function PredictiveSugarAlert() {
                     style={[styles.rangeColor, {backgroundColor: '#f59e0b'}]}
                   />
                   <Text style={styles.rangeText}>Pre-diabetes: 141-199</Text>
-                  {last_reading &&
-                    last_reading.value >= 141 &&
-                    last_reading.value <= 199 && (
+                  {(currentReadingValue ?? last_reading?.value) >= 141 &&
+                    (currentReadingValue ?? last_reading?.value) <= 199 && (
                       <Text style={styles.rangeCurrent}>✓ Current</Text>
                     )}
                 </View>
@@ -413,7 +428,7 @@ export default function PredictiveSugarAlert() {
                     style={[styles.rangeColor, {backgroundColor: '#ef4444'}]}
                   />
                   <Text style={styles.rangeText}>Diabetes: ≥200</Text>
-                  {last_reading && last_reading.value >= 200 && (
+                  {(currentReadingValue ?? last_reading?.value) >= 200 && (
                     <Text style={styles.rangeCurrent}>✓ Current</Text>
                   )}
                 </View>
@@ -421,9 +436,9 @@ export default function PredictiveSugarAlert() {
               {predicted_value && (
                 <View style={styles.predictedIndicator}>
                   <Text style={styles.predictedIndicatorText}>
-                    Predicted: {predicted_value.value} mg/dL (
+                    Predicted: {formatGlucose(predicted_value.value)} mg/dL (
                     {changeValue > 0 ? '+' : ''}
-                    {changeValue} change)
+                    {formatGlucose(changeValue)} change)
                   </Text>
                 </View>
               )}

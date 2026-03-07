@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SugarCare</string>
+    <!-- FCM uses this channel when auto-displaying notification messages (background/quit). -->
+    <string name="default_notification_channel_id">sugarcare_default</string>
 </resources>

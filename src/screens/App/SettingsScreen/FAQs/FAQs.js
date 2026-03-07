@@ -4,30 +4,32 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
-  Image,
+  StatusBar,
 } from 'react-native';
-import {appIcons, colors, family, HP, size, WP} from '../../../../utilities';
+import {colors} from '../../../../utilities';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Header} from '../../../../components';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
+import styles from './styles';
 
 const FAQs = () => {
   const navigation = useNavigation();
-  const [expandedId, setExpandedId] = useState(1); // First item expanded by default
+  const [expandedId, setExpandedId] = useState(null);
 
   const faqs = [
     {
       id: 1,
       question: 'How do I track my blood sugar?',
       answer:
-        'Yes, we can track your daily water intake using the app. You can set reminders and log your consumption throughout the day.',
+        'Use the Track Sugar tab to add readings. Tap "Add New Record" to log your blood sugar level, and view trends in the chart. You can also scan food to predict sugar impact.',
     },
     {
       id: 2,
       question: 'How does the fasting tracker work?',
       answer:
-        'The fasting tracker helps you monitor your fasting periods. Start and stop the timer, and view your fasting history with detailed insights.',
+        'The fasting tracker helps you monitor your fasting periods. Choose a plan (e.g. 16:8), start the timer, and view your fasting history with detailed insights.',
     },
     {
       id: 3,
@@ -48,17 +50,29 @@ const FAQs = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <Header title="FAQs" onPress={() => navigation.goBack()} />
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.headerWrapper}>
+        <Header title="FAQs" onPress={() => navigation.goBack()} />
+      </View>
 
-      {/* FAQ List */}
+      <View style={styles.heroSection}>
+        <View style={styles.heroIconWrap}>
+          <Ionicons name="help-circle" size={26} color={colors.p1} />
+        </View>
+        <Text style={styles.heroTitle}>Frequently Asked Questions</Text>
+        <Text style={styles.heroSubtitle}>
+          Quick answers to common questions
+        </Text>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {faqs.map(faq => (
+        {faqs.map((faq, index) => (
           <FAQItem
             key={faq.id}
+            num={index + 1}
             question={faq.question}
             answer={faq.answer}
             isExpanded={expandedId === faq.id}
@@ -70,82 +84,38 @@ const FAQs = () => {
   );
 };
 
-// Reusable FAQ Item – now uses icons instead of text arrows
-const FAQItem = ({question, answer, isExpanded, onPress}) => {
-  return (
-    <View style={styles.faqCard}>
-      <TouchableOpacity style={styles.questionRow} onPress={onPress}>
-        <Text style={styles.question}>{question}</Text>
+const FAQItem = ({num, question, answer, isExpanded, onPress}) => (
+  <View style={styles.faqCard}>
+    <LinearGradient
+      colors={[colors.p1, colors.p9]}
+      start={{x: 0, y: 0}}
+      end={{x: 0, y: 1}}
+      style={styles.faqAccent}
+    />
+    <TouchableOpacity
+      style={styles.questionRow}
+      onPress={onPress}
+      activeOpacity={0.8}>
+      <View style={styles.questionNum}>
+        <Text style={styles.questionNumText}>{num}</Text>
+      </View>
+      <Text style={styles.questionText} numberOfLines={isExpanded ? 10 : 2}>
+        {question}
+      </Text>
+      <Ionicons
+        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+        size={20}
+        color={colors.g9}
+        style={styles.expandIcon}
+      />
+    </TouchableOpacity>
 
-        {/* Up / Down Chevron Icons */}
-        <Image
-          source={isExpanded ? appIcons.upArrow : appIcons.donwArrow}
-          style={styles.expandIcon}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
-
-      {isExpanded && (
-        <View style={styles.answerContainer}>
-          <Text style={styles.answer}>{answer}</Text>
-        </View>
-      )}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white || '#f5f5f5',
-  },
-  scrollContent: {
-    padding: WP(5),
-    paddingBottom: HP(4),
-  },
-  faqCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: WP(4),
-    paddingVertical: HP(1.5),
-    marginBottom: HP(2),
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  questionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  question: {
-    fontSize: size.medium,
-    fontFamily: family.inter_medium,
-    fontWeight: '600',
-    color: colors.b1 || '#333',
-    flex: 1,
-    marginRight: WP(3),
-  },
-  expandIcon: {
-    width: WP(5),
-    height: WP(5),
-  },
-  answerContainer: {
-    marginTop: HP(1.5),
-    paddingTop: HP(1),
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  answer: {
-    fontSize: size.small,
-    fontFamily: family.inter_medium,
-    color: colors.g1 || '#666',
-    lineHeight: WP(5.5),
-  },
-});
+    {isExpanded && (
+      <View style={styles.answerContainer}>
+        <Text style={styles.answer}>{answer}</Text>
+      </View>
+    )}
+  </View>
+);
 
 export default FAQs;

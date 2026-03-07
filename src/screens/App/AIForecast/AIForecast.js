@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {Header, MedicalDisclaimer, AIConsentModal} from '../../../components';
@@ -102,13 +102,37 @@ export default function AIRiskForecasting({navigation}) {
   );
   const risks = useSelector(state => state.riskForecast?.risks ?? []);
   const loading = useSelector(state => state.riskForecast?.loading ?? false);
+  const forecastError = useSelector(state => state.riskForecast?.error ?? null);
+  const [displayError, setDisplayError] = useState(null);
+
+  // Message to show on screen (same place as "No risk data"): API error or fallback
+  const messageToShow =
+    displayError
+      ? String(displayError)
+      : forecastError
+        ? typeof forecastError === 'string'
+          ? forecastError
+          : forecastError?.message
+            ? String(forecastError.message)
+            : 'Unable to load risk forecast.'
+        : 'No risk data available yet.';
 
   useEffect(() => {
     let cancelled = false;
+    setDisplayError(null);
     (async () => {
       const ok = await gateAIAction();
       if (ok && !cancelled && accessToken && user?.id) {
-        dispatch(fetchRiskForecast({token: accessToken, user_id: user.id}));
+        dispatch(fetchRiskForecast({token: accessToken, user_id: user.id}))
+          .unwrap()
+          .catch(err => {
+            const msg =
+              (err && typeof err === 'object' && err.message) ||
+              (typeof err === 'string' ? err : null) ||
+              (err && err.error && err.error.message) ||
+              'Unable to load risk forecast.';
+            if (!cancelled) setDisplayError(msg);
+          });
       }
     })();
     return () => {
@@ -202,9 +226,9 @@ export default function AIRiskForecasting({navigation}) {
           <ActivityIndicator size="large" style={styles.activityIndicator} />
         )}
 
-        {/* Empty */}
+        {/* API message on screen (same style as "No risk data") */}
         {!loading && mappedRisks.length === 0 && (
-          <Text style={styles.noDataText}>No risk data available yet.</Text>
+          <Text style={styles.noDataText}>{messageToShow}</Text>
         )}
 
         {/* Render API Risks */}
