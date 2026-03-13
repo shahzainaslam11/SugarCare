@@ -1,3 +1,68 @@
+# SugarCare — Explainable & Preventive AI for Diabetes Support
+
+SugarCare is an AI-driven digital health application designed to support people living with diabetes through **preventive insight**, **explainable guidance**, and **everyday self-management tools**.  
+It focuses on helping users understand how food and lifestyle patterns may influence glucose trends, enabling more proactive decisions beyond reactive logging.
+
+## What SugarCare Does
+- **Personalised Meal Guidance:** Context-aware meal suggestions tailored to individual health patterns and goals.
+- **Food Recognition (Photo):** Estimates nutrition and glycaemic impact from meal images to support informed choices.
+- **Predictive Sugar Trend Alerts:** Early alerts estimating potential spikes or dips in the near term based on recent patterns.
+- **Risk Trend Awareness:** Highlights longer-term patterns to support early awareness of potential complication risks.
+
+## Supporting Features
+- Glucose tracking (fasting/random/post-meal) with trends
+- Fasting logs with notes
+- Weekly / monthly / yearly summaries and reports
+- AI conversational assistant for general guidance and health awareness
+- Community insights
+
+## Why It’s Innovative
+Most diabetes apps focus on tracking past values. SugarCare integrates **predictive awareness + personalised guidance + explainable insights** in a single preventive system, designed to be transparent, user-centred, and practical for daily life.
+
+## Repository Contents
+- `/app` — application source code (client/UI)
+- `/ml` — modelling, experiments, and evaluation utilities
+- `/docs` — product notes, visuals, and evidence assets
+- `/data` — data instructions (no sensitive data is stored in this repository)
+
+## Status
+Active development. Early-stage validation and collaboration discussions are ongoing.
+
+## Contact
+For collaboration, research, or validation discussions: **info@helixaai.com**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
