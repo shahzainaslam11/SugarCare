@@ -1,23 +1,24 @@
-# SugarCare — Explainable & Preventive AI for Diabetes Support
+# SugarCare: Explainable AI for Preventive Diabetes Care
 
-SugarCare is an AI-driven digital health application designed to support people living with diabetes through **preventive insight**, **explainable guidance**, and **everyday self-management tools**.  
-It focuses on helping users understand how food and lifestyle patterns may influence glucose trends, enabling more proactive decisions beyond reactive logging.
+SugarCare is an AI-driven digital health application designed to support people living with diabetes through preventive insight, explainable guidance, and everyday self-management tools. It helps users understand how food and lifestyle patterns may influence glucose trends, enabling more proactive decisions beyond reactive logging.
 
 ## What SugarCare Does
-- **Personalised Meal Guidance:** Context-aware meal suggestions tailored to individual health patterns and goals.
-- **Food Recognition (Photo):** Estimates nutrition and glycaemic impact from meal images to support informed choices.
+- **Personalised Meal Guidance:** Provides intelligent meal suggestions based on individual health patterns to help users make healthier daily food choices.
+- **Food Recognition (Photo):** Users can scan a meal photo to estimate nutritional information such as carbohydrates, sugars,
+and potential glycaemic impact.
 - **Predictive Sugar Trend Alerts:** Early alerts estimating potential spikes or dips in the near term based on recent patterns.
 - **Risk Trend Awareness:** Highlights longer-term patterns to support early awareness of potential complication risks.
 
-## Supporting Features
-- Glucose tracking (fasting/random/post-meal) with trends
-- Fasting logs with notes
-- Weekly / monthly / yearly summaries and reports
-- AI conversational assistant for general guidance and health awareness
-- Community insights
-
 ## Why It’s Innovative
-Most diabetes apps focus on tracking past values. SugarCare integrates **predictive awareness + personalised guidance + explainable insights** in a single preventive system, designed to be transparent, user-centred, and practical for daily life.
+Most diabetes apps mainly record past data. SugarCare moves beyond simple tracking by combining predictive alerts, personalised meal guidance, food recognition, and explainable AI insights into a single preventive support system, helping users understand patterns and make more informed daily health decisions.
+
+## Supporting Features
+
+- Glucose tracking (fasting / random / post-meal) with trend visualisation  
+- Fasting logs with optional notes  
+- Weekly, monthly, and yearly summaries and health reports  
+- AI conversational assistant for general guidance and health awareness  
+- Community insights for shared learning and awareness
 
 ## Repository Contents
 - **`/src`** — React Native app source (client/UI): `assets`, `components`, `context`, `hooks`, `navigation`, `redux`, `screens`, `services`, `utilities`
