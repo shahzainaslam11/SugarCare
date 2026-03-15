@@ -1,0 +1,170 @@
+{
+  "best_models": {
+    "neuropathy": "gradient_boosting",
+    "retinopathy": "gradient_boosting",
+    "nephropathy": "gradient_boosting",
+    "cardiovascular": "gradient_boosting",
+    "foot_problems": "logistic_regression"
+  },
+  "all_results": {
+    "neuropathy": {
+      "random_forest": {
+        "accuracy": "0.9975978473996486",
+        "precision": "0.9976007289465926",
+        "recall": "0.9975978473996486",
+        "f1_score": "0.9975952959749625"
+      },
+      "gradient_boosting": {
+        "accuracy": "0.9990917656246021",
+        "precision": "0.9990914954045155",
+        "recall": "0.9990917656246021",
+        "f1_score": "0.9990915889217495"
+      },
+      "logistic_regression": {
+        "accuracy": "0.9967660065698449",
+        "precision": "0.9967622397962304",
+        "recall": "0.9967660065698449",
+        "f1_score": "0.9967537139758211"
+      },
+      "xgboost": {
+        "accuracy": "0.9990153720790079",
+        "precision": "0.9990149024859952",
+        "recall": "0.9990153720790079",
+        "f1_score": "0.9990150073328501"
+      }
+    },
+    "retinopathy": {
+      "random_forest": {
+        "accuracy": "0.9971649506412814",
+        "precision": "0.9971689829767438",
+        "recall": "0.9971649506412814",
+        "f1_score": "0.9971458784558934"
+      },
+      "gradient_boosting": {
+        "accuracy": "0.9992530408875232",
+        "precision": "0.9992528963220347",
+        "recall": "0.9992530408875232",
+        "f1_score": "0.9992529035922306"
+      },
+      "logistic_regression": {
+        "accuracy": "0.9982344602796004",
+        "precision": "0.9982332378839119",
+        "recall": "0.9982344602796004",
+        "f1_score": "0.9982330586527555"
+      },
+      "xgboost": {
+        "accuracy": "0.9991342064832656",
+        "precision": "0.9991341013753258",
+        "recall": "0.9991342064832656",
+        "f1_score": "0.9991340759582024"
+      }
+    },
+    "nephropathy": {
+      "random_forest": {
+        "accuracy": "0.9961972990637546",
+        "precision": "0.9962038727084588",
+        "recall": "0.9961972990637546",
+        "f1_score": "0.9961338591810974"
+      },
+      "gradient_boosting": {
+        "accuracy": "0.9991596709984636",
+        "precision": "0.9991596110930878",
+        "recall": "0.9991596709984636",
+        "f1_score": "0.9991596374308671"
+      },
+      "logistic_regression": {
+        "accuracy": "0.9977845871777677",
+        "precision": "0.9977833503089998",
+        "recall": "0.9977845871777677",
+        "f1_score": "0.9977827801380867"
+      },
+      "xgboost": {
+        "accuracy": "0.9989814193920772",
+        "precision": "0.9989812176759286",
+        "recall": "0.9989814193920772",
+        "f1_score": "0.9989812139825015"
+      }
+    },
+    "cardiovascular": {
+      "random_forest": {
+        "accuracy": "0.9983448065121253",
+        "precision": "0.9983477113798149",
+        "recall": "0.9983448065121253",
+        "f1_score": "0.9983450591799891"
+      },
+      "gradient_boosting": {
+        "accuracy": "0.9986588688662349",
+        "precision": "0.9986589269853489",
+        "recall": "0.9986588688662349",
+        "f1_score": "0.9986588853336632"
+      },
+      "logistic_regression": {
+        "accuracy": "0.9983787591990562",
+        "precision": "0.9983787149227396",
+        "recall": "0.9983787591990562",
+        "f1_score": "0.9983787334329203"
+      },
+      "xgboost": {
+        "accuracy": "0.9986164280075714",
+        "precision": "0.9986167776876382",
+        "recall": "0.9986164280075714",
+        "f1_score": "0.9986165232986516"
+      }
+    },
+    "foot_problems": {
+      "random_forest": {
+        "accuracy": "0.9843138586379879",
+        "precision": "0.9844670524350981",
+        "recall": "0.9843138586379879",
+        "f1_score": "0.984316516446814"
+      },
+      "gradient_boosting": {
+        "accuracy": "0.9967150775394488",
+        "precision": "0.996721278076672",
+        "recall": "0.9967150775394488",
+        "f1_score": "0.996715707152898"
+      },
+      "logistic_regression": {
+        "accuracy": "0.9982853893099966",
+        "precision": "0.9982858626156714",
+        "recall": "0.9982853893099966",
+        "f1_score": "0.9982855218184663"
+      },
+      "xgboost": {
+        "accuracy": "0.9973771549345987",
+        "precision": "0.997381884407156",
+        "recall": "0.9973771549345987",
+        "f1_score": "0.9973775081177004"
+      }
+    }
+  },
+  "training_config": {
+    "target_column": "risk_score",
+    "test_size": 0.2,
+    "random_state": 42,
+    "cv_folds": 5
+  },
+  "feature_columns": [
+    "phys_activity",
+    "weight",
+    "height",
+    "blood_glucose",
+    "physical_activity",
+    "diet",
+    "medication_adherence",
+    "stress_level",
+    "sleep_hours",
+    "hydration_level",
+    "age",
+    "high_chol",
+    "heart_disease",
+    "stroke",
+    "gen_health",
+    "ment_health",
+    "phys_health",
+    "diff_walk",
+    "sex",
+    "diabetes",
+    "hba1c"
+  ]
+}

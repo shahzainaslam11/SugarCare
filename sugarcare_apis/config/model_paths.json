@@ -1,0 +1,64 @@
+{
+  "food_recognition": {
+    "model_path": "food_recognition_model.pkl",
+    "model_type": "pytorch",
+    "input_shape": [1, 3, 224, 224],
+    "output_classes": 1000,
+    "preprocessing": "image_normalization",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "accuracy": 0.85,
+    "confidence_threshold": 0.7
+  },
+  "sugar_forecast": {
+    "model_path": "sugar_forecast_model.pkl",
+    "model_type": "prophet",
+    "input_features": ["glucose", "meal_carbs", "exercise_intensity", "time_of_day"],
+    "output_horizon": 24,
+    "preprocessing": "time_series",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "mae": 12.5,
+    "rmse": 18.3,
+    "r2_score": 0.78
+  },
+  "risk_forecast": {
+    "model_path": "risk_forecast_model.pkl",
+    "model_type": "xgboost",
+    "input_features": ["glucose_mean", "glucose_std", "hba1c", "age", "bmi", "family_history"],
+    "output_classes": 3,
+    "preprocessing": "feature_scaling",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "accuracy": 0.82,
+    "precision": 0.79,
+    "recall": 0.81,
+    "f1_score": 0.80
+  },
+  "meal_recommender": {
+    "model_path": "meal_recommender_model.pkl",
+    "model_type": "rule_based",
+    "input_features": ["meal_type", "glucose_level", "preferences", "dietary_restrictions"],
+    "output_type": "recommendations",
+    "preprocessing": "preference_matching",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "nutrition_db_path": "data/nutrition_database.json",
+    "total_meals": 150
+  },
+  "chatbot": {
+    "model_path": "chatbot_model.pkl",
+    "model_type": "rule_based",
+    "input_features": ["message", "context", "user_history"],
+    "output_type": "response",
+    "preprocessing": "text_cleaning",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "knowledge_base_path": "data/chatbot_knowledge.json",
+    "response_confidence": 0.75
+  },
+  "community_analysis": {
+    "model_path": "community_analysis_model.pkl",
+    "model_type": "statistical",
+    "input_features": ["aggregated_data", "user_segments"],
+    "output_type": "insights",
+    "preprocessing": "data_aggregation",
+    "last_updated": "2024-01-01T00:00:00Z",
+    "analysis_types": ["trends", "comparisons", "recommendations"]
+  }
+}

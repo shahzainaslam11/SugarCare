@@ -73,3 +73,12 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# ML model weights (too large for GitHub)
+sugarcare_apis/models/*.pkl
+sugarcare_apis/models/*.pth
+
+# Secrets (never commit)
+sugarcare_apis/.env
+sugarcare_apis/firebase/serviceAccountKey.json
+**/serviceAccountKey.json
