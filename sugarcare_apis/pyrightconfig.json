@@ -1,0 +1,13 @@
+{
+  "typeCheckingMode": "basic",
+  "reportArgumentType": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportOptionalSubscript": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportOptionalOperand": "none",
+  "reportCallIssue": "none",
+  "reportMissingImports": "warning",
+  "reportAssignmentType": "none",
+  "reportReturnType": "none"
+}
