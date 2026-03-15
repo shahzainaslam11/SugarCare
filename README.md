@@ -20,10 +20,23 @@ It focuses on helping users understand how food and lifestyle patterns may influ
 Most diabetes apps focus on tracking past values. SugarCare integrates **predictive awareness + personalised guidance + explainable insights** in a single preventive system, designed to be transparent, user-centred, and practical for daily life.
 
 ## Repository Contents
-- `/app` — application source code (client/UI)
-- `/ml` — modelling, experiments, and evaluation utilities
-- `/docs` — product notes, visuals, and evidence assets
-- `/data` — data instructions (no sensitive data is stored in this repository)
+- **`/src`** — React Native app source (client/UI): `assets`, `components`, `context`, `hooks`, `navigation`, `redux`, `screens`, `services`, `utilities`
+- **`/android`** — Android native project (Gradle, app module)
+- **`/ios`** — iOS native project (Xcode, CocoaPods)
+- **`/sugarcare_apis`** — Backend APIs and ML:
+  - `api/` — route handlers, model inference, auth, profile, schemas
+  - `config/` — settings, logger, model paths
+  - `data/` — datasets and data utilities (no sensitive data in repo)
+  - `db/` — database models and connection
+  - `firebase/` — Firebase config (service account key is gitignored)
+  - `models/` — trained model artifacts (large `.pkl`/`.pth` files are gitignored)
+  - `notebooks/` — Jupyter notebooks for training (food, sugar alert, risk forecast, meal recommender, chatbot)
+  - `services/` — auth, email, Firebase client, push notifications
+  - `static/`, `templates/`, `utils/` — static assets, email templates, helpers
+  - `main.py`, `requirements.txt`
+- **`/docs`** — Product and setup docs (e.g. `IOS_XCODE_SETUP.md`)
+- **`/scripts`** — Utility scripts (e.g. `remove-console-logs.sh`)
+- **`/__tests__`** — Test files
 
 ## Status
 Active development. Early-stage validation and collaboration discussions are ongoing.
