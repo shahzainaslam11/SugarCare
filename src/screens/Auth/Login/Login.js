@@ -81,119 +81,124 @@ export default function LogIn() {
       style={styles.container}
       resizeMode="cover">
       <SafeAreaView style={{flex: 1}} edges={['top', 'bottom']}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid
-        keyboardShouldPersistTaps="handled">
-        <Formik
-          initialValues={initialValues}
-          validationSchema={loginVS}
-          enableReinitialize
-          onSubmit={async values => {
-            const email = normalizeEmail(values.email);
+        <KeyboardAwareScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled">
+          <Formik
+            initialValues={initialValues}
+            validationSchema={loginVS}
+            enableReinitialize
+            onSubmit={async values => {
+              const email = normalizeEmail(values.email);
 
-            await handleRememberMe(email, values.password, values.rememberMe);
+              await handleRememberMe(email, values.password, values.rememberMe);
 
-            // ✅ Dispatch login and log full API response
-            const res = await dispatch(
-              loginUser({
-                email: email,
-                password: values.password,
-              }),
-            );
-            console.log('Login API Response:', JSON.stringify(res));
-            if (res.meta.requestStatus === 'fulfilled') {
-              showSuccess(`Welcome ${res.payload?.data?.name || 'User'}`);
-              const fcmToken = await AsyncStorage.getItem(FCM_TOKEN_STORAGE_KEY);
-              if (fcmToken) {
-                dispatch(registerDeviceToken({fcm_token: fcmToken}));
-              }
-              let rootNav = navigation;
-              while (rootNav.getParent?.()) rootNav = rootNav.getParent();
-              rootNav.reset({
-                index: 0,
-                routes: [{name: 'MainDrawer'}],
-              });
-            } else {
-              showError(res.payload?.message || 'Login failed');
-            }
-          }}>
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-          }) => (
-            <View style={styles.inner}>
-              <Text style={styles.title}>Welcome Back!</Text>
-              <Text style={styles.subtitle}>Sign in to track your health</Text>
-
-              <AppInput
-                title="Your Email Address"
-                placeholder="Enter your email"
-                value={values.email}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                keyboardType="email-address"
-                errorMessage={touched.email && errors.email ? errors.email : ''}
-              />
-
-              <AppInput
-                title="Password"
-                placeholder="Enter your password"
-                value={values.password}
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                secureTextEntry
-                errorMessage={
-                  touched.password && errors.password ? errors.password : ''
+              // ✅ Dispatch login and log full API response
+              const res = await dispatch(
+                loginUser({
+                  email: email,
+                  password: values.password,
+                }),
+              );
+              console.log('Login API Response:', JSON.stringify(res));
+              if (res.meta.requestStatus === 'fulfilled') {
+                showSuccess(`Welcome ${res.payload?.data?.name || 'User'}`);
+                const fcmToken = await AsyncStorage.getItem(
+                  FCM_TOKEN_STORAGE_KEY,
+                );
+                if (fcmToken) {
+                  dispatch(registerDeviceToken({fcm_token: fcmToken}));
                 }
-              />
+                let rootNav = navigation;
+                while (rootNav.getParent?.()) rootNav = rootNav.getParent();
+                rootNav.reset({
+                  index: 0,
+                  routes: [{name: 'MainDrawer'}],
+                });
+              } else {
+                showError(res.payload?.message || 'Login failed');
+              }
+            }}>
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              setFieldValue,
+            }) => (
+              <View style={styles.inner}>
+                <Text style={styles.title}>Welcome Back!</Text>
+                <Text style={styles.subtitle}>Sign in to track your health</Text>
 
-              <View style={styles.row}>
-                <View style={styles.rememberMe}>
-                  <View style={{transform: [{scale: 0.8}]}}>
-                    <CheckBox
-                      value={values.rememberMe}
-                      onValueChange={val => setFieldValue('rememberMe', val)}
-                      style={{marginRight: 10}}
-                      boxType="square"
-                      tintColors={{true: colors.p1, false: colors.g3}}
-                      onCheckColor={colors.white}
-                      onTintColor={colors.white}
-                      onFillColor={colors.p1}
-                    />
+                <AppInput
+                  title="Your Email Address"
+                  placeholder="Enter your email"
+                  value={values.email}
+                  onChangeText={handleChange('email')}
+                  onBlur={handleBlur('email')}
+                  keyboardType="email-address"
+                  errorMessage={
+                    touched.email && errors.email ? errors.email : ''
+                  }
+                />
+
+                <AppInput
+                  title="Password"
+                  placeholder="Enter your password"
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry
+                  errorMessage={
+                    touched.password && errors.password ? errors.password : ''
+                  }
+                />
+
+                <View style={styles.row}>
+                  <View style={styles.rememberMe}>
+                    <View style={{transform: [{scale: 0.8}]}}>
+                      <CheckBox
+                        value={values.rememberMe}
+                        onValueChange={val => setFieldValue('rememberMe', val)}
+                        style={{marginRight: 10}}
+                        boxType="square"
+                        tintColors={{true: colors.p1, false: colors.g3}}
+                        onCheckColor={colors.white}
+                        onTintColor={colors.white}
+                        onFillColor={colors.p1}
+                      />
+                    </View>
+                    <Text style={styles.rememberMeText}>Remember Me</Text>
                   </View>
-                  <Text style={styles.rememberMeText}>Remember Me</Text>
+
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('ForgotPassword')}>
+                    <Text style={styles.forgotText}>Forgot Password?</Text>
+                  </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('ForgotPassword')}>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </View>
+                <AppButton
+                  title="Sign In"
+                  loading={loading}
+                  onPress={handleSubmit}
+                  // containerStyle={styles.signInBtn}
+                />
 
-              <AppButton
-                title="Sign In"
-                loading={loading}
-                onPress={handleSubmit}
-                // containerStyle={styles.signInBtn}
-              />
-
-              <View style={styles.createRow}>
-                <Text style={styles.staticText}>Don’t have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                  <Text style={styles.createText}>Create One</Text>
-                </TouchableOpacity>
+                <View style={styles.createRow}>
+                  <Text style={styles.staticText}>Don’t have an account? </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Signup')}>
+                    <Text style={styles.createText}>Create One</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        </Formik>
-      </KeyboardAwareScrollView>
+            )}
+          </Formik>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </ImageBackground>
   );
