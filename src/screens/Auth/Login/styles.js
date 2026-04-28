@@ -1,15 +1,23 @@
 import {StyleSheet} from 'react-native';
-import {colors, HP, size} from '../../../utilities';
+import {colors, family, HP, size} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: HP(4),
   },
   inner: {
     paddingHorizontal: 25,
     borderRadius: 20,
     marginHorizontal: 10,
     paddingVertical: 20,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     alignItems: 'stretch', // makes children take full width
   },
   inputWrapper: {
@@ -43,8 +51,8 @@ const styles = StyleSheet.create({
   forgotText: {
     color: colors.p1,
     fontWeight: '600',
-    ffontFamily: 'Inter-Medium',
-    fontSize: size.medium,
+    fontFamily: family.inter_medium,
+    fontSize: size.small,
   },
   signInBtn: {
     backgroundColor: '#3b82f6',
@@ -93,9 +101,8 @@ const styles = StyleSheet.create({
   createText: {
     color: colors.p1,
     fontWeight: '600',
-    // ⭐ CORRECTION: Fix typo 'ffontFamily' to 'fontFamily'
-    fontFamily: 'Inter-Medium',
-    fontSize: size.medium,
+    fontFamily: family.inter_medium,
+    fontSize: size.small,
     // Optional: Ensure text itself does not wrap (usually default, but good check)
     // textAlign: 'center',
   },
@@ -108,13 +115,13 @@ const styles = StyleSheet.create({
 
   staticText: {
     color: colors.g1,
-    fontSize: size.medium,
-    fontFamily: 'Inter-Medium',
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
   },
   rememberMeText: {
     color: colors.g1,
     fontSize: size.small,
-    fontFamily: 'Inter-Medium',
+    fontFamily: family.inter_medium,
   },
 });
 export default styles;
