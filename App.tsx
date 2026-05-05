@@ -6,12 +6,15 @@ import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
 import {store, persistor} from './src/redux/store';
 import {AuthProvider} from './src/context/AuthContext';
+import {ScanCreditsProvider} from './src/context/ScanCreditsContext';
+import {IAPProvider} from './src/context/IAPContext';
 import {ActivityIndicator, Platform, View} from 'react-native';
 import notifee, {EventType} from '@notifee/react-native';
 import {fcmService, FCM_TOKEN_STORAGE_KEY} from './src/utilities/NotificationsService/FCMService';
 import {displayFCMAsSystemNotification} from './src/utilities/NotificationsService/displayFCMAsNotification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {registerDeviceToken} from './src/redux/slices/notificationSlice';
+import {withIAPContext} from 'react-native-iap';
 
 const App = () => {
   const onOpenNotificationRef = useRef<(data: Record<string, unknown>, remoteMessage: unknown) => void>(() => {});
@@ -95,12 +98,16 @@ const App = () => {
         }
         persistor={persistor}>
         <AuthProvider>
-          <MainAppNav />
-          <FlashMessage position="top" />
+          <ScanCreditsProvider>
+            <IAPProvider>
+              <MainAppNav />
+              <FlashMessage position="top" />
+            </IAPProvider>
+          </ScanCreditsProvider>
         </AuthProvider>
       </PersistGate>
     </Provider>
   );
 };
 
-export default App;
+export default withIAPContext(App);

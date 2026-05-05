@@ -19,6 +19,7 @@ import Notification from '../../screens/App/Notification/Notification';
 import AIForecast from '../../screens/App/AIForecast/AIForecast';
 import PredictSugarAlert from '../../screens/App/PredictSugarAlert';
 import PredictInputs from '../../screens/App/PredictSugarAlert/PredictInputs';
+import PurchaseScreen from '../../screens/PurchaseScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +46,7 @@ function AppScreens() {
       <Stack.Screen name="AIForecast" component={AIForecast} />
       <Stack.Screen name="PredictSugarAlert" component={PredictSugarAlert} />
       <Stack.Screen name="PredictInputs" component={PredictInputs} />
+      <Stack.Screen name="PurchaseScreen" component={PurchaseScreen} />
     </Stack.Navigator>
   );
 }

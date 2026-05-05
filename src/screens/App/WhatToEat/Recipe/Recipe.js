@@ -292,7 +292,7 @@ const Recipe = ({route}) => {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="Recipe Details"
+        title="Smart Meal Insights"
         onPress={() => navigation.goBack()}
         showRightIcon={true}
         onRightPress={handleShare}

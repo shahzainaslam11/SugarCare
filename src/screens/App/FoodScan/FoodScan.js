@@ -18,6 +18,7 @@ import ImageResizer from 'react-native-image-resizer';
 import {appIcons, colors, family, HP, size, showError, showSuccess} from '../../../utilities';
 import {Header, AIConsentModal} from '../../../components';
 import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
+import {useScanCredits} from '../../../context/ScanCreditsContext';
 import styles from './styles';
 
 // Redux
@@ -32,6 +33,7 @@ const FoodScanScreen = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
+  const {scanCount, consumeOneScan} = useScanCredits();
   const [capturedImage, setCapturedImage] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
@@ -130,6 +132,11 @@ const FoodScanScreen = ({route}) => {
       showError('User not found');
       return;
     }
+    if (!scanCount) {
+      showError('No scans left. Please purchase a plan to continue.');
+      navigation.navigate('PurchaseScreen');
+      return;
+    }
 
     const ok = await gateAIAction();
     if (!ok) return;
@@ -151,6 +158,7 @@ const FoodScanScreen = ({route}) => {
 
       // ✅ Show success or error message
       if (analysisResult?.status === 'success') {
+        await consumeOneScan();
         showSuccess(
           analysisResult.message || 'Food analysis completed successfully',
         );
@@ -190,6 +198,7 @@ const FoodScanScreen = ({route}) => {
           Scan your meal to get nutrition details and predicted impact on blood
           sugar
         </Text>
+        <Text style={styles.subtitle}>Remaining scans: {scanCount}</Text>
 
         <View style={styles.heroSection}>
           <Text style={styles.sectionLabel}>Photo</Text>
