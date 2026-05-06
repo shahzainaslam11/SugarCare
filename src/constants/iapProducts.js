@@ -11,8 +11,8 @@ import {Platform} from 'react-native';
  * Products must be configured as consumables (or non-consumables) queried via getProducts.
  * Auto-renewable subscriptions belong in getSubscriptions instead — different API.
  */
-const IOS_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15', 'food_scan_25'];
-const ANDROID_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15', 'food_scan_25'];
+const IOS_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15'];
+const ANDROID_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15'];
 
 export const FOOD_SCAN_PRODUCT_IDS = Platform.select({
   ios: IOS_IAP_PRODUCT_IDS,
@@ -25,7 +25,6 @@ export const SCAN_CREDITS_BY_PRODUCT_ID = {
   food_scan_5: 5,
   food_scan_10: 10,
   food_scan_15: 15,
-  food_scan_25: 25,
 };
 
 /** UI + logical plan id (plan id === store productId when IDs align). */
@@ -50,13 +49,5 @@ export const FOOD_SCAN_PLANS = [
     label: 'Plus',
     scans: 15,
     description: 'More scans for steady habits.',
-  },
-  {
-    id: 'food_scan_25',
-    title: '25 Food Scans',
-    label: 'BEST VALUE',
-    scans: 25,
-    description: 'Maximum savings for daily use.',
-    bestValue: true,
   },
 ];

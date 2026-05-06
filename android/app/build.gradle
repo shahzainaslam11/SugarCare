@@ -84,7 +84,7 @@ android {
         applicationId "com.sugarcare.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
+        versionCode 8
         versionName "1.0.0"
         // react-native-iap exposes store flavors (play | amazon); pick play for Google Play.
         missingDimensionStrategy "store", "play"
