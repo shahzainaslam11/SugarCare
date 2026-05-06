@@ -27,6 +27,7 @@ import mealRecommendationsReducer from './slices/mealRecommendationsSlice';
 import communityInsightsReducer from './slices/communityInsightsSlice';
 import sugarAlertReducer from './slices/sugarAlertSlice';
 import riskForecastReducer from './slices/riskForecastSlice';
+import iapReducer from './slices/iapSlice';
 
 // Persist configuration - auth tokens are in Keychain (secure), not persisted here
 const persistConfig = {
@@ -52,6 +53,7 @@ const rootReducer = combineReducers({
   communityInsights: communityInsightsReducer,
   sugarAlert: sugarAlertReducer,
   riskForecast: riskForecastReducer,
+  iap: iapReducer,
 });
 
 // Create persisted reducer

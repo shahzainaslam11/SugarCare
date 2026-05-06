@@ -2,13 +2,14 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StatusBar,
   Image,
   ActivityIndicator,
   Alert,
   ScrollView,
   Pressable,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {useNavigation} from '@react-navigation/native';
@@ -33,7 +34,7 @@ const FoodScanScreen = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {gateAIAction, showModal, handleAccept, handleDecline} = useAIConsentGate();
-  const {scanCount, consumeOneScan} = useScanCredits();
+  const {scanCount, refreshBalance} = useScanCredits();
   const [capturedImage, setCapturedImage] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
@@ -57,11 +58,32 @@ const FoodScanScreen = ({route}) => {
     includeExtra: true, // includes EXIF data
   };
 
-  const handleTakePhoto = () => {
-    launchCamera({...imageOptions, saveToPhotos: true}, handleImageResponse);
+  const requestAndroidCameraPermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      {
+        title: 'Camera Permission',
+        message: 'SugarCare needs camera access to take food photos for analysis.',
+        buttonPositive: 'Allow',
+        buttonNegative: 'Deny',
+      },
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
   };
 
-  const handlePickFromGallery = () => {
+  const handleTakePhoto = async () => {
+    const hasPermission = await requestAndroidCameraPermission();
+    if (!hasPermission) {
+      showError('Camera permission is required to take a photo.');
+      return;
+    }
+    launchCamera({...imageOptions, saveToPhotos: false}, handleImageResponse);
+  };
+
+  const handlePickFromGallery = async () => {
     launchImageLibrary(
       {...imageOptions, selectionLimit: 1},
       handleImageResponse,
@@ -95,21 +117,24 @@ const FoodScanScreen = ({route}) => {
         1080, // width
         1080, // height
         'JPEG',
-        100,
+        80,
         0, // rotation handled automatically by EXIF
       );
 
       setCapturedImage({
         uri: resized.uri,
-        type: asset.type || 'image/jpeg',
-        name: asset.fileName || `food_${Date.now()}.jpg`,
+        // Resizer outputs JPEG here; keep metadata aligned with actual file content.
+        type: 'image/jpeg',
+        name: `food_${Date.now()}.jpg`,
       });
     } catch (err) {
       console.log('Image processing error:', err);
       // fallback to original image if resizing fails
+      const normalizedType =
+        asset.type && asset.type.startsWith('image/') ? asset.type : 'image/jpeg';
       setCapturedImage({
         uri: asset.uri,
-        type: asset.type || 'image/jpeg',
+        type: normalizedType,
         name: asset.fileName || `food_${Date.now()}.jpg`,
       });
     } finally {
@@ -158,7 +183,7 @@ const FoodScanScreen = ({route}) => {
 
       // ✅ Show success or error message
       if (analysisResult?.status === 'success') {
-        await consumeOneScan();
+        await refreshBalance();
         showSuccess(
           analysisResult.message || 'Food analysis completed successfully',
         );
@@ -171,7 +196,17 @@ const FoodScanScreen = ({route}) => {
       navigation.navigate('ScanResult', {scanData: analysisResult});
     } catch (error) {
       console.log('Scan Error:', error);
-      showError('Scan failed. Please try again.');
+      if (error?.status === 402) {
+        await refreshBalance().catch(() => {});
+        showError(error?.message || 'No scans left. Please purchase a plan.');
+        navigation.navigate('PurchaseScreen');
+        return;
+      }
+      if (error?.status === 401) {
+        showError('Session expired. Please login again.');
+        return;
+      }
+      showError(error?.message || 'Scan failed. Please try again.');
     } finally {
       setScanning(false);
     }

@@ -7,12 +7,15 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useIAP} from 'react-native-iap';
+import {useDispatch} from 'react-redux';
 import {showError, showSuccess} from '../utilities';
 import {useScanCredits} from './ScanCreditsContext';
 import * as iapService from '../services/iapService';
 import {FOOD_SCAN_PRODUCT_IDS, SCAN_CREDITS_BY_PRODUCT_ID} from '../constants/iapProducts';
+import {verifyAndCreditPurchase} from '../redux/slices/iapSlice';
 
 const PROCESSED_PURCHASES_KEY = 'processedIapTransactions';
 
@@ -25,12 +28,89 @@ const getTransactionId = purchase =>
   purchase?.id ||
   '';
 
+const isLikelyJws = value => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  const trimmed = value.trim();
+  return trimmed.split('.').length === 3;
+};
+
+const getIosSignedTransactionInfo = purchase => {
+  const directCandidates = [
+    purchase?.signedTransactionInfo,
+    purchase?.signedTransactionInfoIOS,
+    purchase?.transactionReceiptIOS,
+    purchase?.transactionReceipt,
+  ];
+
+  const directMatch = directCandidates.find(isLikelyJws);
+  if (directMatch) {
+    return directMatch;
+  }
+
+  if (typeof purchase?.originalJson === 'string') {
+    try {
+      const parsed = JSON.parse(purchase.originalJson);
+      const nestedCandidates = [
+        parsed?.signedTransactionInfo,
+        parsed?.signed_transaction_info,
+        parsed?.transactionReceipt,
+      ];
+      const nestedMatch = nestedCandidates.find(isLikelyJws);
+      if (nestedMatch) {
+        return nestedMatch;
+      }
+    } catch (_) {}
+  }
+
+  return null;
+};
+
+const getIosReceiptData = purchase => {
+  const directCandidates = [
+    purchase?.transactionReceipt,
+    purchase?.transactionReceiptIOS,
+    purchase?.receiptData,
+  ];
+  const direct = directCandidates.find(value => typeof value === 'string' && value.trim());
+  if (direct) {
+    return direct;
+  }
+  const originalJsonValue = purchase?.originalJson;
+  if (typeof originalJsonValue === 'string') {
+    try {
+      const parsed = JSON.parse(originalJsonValue);
+      const nested = [
+        parsed?.transactionReceipt,
+        parsed?.receiptData,
+        parsed?.receipt_data,
+      ].find(value => typeof value === 'string' && value.trim());
+      if (nested) {
+        return nested;
+      }
+    } catch (_) {}
+  }
+  if (originalJsonValue && typeof originalJsonValue === 'object') {
+    const nested = [
+      originalJsonValue?.transactionReceipt,
+      originalJsonValue?.receiptData,
+      originalJsonValue?.receipt_data,
+    ].find(value => typeof value === 'string' && value.trim());
+    if (nested) {
+      return nested;
+    }
+  }
+  return null;
+};
+
 export function IAPProvider({children}) {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [processedTransactions, setProcessedTransactions] = useState(new Set());
-  const {addScans} = useScanCredits();
+  const dispatch = useDispatch();
+  const {refreshBalance} = useScanCredits();
   /** Optional: e.g. PurchaseScreen registers `navigation.goBack` after credits are granted. */
   const afterSuccessfulPurchaseRef = useRef(null);
 
@@ -127,20 +207,53 @@ export function IAPProvider({children}) {
       }
 
       try {
+        const signedTransactionInfo = getIosSignedTransactionInfo(currentPurchase);
+        const iosReceiptData = getIosReceiptData(currentPurchase);
+        const purchaseToken =
+          currentPurchase?.purchaseToken ||
+          currentPurchase?.purchaseTokenAndroid ||
+          currentPurchase?.transactionReceipt;
+
+        const iosTransactionId =
+          currentPurchase?.transactionId ||
+          currentPurchase?.transactionIdentifier ||
+          currentPurchase?.originalTransactionIdentifierIOS ||
+          '';
+
+        if (Platform.OS === 'ios' && !signedTransactionInfo && !iosReceiptData && !iosTransactionId) {
+          throw new Error(
+            'iOS purchase payload missing transaction proof (JWS/receipt/transactionId).',
+          );
+        }
+
+        await dispatch(
+          verifyAndCreditPurchase({
+            platform: Platform.OS,
+            product_id: currentPurchase.productId,
+            signed_transaction_info: signedTransactionInfo,
+            receipt_data: iosReceiptData,
+            transactionReceipt: iosReceiptData,
+            transaction_id: iosTransactionId,
+            purchase_token: purchaseToken,
+            package_name: 'com.sugarcare.app',
+          }),
+        ).unwrap();
         await iapService.finishTransaction(currentPurchase, true);
-        await addScans(scanCredit);
         await markProcessed(transactionId);
+        await refreshBalance();
         showSuccess('Purchase successful 🎉');
         afterSuccessfulPurchaseRef.current?.();
       } catch (error) {
-        showError(error?.message || 'Unable to complete transaction');
+        const resolvedMessage =
+          typeof error === 'string' ? error : error?.message || 'Unable to complete transaction';
+        showError(resolvedMessage);
       } finally {
         setIsProcessing(false);
       }
     };
 
     handlePurchase();
-  }, [addScans, currentPurchase, markProcessed, processedTransactions]);
+  }, [currentPurchase, dispatch, markProcessed, processedTransactions, refreshBalance]);
 
   useEffect(() => {
     if (!currentPurchaseError) {

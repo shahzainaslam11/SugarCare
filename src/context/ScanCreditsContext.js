@@ -1,5 +1,7 @@
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchIapBalance} from '../redux/slices/iapSlice';
 
 const SCAN_CREDITS_KEY = 'foodScanCredits';
 const ScanCreditsContext = createContext(null);
@@ -8,6 +10,8 @@ export function ScanCreditsProvider({children}) {
   const [scanCount, setScanCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const persistQueueRef = useRef(Promise.resolve());
+  const dispatch = useDispatch();
+  const {accessToken} = useSelector(state => state.auth);
 
   useEffect(() => {
     const hydrateCredits = async () => {
@@ -21,6 +25,46 @@ export function ScanCreditsProvider({children}) {
 
     hydrateCredits();
   }, []);
+
+  const refreshBalance = useCallback(async () => {
+    if (!accessToken) {
+      setScanCount(0);
+      return 0;
+    }
+    const balance = await dispatch(fetchIapBalance()).unwrap();
+    setScanCount(balance);
+    await AsyncStorage.setItem(SCAN_CREDITS_KEY, String(balance));
+    return balance;
+  }, [accessToken, dispatch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const syncBalance = async () => {
+      if (!accessToken) {
+        if (!cancelled) {
+          setLoading(false);
+          setScanCount(0);
+        }
+        return;
+      }
+      try {
+        const balance = await dispatch(fetchIapBalance()).unwrap();
+        if (!cancelled) {
+          setScanCount(balance);
+          await AsyncStorage.setItem(SCAN_CREDITS_KEY, String(balance));
+        }
+      } catch (_) {
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+    syncBalance();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, dispatch]);
 
   const updateCredits = useCallback(
     async updater => {
@@ -55,8 +99,9 @@ export function ScanCreditsProvider({children}) {
       loading,
       addScans,
       consumeOneScan,
+      refreshBalance,
     }),
-    [scanCount, loading, addScans, consumeOneScan],
+    [scanCount, loading, addScans, consumeOneScan, refreshBalance],
   );
 
   return <ScanCreditsContext.Provider value={value}>{children}</ScanCreditsContext.Provider>;

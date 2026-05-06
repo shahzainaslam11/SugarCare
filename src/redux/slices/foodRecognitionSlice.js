@@ -33,7 +33,17 @@ export const analyzeFoodImage = createAsyncThunk(
         '❌ Food Analysis Error:',
         JSON.stringify(err.response?.data),
       );
-      return rejectWithValue(err.response?.data);
+      const payload = err.response?.data;
+      return rejectWithValue({
+        status: err.response?.status,
+        message:
+          payload?.message ||
+          payload?.detail ||
+          payload?.error ||
+          err.message ||
+          'Failed to analyze food image',
+        raw: payload,
+      });
     }
   },
 );
