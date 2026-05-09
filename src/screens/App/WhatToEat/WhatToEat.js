@@ -201,7 +201,7 @@ const WhatToEat = () => {
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {loading && !apiRecommendations ? (
+        {loading && !apiRecommendations && !isSubmitting ? (
           <SmallLoader />
         ) : error && !apiRecommendations ? (
           <Text style={styles.errorText}>{error}</Text>

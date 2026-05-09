@@ -21,11 +21,7 @@ import {Formik} from 'formik';
 import * as Yup from 'yup';
 import {useDispatch, useSelector} from 'react-redux';
 import styles from './styles';
-import {
-  fetchRecentSugarReadings,
-  predictSugarAlert,
-  setUserInput,
-} from '../../../../redux/slices/sugarAlertSlice';
+import {predictSugarAlert, setUserInput} from '../../../../redux/slices/sugarAlertSlice';
 import {useAIConsentGate} from '../../../../hooks/useAIConsentGate';
 
 const PredictInputs = () => {
@@ -35,21 +31,7 @@ const PredictInputs = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const {accessToken, user} = useSelector(state => state.auth);
-  const {recentReadings, loading, error} = useSelector(
-    state => state.sugarAlert,
-  );
-
-  useEffect(() => {
-    if (accessToken && user?.id) {
-      dispatch(
-        fetchRecentSugarReadings({
-          token: accessToken,
-          user_id: user.id,
-          limit: 30,
-        }),
-      );
-    }
-  }, [accessToken, user?.id, dispatch]);
+  const {loading, error} = useSelector(state => state.sugarAlert);
 
   useEffect(() => {
     if (error) {
@@ -86,7 +68,7 @@ const PredictInputs = () => {
   /* =====================================================
      SUBMIT HANDLER
   ===================================================== */
-  const handleFormSubmit = async values => {
+  const handleFormSubmit = async (values, {resetForm}) => {
     const ok = await gateAIAction();
     if (!ok) return;
 
@@ -117,6 +99,8 @@ const PredictInputs = () => {
           predictionResult: result.data,
           userInput: userInputData,
         });
+        // Clear inputs so returning to this screen shows a fresh form
+        resetForm();
       } else {
         Alert.alert(
           'Prediction Failed',
@@ -214,20 +198,6 @@ const PredictInputs = () => {
                         : ''
                     }
                   />
-                </View>
-
-                {/* Recent reading info */}
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Current Reading</Text>
-                  <Text style={styles.infoText}>
-                    We will send your current reading as a single value.
-                  </Text>
-                  {recentReadings && recentReadings.length > 0 ? (
-                    <Text style={styles.infoNote}>
-                      Last saved reading: {recentReadings[0]?.value} mg/dL on{' '}
-                      {recentReadings[0]?.timestamp}
-                    </Text>
-                  ) : null}
                 </View>
 
                 <MedicalDisclaimer />

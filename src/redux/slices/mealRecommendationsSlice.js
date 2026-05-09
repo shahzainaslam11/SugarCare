@@ -112,9 +112,10 @@ const mealRecommendationsSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      // Generate Recommendations
+      // Generate Recommendations — do not set `loading`; WhatToEat uses a dedicated
+      // full-screen submit state. Toggling `loading` here also triggered SmallLoader
+      // (a second Modal) and caused a double-spinner.
       .addCase(generateMealRecommendations.pending, state => {
-        state.loading = true;
         state.error = null;
       })
       .addCase(generateMealRecommendations.fulfilled, (state, action) => {

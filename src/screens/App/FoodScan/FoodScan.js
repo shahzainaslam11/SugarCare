@@ -50,12 +50,25 @@ const FoodScanScreen = ({route}) => {
       .replace(/\bscan\b/gi, 'credit');
   };
 
+  /**
+   * Prefer `uri` (content:// or file://) — it is what Android/iOS expose for preview and
+   * what Image + ImageResizer handle reliably. Camera in particular can return an
+   * `originalPath` that does not load in <Image> or fails in the resizer, while gallery
+   * often worked anyway. Use `originalPath` only when `uri` is missing.
+   */
   const resolveAssetUri = asset => {
-    const originalPath = asset?.originalPath;
+    if (!asset) {
+      return undefined;
+    }
+    const uri = asset.uri;
+    if (typeof uri === 'string' && uri.trim()) {
+      return uri;
+    }
+    const originalPath = asset.originalPath;
     if (Platform.OS === 'android' && typeof originalPath === 'string' && originalPath.trim()) {
       return originalPath.startsWith('file://') ? originalPath : `file://${originalPath}`;
     }
-    return asset?.uri;
+    return uri;
   };
 
   // If image comes from server, set it
