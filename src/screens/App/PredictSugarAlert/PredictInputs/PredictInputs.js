@@ -21,11 +21,7 @@ import {Formik} from 'formik';
 import * as Yup from 'yup';
 import {useDispatch, useSelector} from 'react-redux';
 import styles from './styles';
-import {
-  fetchRecentSugarReadings,
-  predictSugarAlert,
-  setUserInput,
-} from '../../../../redux/slices/sugarAlertSlice';
+import {predictSugarAlert, setUserInput} from '../../../../redux/slices/sugarAlertSlice';
 import {useAIConsentGate} from '../../../../hooks/useAIConsentGate';
 
 const PredictInputs = () => {
@@ -35,21 +31,7 @@ const PredictInputs = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const {accessToken, user} = useSelector(state => state.auth);
-  const {recentReadings, loading, error} = useSelector(
-    state => state.sugarAlert,
-  );
-
-  useEffect(() => {
-    if (accessToken && user?.id) {
-      dispatch(
-        fetchRecentSugarReadings({
-          token: accessToken,
-          user_id: user.id,
-          limit: 30,
-        }),
-      );
-    }
-  }, [accessToken, user?.id, dispatch]);
+  const {loading, error} = useSelector(state => state.sugarAlert);
 
   useEffect(() => {
     if (error) {
@@ -84,55 +66,15 @@ const PredictInputs = () => {
   });
 
   /* =====================================================
-     Prepare readings for prediction
-  ===================================================== */
-  const prepareReadingsForPrediction = () => {
-    if (!recentReadings || recentReadings.length === 0) {
-      return [];
-    }
-
-    // Take last 4 unique readings (most recent)
-    const uniqueReadings = [];
-    const seenDates = new Set();
-
-    for (const reading of recentReadings) {
-      if (!seenDates.has(reading.timestamp)) {
-        seenDates.add(reading.timestamp);
-        uniqueReadings.push(reading);
-        if (uniqueReadings.length >= 4) break;
-      }
-    }
-
-    // Sort ascending (oldest to newest) for API
-    return uniqueReadings.sort(
-      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
-    );
-  };
-
-  /* =====================================================
      SUBMIT HANDLER
   ===================================================== */
-  const handleFormSubmit = async values => {
+  const handleFormSubmit = async (values, {resetForm}) => {
     const ok = await gateAIAction();
     if (!ok) return;
 
     try {
-      // Get prepared recent readings
-      const recentReadingsForAPI = prepareReadingsForPrediction();
-
-      // Format current date
-      const today = new Date().toISOString().split('T')[0];
-
-      // Add today's reading to the list
-      const allReadings = [
-        ...recentReadingsForAPI,
-        {
-          timestamp: today,
-          value: Number(values.recentReading),
-        },
-      ];
-
-      console.log('Sending readings:', JSON.stringify(allReadings));
+      const recentReadingString = String(values.recentReading).trim();
+      console.log('Sending recent_readings:', recentReadingString);
 
       // Dispatch the prediction
       const result = await dispatch(
@@ -141,7 +83,7 @@ const PredictInputs = () => {
           user_id: user.id,
           activity_level: values.activityLevel,
           meal_info: values.lastMeal,
-          recent_readings: allReadings,
+          recent_readings: recentReadingString,
         }),
       ).unwrap();
       console.log('Sending Real:', JSON.stringify(result));
@@ -157,6 +99,8 @@ const PredictInputs = () => {
           predictionResult: result.data,
           userInput: userInputData,
         });
+        // Clear inputs so returning to this screen shows a fresh form
+        resetForm();
       } else {
         Alert.alert(
           'Prediction Failed',
@@ -254,31 +198,6 @@ const PredictInputs = () => {
                         : ''
                     }
                   />
-                </View>
-
-                {/* Recent readings info */}
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Recent Readings Status</Text>
-                  {recentReadings && recentReadings.length > 0 ? (
-                    <>
-                      <Text style={styles.infoText}>
-                        Available: {recentReadings.length} readings
-                      </Text>
-                      <Text style={styles.infoText}>
-                        Using last {Math.min(4, recentReadings.length)} readings
-                        for prediction
-                      </Text>
-                      <Text style={styles.infoNote}>
-                        Latest reading: {recentReadings[0]?.value} mg/dL on{' '}
-                        {recentReadings[0]?.timestamp}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.infoText}>
-                      No recent readings found. Only current reading will be
-                      used.
-                    </Text>
-                  )}
                 </View>
 
                 <MedicalDisclaimer />

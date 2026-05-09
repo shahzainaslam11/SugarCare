@@ -21,6 +21,7 @@ const AppButton = ({
   loaderColor = colors.white,
   disabled,
 }) => {
+  const hasIcon = Boolean(icon);
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -41,7 +42,9 @@ const AppButton = ({
               resizeMode="contain"
             />
           )}
-          <Text style={[styles.textStyle, titleStyle]}>{title}</Text>
+          <Text style={[styles.textStyle, hasIcon && styles.textWithIcon, titleStyle]}>
+            {title}
+          </Text>
         </Fragment>
       )}
     </TouchableOpacity>
@@ -79,8 +82,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     textAlign: 'center',
     fontFamily: family.inter_bold,
-    marginLeft: WP('2'),
     fontSize: Platform.OS == 'ios' ? size.large : size.normal,
+  },
+  textWithIcon: {
+    marginLeft: WP('2'),
   },
   iconStyle: {
     width: WP('6'),

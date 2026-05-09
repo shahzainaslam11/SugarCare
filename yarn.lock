@@ -2268,9 +2268,9 @@
     nullthrows "^1.1.1"
 
 "@react-navigation/bottom-tabs@^7.4.7":
-  version "7.15.10"
-  resolved "https://registry.yarnpkg.com/@react-navigation/bottom-tabs/-/bottom-tabs-7.15.10.tgz#d62368367a1070f97bec971d92be4c010ac7f306"
-  integrity sha512-Ao/yYlrpr0cwYYGxt9FDMQk+tTSHNm4WTaszyhroINLdoEMuKH19k1tGFdYbRBKHJx1UIH8kD+EZTYW1w6LL3Q==
+  version "7.15.11"
+  resolved "https://registry.yarnpkg.com/@react-navigation/bottom-tabs/-/bottom-tabs-7.15.11.tgz#eafbb0fa94edb04d8e155f1d0ec07990639625f9"
+  integrity sha512-+WtNbd6fJgbViDNjmBUUP7eTgGH+zBtrl3jHuNnfUfXTs9YGuI5q3SiHIc9a5gY3voBOxbOXEiHJyW4xea7nAw==
   dependencies:
     "@react-navigation/elements" "^2.9.15"
     color "^4.2.3"
@@ -5665,7 +5665,7 @@ lodash.throttle@^4.1.1:
   resolved "https://registry.yarnpkg.com/lodash.throttle/-/lodash.throttle-4.1.1.tgz#c23e91b710242ac70c37f1e1cda9274cc39bf2f4"
   integrity sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==
 
-lodash@^4.17.13, lodash@^4.17.15, lodash@^4.17.21:
+lodash@^4.17.15, lodash@^4.17.21:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
@@ -6571,11 +6571,10 @@ react-native-animatable@1.4.0:
     prop-types "^15.8.1"
 
 react-native-chart-kit@^6.12.0:
-  version "6.12.1"
-  resolved "https://registry.yarnpkg.com/react-native-chart-kit/-/react-native-chart-kit-6.12.1.tgz#c1977bc50d3336d2f0339d415358332fc4c6c9bb"
-  integrity sha512-ps9PmlCFLB6n+VpMQhH4qkKtgyTxhKyJU7VsDqUU2a5ikomcjwLX3f7PVxSSctmqw/hdVPNBz+g7zbBVA2vhAg==
+  version "6.12.2"
+  resolved "https://registry.yarnpkg.com/react-native-chart-kit/-/react-native-chart-kit-6.12.2.tgz#49436a366d05d3d4c2b68381deea957ac7e524e3"
+  integrity sha512-99gwywj5ZkGRgtWUF6Th78u8bfLcIseNXN0cOYH4sRh3adHHwmJVepByroYqlxWxQa2i8gBDOBCZaS8kSltXkQ==
   dependencies:
-    lodash "^4.17.13"
     paths-js "^0.4.10"
     point-in-polygon "^1.0.1"
 
@@ -6653,6 +6652,11 @@ react-native-gifted-charts@^1.4.64:
   integrity sha512-GmaICcCouL7Z13KRfeVT6ngfQ2cByrVQ7TzWY8SPNUyQf+6/dZZ2+ySChNTsaFFhuwW2eTFBrDSz6HXBIzd0PA==
   dependencies:
     gifted-charts-core "0.1.80"
+
+react-native-iap@13.0.4:
+  version "13.0.4"
+  resolved "https://registry.yarnpkg.com/react-native-iap/-/react-native-iap-13.0.4.tgz#90f40aeda59d8c46acaa15067c92d1beb2f9659c"
+  integrity sha512-DFyBWCgohNYkv30tKNz43091Th3ASadKg3hRMu3rcvBWQzzRlLB/4DuFK/o0QIneXcZ+otZquMDrDIBVxWhqWg==
 
 react-native-image-picker@^8.2.1:
   version "8.2.1"

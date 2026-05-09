@@ -35,6 +35,9 @@ const styles = StyleSheet.create({
     paddingBottom: HP(4),
     alignItems: 'center',
   },
+  scrollContentWithBottomScan: {
+    paddingBottom: HP(16),
+  },
 
   // Hero: illustration or image preview
   heroSection: {
@@ -102,7 +105,7 @@ const styles = StyleSheet.create({
   },
   capturedImage: {
     width: '100%',
-    aspectRatio: 1,
+    aspectRatio: 0.92,
     borderRadius: WP(3.5),
     borderWidth: 2,
     borderColor: colors.p1,
@@ -226,6 +229,13 @@ const styles = StyleSheet.create({
     marginTop: HP(0.3),
     marginBottom: HP(0.5),
   },
+  bottomScanSection: {
+    position: 'absolute',
+    left: WP(3.5),
+    right: WP(3.5),
+    bottom: HP(9.8),
+    zIndex: 10,
+  },
   scanButton: {
     width: '100%',
     flexDirection: 'row',
@@ -268,6 +278,28 @@ const styles = StyleSheet.create({
   scanningText: {
     marginTop: HP(0.6),
     fontSize: size.xtiny,
+    fontFamily: family.inter_medium,
+    color: colors.g3,
+  },
+  fullScreenLoaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.32)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  fullScreenLoaderCard: {
+    backgroundColor: colors.white,
+    borderRadius: WP(4),
+    paddingVertical: HP(2),
+    paddingHorizontal: WP(6),
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...cardShadow,
+  },
+  fullScreenLoaderText: {
+    marginTop: HP(0.8),
+    fontSize: size.small,
     fontFamily: family.inter_medium,
     color: colors.g3,
   },

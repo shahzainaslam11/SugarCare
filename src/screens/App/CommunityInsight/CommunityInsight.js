@@ -21,21 +21,33 @@ const CommunityInsight = () => {
   const {accessToken, user} = useSelector(state => state.auth);
   const {items, loading} = useSelector(state => state.communityInsights);
   const [searchQuery, setSearchQuery] = useState('');
+  const safeItems = Array.isArray(items) ? items : [];
 
   useEffect(() => {
-    if (accessToken) {
+    if (accessToken && user?.id) {
       dispatch(fetchCommunityInsights({token: accessToken, user_id: user.id}));
     }
-  }, [dispatch, accessToken, user.id]);
+  }, [dispatch, accessToken, user?.id]);
 
   const navigateToInsightDetails = insight => {
     navigation.navigate('InsightDetails', {
-      title: insight.title,
-      description: insight.description || 'No description available',
-      image: insight.image,
-      read_time: insight.read_time,
+      insight,
     });
   };
+
+  const normalizeInsight = insight => ({
+    id: insight?.id || `${insight?.title || 'insight'}-${Math.random()}`,
+    title: typeof insight?.title === 'string' ? insight.title : 'Untitled Insight',
+    description:
+      typeof insight?.description === 'string' && insight.description.trim()
+        ? insight.description
+        : 'No description available',
+    image: insight?.image || null,
+    read_time: insight?.read_time,
+    author_name: insight?.author_name || '',
+    created_at: insight?.created_at || '',
+    featured: Boolean(insight?.featured),
+  });
 
   const getImageSource = image => {
     if (!image) return appImages.p1;
@@ -44,9 +56,9 @@ const CommunityInsight = () => {
   };
 
   // Filtered by search query
-  const filteredItems = items.filter(i =>
-    i.title?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredItems = safeItems
+    .map(normalizeInsight)
+    .filter(i => i.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Featured is the first item
   const featuredInsight = filteredItems[0] || {

@@ -16,6 +16,7 @@ const AppInput = ({
   keyboardType = 'default',
   multiline = false,
   numberOfLines = 1,
+  multilineMaxHeight,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -37,9 +38,14 @@ const AppInput = ({
         inputContainerStyle={[
           styles.inputInner,
           multiline && styles.inputInnerMultiline,
+          multiline &&
+            multilineMaxHeight != null && {
+              maxHeight: multilineMaxHeight,
+            },
         ]}
         inputStyle={styles.inputText}
         textAlignVertical={multiline ? 'top' : 'center'}
+        scrollEnabled={multiline ? true : undefined}
         rightIcon={
           secureTextEntry ? (
             <TouchableOpacity
@@ -119,6 +125,7 @@ AppInput.propTypes = {
   keyboardType: PropTypes.string,
   multiline: PropTypes.bool,
   numberOfLines: PropTypes.number,
+  multilineMaxHeight: PropTypes.number,
 };
 
 export {AppInput};

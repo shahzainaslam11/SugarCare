@@ -1,5 +1,5 @@
-import {StyleSheet} from 'react-native';
-import {colors, family, HP, size} from '../../../utilities';
+import {Platform, StyleSheet} from 'react-native';
+import {colors, family, HP, size, WP} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
@@ -8,41 +8,53 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: HP(4),
+    paddingVertical: HP(1.2),
+    paddingHorizontal: WP(5),
   },
   inner: {
-    paddingHorizontal: 25,
-    borderRadius: 20,
-    marginHorizontal: 10,
-    paddingVertical: 20,
+    paddingHorizontal: 0,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    paddingVertical: HP(2.1),
     width: '100%',
     maxWidth: 480,
     alignSelf: 'center',
-    alignItems: 'stretch', // makes children take full width
+    alignItems: 'stretch',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   inputWrapper: {
     width: '100%',
     marginBottom: 15,
   },
+  logo: {
+    width: WP(20),
+    height: WP(20),
+    alignSelf: 'center',
+    marginBottom: HP(1.2),
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 5,
-    color: '#000',
+    fontSize: size.h1,
+    fontWeight: '800',
+    marginBottom: HP(0.25),
+    color: colors.black,
     textAlign: 'center',
+    fontFamily: family.inter_bold,
+    letterSpacing: 0.3,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#777',
-    marginBottom: 20,
+    fontSize: size.small,
+    color: colors.g3,
+    marginBottom: HP(1.8),
     textAlign: 'center',
+    fontFamily: family.inter_regular,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: HP(1.7),
   },
   rememberMe: {
     flexDirection: 'row',
@@ -55,17 +67,32 @@ const styles = StyleSheet.create({
     fontSize: size.small,
   },
   signInBtn: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 15,
-    borderRadius: 15,
+    backgroundColor: '#4257FF',
+    minHeight: HP(6.2),
+    paddingVertical: HP(1.2),
+    borderRadius: WP(3.8),
     alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
-    marginBottom: 25,
+    marginTop: HP(0.2),
+    marginBottom: HP(1.1),
+    borderWidth: 0,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#4257FF',
+        shadowOffset: {width: 0, height: 6},
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+      android: {elevation: 6},
+    }),
   },
   signInText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: size.medium,
+    fontWeight: '700',
+    fontFamily: family.inter_bold,
+    lineHeight: size.medium + 2,
   },
   dividerRow: {
     flexDirection: 'row',
@@ -99,16 +126,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   createText: {
-    color: colors.p1,
+    color: '#4257FF',
     fontWeight: '600',
     fontFamily: family.inter_medium,
     fontSize: size.small,
-    // Optional: Ensure text itself does not wrap (usually default, but good check)
-    // textAlign: 'center',
   },
   createRow: {
     flexDirection: 'row',
-    marginTop: HP(4),
+    marginTop: HP(1.7),
     alignSelf: 'center',
     justifyContent: 'center',
   },

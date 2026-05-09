@@ -1,36 +1,28 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Image,
-  Modal,
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   Header,
-  AppInput,
   MedicalDisclaimer,
   SmallLoader,
   AIConsentModal,
 } from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {useAIConsentGate} from '../../../hooks/useAIConsentGate';
-import {Formik} from 'formik';
-import * as Yup from 'yup';
 import {useDispatch, useSelector} from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
-import {appImages, colors, family, size} from '../../../utilities';
+import {appImages, colors} from '../../../utilities';
 import styles from './styles';
-import {
-  generateMealRecommendations,
-  fetchMealHistory,
-} from '../../../redux/slices/mealRecommendationsSlice';
+import {fetchMealHistory} from '../../../redux/slices/mealRecommendationsSlice';
+import PersonalizeMealModal from './PersonalizeMealModal';
 
 const MEAL_TABS = [
   {id: 'breakfast', label: 'Breakfast'},
@@ -73,35 +65,6 @@ const WhatToEat = () => {
   };
 
   console.log('currentMeal', JSON.stringify(currentMeal));
-
-  // Validation schema
-  const validationSchema = Yup.object().shape({
-    currentGlucose: Yup.number()
-      .typeError('Must be a valid number')
-      .positive('Glucose must be positive')
-      .min(50, 'Value too low')
-      .max(400, 'Value too high')
-      .required('Current glucose is required'),
-
-    diabetesControlLevel: Yup.string()
-      .trim()
-      .required('Diabetes control level is required')
-      .oneOf(
-        ['Well controlled', 'Moderately controlled', 'Poorly controlled'],
-        'Must be: Well controlled, Moderately controlled, or Poorly controlled',
-      ),
-
-    mealDescription: Yup.string()
-      .trim()
-      .required('Meal description is required')
-      .min(5, 'Description too short (min 5 characters)')
-      .max(100, 'Description too long (max 100 characters)'),
-
-    portionSize: Yup.string()
-      .trim()
-      .required('Portion size is required')
-      .oneOf(['Light', 'Medium', 'Large'], 'Must be Light, Medium, or Large'),
-  });
 
   // Fetch meal history on mount
   useEffect(() => {
@@ -146,63 +109,24 @@ const WhatToEat = () => {
     }
   }, [apiRecommendations, activeMealType]);
 
-  // Handle form submission (AI consent already obtained when modal opened)
-  const handleFormSubmit = async (values, {resetForm}) => {
-    if (!user?.id) {
-      Alert.alert('Error', 'User information not available');
-      return;
+  const handleClosePersonalizeModal = useCallback(() => {
+    if (!isSubmitting) {
+      setModalVisible(false);
     }
+  }, [isSubmitting]);
 
+  const handlePersonalizeBeginSubmit = useCallback(() => {
     setIsSubmitting(true);
+    setModalVisible(false);
+  }, []);
 
-    const payload = {
-      current_glucose: Number(values.currentGlucose),
-      diabetes_control_level: values.diabetesControlLevel,
-      meal_description: values.mealDescription.trim(),
-      portion_size: values.portionSize.trim(),
-      time: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      }),
-      user_id: user.id,
-    };
+  const handlePersonalizeFinishSubmit = useCallback(() => {
+    setIsSubmitting(false);
+  }, []);
 
-    console.log('Submitting payload to API:', payload);
-
-    try {
-      const result = await dispatch(
-        generateMealRecommendations({
-          payload,
-          token: accessToken,
-        }),
-      ).unwrap();
-
-      console.log('API success response:', result);
-
-      if (result) {
-        setApiRecommendations(result);
-        resetForm();
-        setModalVisible(false);
-
-        Alert.alert('Success', 'Meal recommendations generated successfully!');
-      }
-    } catch (error) {
-      console.error('API error:', error);
-
-      let errorMessage = 'Failed to generate meal recommendations';
-
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const handlePersonalizeSuccess = useCallback(result => {
+    setApiRecommendations(result);
+  }, []);
 
   // Get meals for active type
   const apiMeals = apiRecommendations?.[activeMealType] || [];
@@ -277,7 +201,7 @@ const WhatToEat = () => {
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {loading && !apiRecommendations ? (
+        {loading && !apiRecommendations && !isSubmitting ? (
           <SmallLoader />
         ) : error && !apiRecommendations ? (
           <Text style={styles.errorText}>{error}</Text>
@@ -381,189 +305,28 @@ const WhatToEat = () => {
         </View>
       </ScrollView>
 
-      {/* Personalization Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => !isSubmitting && setModalVisible(false)}>
-        <KeyboardAvoidingView
-          style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Personalize Your Meal</Text>
-                {!isSubmitting && (
-                  <TouchableOpacity
-                    onPress={() => setModalVisible(false)}
-                    style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>×</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+      <PersonalizeMealModal
+        isVisible={modalVisible}
+        onClose={handleClosePersonalizeModal}
+        onBeginSubmit={handlePersonalizeBeginSubmit}
+        onFinishSubmit={handlePersonalizeFinishSubmit}
+        onSuccess={handlePersonalizeSuccess}
+      />
 
-              <Formik
-                initialValues={{
-                  currentGlucose: '',
-                  diabetesControlLevel: 'Moderately controlled',
-                  mealDescription: '',
-                  portionSize: 'Medium',
-                }}
-                validationSchema={validationSchema}
-                onSubmit={handleFormSubmit}>
-                {({
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  values,
-                  errors,
-                  touched,
-                  isValid,
-                  dirty,
-                  setFieldValue,
-                }) => (
-                  <ScrollView
-                    style={styles.formContainer}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}>
-                    <AppInput
-                      title="Current Glucose (mg/dL)"
-                      placeholder="e.g. 140"
-                      keyboardType="numeric"
-                      value={values.currentGlucose}
-                      onChangeText={handleChange('currentGlucose')}
-                      onBlur={handleBlur('currentGlucose')}
-                      errorMessage={
-                        touched.currentGlucose && errors.currentGlucose
-                          ? errors.currentGlucose
-                          : ''
-                      }
-                      editable={!isSubmitting}
-                    />
-
-                    {/* Diabetes Control Level Dropdown */}
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.inputTitle}>
-                        Diabetes Control Level *
-                      </Text>
-                      <View style={styles.dropdownContainer}>
-                        {[
-                          'Well controlled',
-                          'Moderately controlled',
-                          'Poorly controlled',
-                        ].map(option => (
-                          <TouchableOpacity
-                            key={option}
-                            style={[
-                              styles.dropdownOption,
-                              values.diabetesControlLevel === option &&
-                                styles.dropdownOptionSelected,
-                            ]}
-                            onPress={() =>
-                              setFieldValue('diabetesControlLevel', option)
-                            }
-                            disabled={isSubmitting}>
-                            <Text
-                              style={[
-                                styles.dropdownOptionText,
-                                values.diabetesControlLevel === option &&
-                                  styles.dropdownOptionTextSelected,
-                              ]}>
-                              {option}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                      {touched.diabetesControlLevel &&
-                        errors.diabetesControlLevel && (
-                          <Text style={styles.errorTextSmall}>
-                            {errors.diabetesControlLevel}
-                          </Text>
-                        )}
-                    </View>
-
-                    <AppInput
-                      title="Meal Description"
-                      placeholder="e.g. craving something sweet (min 5 characters)"
-                      value={values.mealDescription}
-                      onChangeText={handleChange('mealDescription')}
-                      onBlur={handleBlur('mealDescription')}
-                      errorMessage={
-                        touched.mealDescription && errors.mealDescription
-                          ? errors.mealDescription
-                          : ''
-                      }
-                      multiline
-                      numberOfLines={3}
-                      editable={!isSubmitting}
-                    />
-
-                    {/* Portion Size Dropdown */}
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.inputTitle}>Portion Size *</Text>
-                      <View style={styles.dropdownContainer}>
-                        {['Light', 'Medium', 'Large'].map(option => (
-                          <TouchableOpacity
-                            key={option}
-                            style={[
-                              styles.dropdownOption,
-                              values.portionSize === option &&
-                                styles.dropdownOptionSelected,
-                            ]}
-                            onPress={() => setFieldValue('portionSize', option)}
-                            disabled={isSubmitting}>
-                            <Text
-                              style={[
-                                styles.dropdownOptionText,
-                                values.portionSize === option &&
-                                  styles.dropdownOptionTextSelected,
-                              ]}>
-                              {option}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                      {touched.portionSize && errors.portionSize && (
-                        <Text style={styles.errorTextSmall}>
-                          {errors.portionSize}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View style={styles.modalButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.cancelButton,
-                          isSubmitting && styles.buttonDisabled,
-                        ]}
-                        onPress={() => setModalVisible(false)}
-                        disabled={isSubmitting}>
-                        <Text style={styles.cancelText}>Cancel</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.submitButton,
-                          (!isValid || !dirty || isSubmitting) &&
-                            styles.buttonDisabled,
-                        ]}
-                        onPress={handleSubmit}
-                        disabled={!isValid || !dirty || isSubmitting}>
-                        {isSubmitting ? (
-                          <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                          <Text style={styles.submitText}>Get Suggestion</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </ScrollView>
-                )}
-              </Formik>
-            </View>
+      {isSubmitting && (
+        <View style={styles.fullScreenLoaderOverlay}>
+          <View style={styles.fullScreenLoaderCard}>
+            <View style={styles.loaderAccentDot} />
+            <ActivityIndicator size="large" color={colors.p1} />
+            <Text style={styles.fullScreenLoaderText}>
+              Generating personalized meal suggestions...
+            </Text>
+            <Text style={styles.fullScreenLoaderSubText}>
+              Please wait while AI prepares your recommendations.
+            </Text>
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </View>
+      )}
 
       <AIConsentModal
         visible={showModal}

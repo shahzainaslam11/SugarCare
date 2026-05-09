@@ -10,6 +10,11 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+# Default off to match android/gradle.properties newArchEnabled=false. RN iOS treats unset
+# RCT_NEW_ARCH_ENABLED as enabled (NewArchitectureHelper), which pulls Fabric codegen paths
+# that can break (e.g. ReactCodegen missing RNDateTimePickerCGen/States.h). Set RCT_NEW_ARCH_ENABLED=1 before pod install to opt in.
+ENV['RCT_NEW_ARCH_ENABLED'] = ENV.fetch('RCT_NEW_ARCH_ENABLED', '0')
+
 # Ensure generated dir exists so CpHeader for ReactAppDependencyProvider etc. can write into it
 FileUtils.mkdir_p(File.join(__dir__, 'build', 'generated', 'ios'))
 

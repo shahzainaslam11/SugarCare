@@ -153,7 +153,7 @@ function CustomDrawerContentInner(props) {
         </View>
 
         <View style={styles.bottomSection}>
-          <Text style={styles.versionText}>Version: 2.0.0</Text>
+          <Text style={styles.versionText}>Version: 2.0.1</Text>
         </View>
       </View>
     </DrawerContentScrollView>

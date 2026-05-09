@@ -95,7 +95,10 @@ export const predictSugarAlert = createAsyncThunk(
     {rejectWithValue},
   ) => {
     try {
-      const preparedReadings = prepareReadingsForAPI(recent_readings);
+      const recentReadingsPayload =
+        typeof recent_readings === 'string' || typeof recent_readings === 'number'
+          ? String(recent_readings)
+          : prepareReadingsForAPI(recent_readings);
 
       const res = await api.post(
         '/sugar/forecast',
@@ -103,7 +106,7 @@ export const predictSugarAlert = createAsyncThunk(
           user_id,
           activity_level,
           meal_info,
-          recent_readings: preparedReadings,
+          recent_readings: recentReadingsPayload,
         },
         {
           headers: {

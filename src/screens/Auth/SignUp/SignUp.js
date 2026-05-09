@@ -165,7 +165,7 @@ export default function SignUp() {
                   if (fcmToken) {
                     dispatch(registerDeviceToken({fcm_token: fcmToken}));
                   }
-                  navigation.navigate('LogIn', {email: values.email});
+                  navigation.replace('LogIn', {email: values.email});
                 } else if (res.payload?.error) {
                   // Show the exact backend error message from the "error" field
                   showError(res.payload.error);
@@ -414,7 +414,8 @@ export default function SignUp() {
                   loading={loading}
                   onPress={handleSubmit}
                   disabled={isSubmitting || loading}
-                  // containerStyle={styles.signInBtn}
+                  containerStyle={styles.signInBtn}
+                  titleStyle={styles.signInText}
                 />
                 {/* Footer */}
                 <View style={styles.createRow}>
@@ -422,7 +423,7 @@ export default function SignUp() {
                     Already have an account?{' '}
                   </Text>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('LogIn')}>
+                    onPress={() => navigation.replace('LogIn')}>
                     <Text style={styles.linkText}>Sign In</Text>
                   </TouchableOpacity>
                 </View>
