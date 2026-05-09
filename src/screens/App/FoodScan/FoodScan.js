@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ImageResizer from 'react-native-image-resizer';
 
@@ -41,6 +41,23 @@ const FoodScanScreen = ({route}) => {
 
   const {accessToken, user} = useSelector(state => state.auth);
 
+  const mapScanWordingToCredits = message => {
+    if (typeof message !== 'string') {
+      return message;
+    }
+    return message
+      .replace(/\bscans\b/gi, 'credits')
+      .replace(/\bscan\b/gi, 'credit');
+  };
+
+  const resolveAssetUri = asset => {
+    const originalPath = asset?.originalPath;
+    if (Platform.OS === 'android' && typeof originalPath === 'string' && originalPath.trim()) {
+      return originalPath.startsWith('file://') ? originalPath : `file://${originalPath}`;
+    }
+    return asset?.uri;
+  };
+
   // If image comes from server, set it
   React.useEffect(() => {
     if (route?.params?.serverImage) {
@@ -51,6 +68,14 @@ const FoodScanScreen = ({route}) => {
       });
     }
   }, [route?.params?.serverImage]);
+
+  // Always fetch latest credits whenever this screen becomes active.
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshBalance().catch(() => {});
+      return undefined;
+    }, [refreshBalance]),
+  );
 
   const imageOptions = {
     mediaType: 'photo',
@@ -103,7 +128,8 @@ const FoodScanScreen = ({route}) => {
     }
 
     const asset = response?.assets?.[0];
-    if (!asset?.uri) {
+    const selectedUri = resolveAssetUri(asset);
+    if (!selectedUri) {
       Alert.alert('Error', 'Invalid image selected. Try another image.');
       return;
     }
@@ -113,7 +139,7 @@ const FoodScanScreen = ({route}) => {
 
       // Rotate and resize image properly
       const resized = await ImageResizer.createResizedImage(
-        asset.uri,
+        selectedUri,
         1080, // width
         1080, // height
         'JPEG',
@@ -133,7 +159,7 @@ const FoodScanScreen = ({route}) => {
       const normalizedType =
         asset.type && asset.type.startsWith('image/') ? asset.type : 'image/jpeg';
       setCapturedImage({
-        uri: asset.uri,
+        uri: selectedUri,
         type: normalizedType,
         name: asset.fileName || `food_${Date.now()}.jpg`,
       });
@@ -158,7 +184,7 @@ const FoodScanScreen = ({route}) => {
       return;
     }
     if (!scanCount) {
-      showError('No scans left. Please purchase a plan to continue.');
+      showError('No credits left. Please purchase a plan to continue.');
       navigation.navigate('PurchaseScreen');
       return;
     }
@@ -185,12 +211,16 @@ const FoodScanScreen = ({route}) => {
       if (analysisResult?.status === 'success') {
         await refreshBalance();
         showSuccess(
-          analysisResult.message || 'Food analysis completed successfully',
+          mapScanWordingToCredits(
+            analysisResult.message || 'Food analysis completed successfully',
+          ),
         );
         setCapturedImage(null);
         dispatch(clearFoodResult());
       } else {
-        showError(analysisResult.message || 'Food analysis failed');
+        showError(
+          mapScanWordingToCredits(analysisResult.message || 'Food analysis failed'),
+        );
       }
 
       navigation.navigate('ScanResult', {scanData: analysisResult});
@@ -198,7 +228,11 @@ const FoodScanScreen = ({route}) => {
       console.log('Scan Error:', error);
       if (error?.status === 402) {
         await refreshBalance().catch(() => {});
-        showError(error?.message || 'No scans left. Please purchase a plan.');
+        showError(
+          mapScanWordingToCredits(
+            error?.message || 'No credits left. Please purchase a plan.',
+          ),
+        );
         navigation.navigate('PurchaseScreen');
         return;
       }
@@ -206,7 +240,9 @@ const FoodScanScreen = ({route}) => {
         showError('Session expired. Please login again.');
         return;
       }
-      showError(error?.message || 'Scan failed. Please try again.');
+      showError(
+        mapScanWordingToCredits(error?.message || 'Credit check failed. Please try again.'),
+      );
     } finally {
       setScanning(false);
     }
@@ -225,7 +261,10 @@ const FoodScanScreen = ({route}) => {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          capturedImage && !scanning ? styles.scrollContentWithBottomScan : null,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Food Scan</Text>
@@ -233,7 +272,7 @@ const FoodScanScreen = ({route}) => {
           Scan your meal to get nutrition details and predicted impact on blood
           sugar
         </Text>
-        <Text style={styles.subtitle}>Remaining scans: {scanCount}</Text>
+        <Text style={styles.subtitle}>Remaining Credits: {scanCount}</Text>
 
         <View style={styles.heroSection}>
           <Text style={styles.sectionLabel}>Photo</Text>
@@ -272,65 +311,70 @@ const FoodScanScreen = ({route}) => {
           )}
         </View>
 
-        <View style={styles.actionsSection}>
-          <Text style={styles.stepLabel}>Get started</Text>
-          <View style={styles.buttonContainer}>
-            <Pressable
-              style={({pressed}) => [
-                styles.primaryButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handleTakePhoto}>
-              <Image
-                source={appIcons.camera}
-                style={styles.buttonIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.primaryButtonText}>Take a Photo</Text>
-            </Pressable>
+        {!capturedImage && (
+          <View style={styles.actionsSection}>
+            <Text style={styles.stepLabel}>Get started</Text>
+            <View style={styles.buttonContainer}>
+              <Pressable
+                style={({pressed}) => [
+                  styles.primaryButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleTakePhoto}>
+                <Image
+                  source={appIcons.camera}
+                  style={styles.buttonIcon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.primaryButtonText}>Take a Photo</Text>
+              </Pressable>
 
-            <Pressable
-              style={({pressed}) => [
-                styles.secondaryButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handlePickFromGallery}>
-              <Image
-                source={appIcons.gallery}
-                style={[styles.buttonIcon, styles.buttonIconSecondary]}
-                resizeMode="contain"
-              />
-              <Text style={styles.secondaryButtonText}>Pick from Gallery</Text>
-            </Pressable>
+              <Pressable
+                style={({pressed}) => [
+                  styles.secondaryButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handlePickFromGallery}>
+                <Image
+                  source={appIcons.gallery}
+                  style={[styles.buttonIcon, styles.buttonIconSecondary]}
+                  resizeMode="contain"
+                />
+                <Text style={styles.secondaryButtonText}>Pick from Gallery</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+      </ScrollView>
+
+      {capturedImage && !scanning && (
+        <View style={styles.bottomScanSection}>
+          <Pressable
+            style={({pressed}) => [
+              styles.scanButton,
+              pressed && styles.scanButtonPressed,
+            ]}
+            onPress={handleScanFood}>
+            <Image
+              source={appIcons.activeScan}
+              style={styles.scanButtonIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.scanButtonText}>Scan This Food</Text>
+          </Pressable>
+          <Text style={styles.scanHint}>AI-powered analysis</Text>
+        </View>
+      )}
+
+      {scanning && (
+        <View style={styles.fullScreenLoaderOverlay}>
+          <View style={styles.fullScreenLoaderCard}>
+            <ActivityIndicator size="large" color={colors.p1} />
+            <Text style={styles.fullScreenLoaderText}>Analyzing food...</Text>
           </View>
         </View>
-
-        {capturedImage && !scanning && (
-          <View style={styles.scanSection}>
-            <Pressable
-              style={({pressed}) => [
-                styles.scanButton,
-                pressed && styles.scanButtonPressed,
-              ]}
-              onPress={handleScanFood}>
-              <Image
-                source={appIcons.activeScan}
-                style={styles.scanButtonIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.scanButtonText}>Scan This Food</Text>
-            </Pressable>
-            <Text style={styles.scanHint}>AI-powered analysis</Text>
-          </View>
-        )}
-
-        {scanning && (
-          <View style={styles.scanningOverlay}>
-            <ActivityIndicator size="large" color={colors.p1} />
-            <Text style={styles.scanningText}>Analyzing food...</Text>
-          </View>
-        )}
-      </ScrollView>
+      )}
 
       <AIConsentModal
         visible={showModal}

@@ -64,6 +64,13 @@ const PlanCard = ({plan, selected, onPress}) => {
           {plan.description}
         </Text>
 
+        <View style={styles.creditsRow}>
+          <Text style={styles.creditsLabel}>Credits:</Text>
+          <Text style={styles.creditsValue}>
+            {typeof plan.credits === 'number' ? `${plan.credits} credits` : plan.credits}
+          </Text>
+        </View>
+
         {selected && !isUnavailable ? (
           <View style={styles.selectedFooter}>
             <Ionicons name="checkmark-circle" size={WP(4.2)} color={colors.p1} />
@@ -221,6 +228,24 @@ const styles = StyleSheet.create({
     fontSize: size.xsmall,
     fontFamily: family.inter_regular,
     lineHeight: size.xsmall + 5,
+  },
+  creditsRow: {
+    marginTop: HP(0.8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: WP(1.5),
+  },
+  creditsLabel: {
+    color: colors.g9,
+    fontSize: size.xtiny,
+    fontFamily: family.inter_medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  creditsValue: {
+    color: colors.p1,
+    fontSize: size.small,
+    fontFamily: family.inter_bold,
   },
   selectedFooter: {
     flexDirection: 'row',

@@ -215,11 +215,11 @@ export default function PredictiveSugarAlert() {
               <View style={styles.alertHeader}>
                 <View style={styles.alertTitleContainer}>
                   <Text style={styles.alertTitle}>{alertStatus.title}</Text>
-                  <View style={styles.confidenceBadge}>
+                  {/* <View style={styles.confidenceBadge}>
                     <Text style={styles.confidenceText}>
                       {confidencePercent}% Confident
                     </Text>
-                  </View>
+                  </View> */}
                 </View>
               </View>
 

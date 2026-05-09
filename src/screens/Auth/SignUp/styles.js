@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {colors, family, HP, size} from '../../../utilities';
+import {colors, family, HP, size, WP} from '../../../utilities';
 
 const styles = StyleSheet.create({
   container: {
@@ -8,31 +8,36 @@ const styles = StyleSheet.create({
 
   scrollContainer: {
     flexGrow: 1,
-    paddingVertical: HP(4),
+    paddingVertical: HP(1.2),
+    paddingHorizontal: WP(5),
+    paddingTop: HP(5),
   },
 
   inner: {
-    borderRadius: 20,
-    paddingHorizontal: 25,
-    marginHorizontal: 10,
-    paddingVertical: 20,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
+    paddingVertical: HP(2.1),
     alignItems: 'stretch',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
 
   title: {
-    fontSize: size.h2,
+    fontSize: size.h1,
     fontFamily: family.inter_bold,
     color: colors.black,
     textAlign: 'center',
     marginBottom: HP(0.5),
+    letterSpacing: 0.3,
   },
 
   subtitle: {
-    fontSize: size.medium,
+    fontSize: size.small,
     fontFamily: family.inter_regular,
-    color: colors.g1,
+    color: colors.g3,
     textAlign: 'center',
-    marginBottom: HP(3),
+    marginBottom: HP(1.8),
   },
 
   inputWrapper: {
@@ -42,6 +47,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: HP(0.6),
   },
 
   half: {
@@ -54,14 +60,14 @@ const styles = StyleSheet.create({
 
   halfSmall: {
     width: '100%',
-    marginBottom: HP(2),
+    marginBottom: HP(1.1),
   },
 
   checkboxContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: HP(2),
+    marginVertical: HP(1.1),
     paddingHorizontal: HP(0.5),
   },
 
@@ -72,28 +78,31 @@ const styles = StyleSheet.create({
   },
 
   signInBtn: {
-    backgroundColor: colors.p1,
-    paddingVertical: HP(2.2),
-    borderRadius: 15,
+    backgroundColor: '#4257FF',
+    minHeight: HP(6.2),
+    paddingVertical: HP(1.2),
+    borderRadius: WP(3.8),
     alignItems: 'center',
-    marginTop: HP(2),
-    shadowColor: colors.p1,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 3,
+    justifyContent: 'center',
+    marginTop: HP(0.4),
+    shadowColor: '#4257FF',
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
 
   signInText: {
     color: colors.white,
-    fontSize: size.large,
+    fontSize: size.medium,
     fontFamily: family.inter_bold,
+    lineHeight: size.medium + 2,
   },
 
   createRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: HP(3),
+    marginTop: HP(1.7),
   },
 
   createText: {
@@ -104,7 +113,7 @@ const styles = StyleSheet.create({
 
   linkText: {
     fontSize: size.medium,
-    color: colors.p1,
+    color: '#4257FF',
     fontFamily: family.inter_bold,
   },
 });

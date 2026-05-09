@@ -84,32 +84,6 @@ const PredictInputs = () => {
   });
 
   /* =====================================================
-     Prepare readings for prediction
-  ===================================================== */
-  const prepareReadingsForPrediction = () => {
-    if (!recentReadings || recentReadings.length === 0) {
-      return [];
-    }
-
-    // Take last 4 unique readings (most recent)
-    const uniqueReadings = [];
-    const seenDates = new Set();
-
-    for (const reading of recentReadings) {
-      if (!seenDates.has(reading.timestamp)) {
-        seenDates.add(reading.timestamp);
-        uniqueReadings.push(reading);
-        if (uniqueReadings.length >= 4) break;
-      }
-    }
-
-    // Sort ascending (oldest to newest) for API
-    return uniqueReadings.sort(
-      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
-    );
-  };
-
-  /* =====================================================
      SUBMIT HANDLER
   ===================================================== */
   const handleFormSubmit = async values => {
@@ -117,22 +91,8 @@ const PredictInputs = () => {
     if (!ok) return;
 
     try {
-      // Get prepared recent readings
-      const recentReadingsForAPI = prepareReadingsForPrediction();
-
-      // Format current date
-      const today = new Date().toISOString().split('T')[0];
-
-      // Add today's reading to the list
-      const allReadings = [
-        ...recentReadingsForAPI,
-        {
-          timestamp: today,
-          value: Number(values.recentReading),
-        },
-      ];
-
-      console.log('Sending readings:', JSON.stringify(allReadings));
+      const recentReadingString = String(values.recentReading).trim();
+      console.log('Sending recent_readings:', recentReadingString);
 
       // Dispatch the prediction
       const result = await dispatch(
@@ -141,7 +101,7 @@ const PredictInputs = () => {
           user_id: user.id,
           activity_level: values.activityLevel,
           meal_info: values.lastMeal,
-          recent_readings: allReadings,
+          recent_readings: recentReadingString,
         }),
       ).unwrap();
       console.log('Sending Real:', JSON.stringify(result));
@@ -256,29 +216,18 @@ const PredictInputs = () => {
                   />
                 </View>
 
-                {/* Recent readings info */}
+                {/* Recent reading info */}
                 <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Recent Readings Status</Text>
+                  <Text style={styles.infoTitle}>Current Reading</Text>
+                  <Text style={styles.infoText}>
+                    We will send your current reading as a single value.
+                  </Text>
                   {recentReadings && recentReadings.length > 0 ? (
-                    <>
-                      <Text style={styles.infoText}>
-                        Available: {recentReadings.length} readings
-                      </Text>
-                      <Text style={styles.infoText}>
-                        Using last {Math.min(4, recentReadings.length)} readings
-                        for prediction
-                      </Text>
-                      <Text style={styles.infoNote}>
-                        Latest reading: {recentReadings[0]?.value} mg/dL on{' '}
-                        {recentReadings[0]?.timestamp}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.infoText}>
-                      No recent readings found. Only current reading will be
-                      used.
+                    <Text style={styles.infoNote}>
+                      Last saved reading: {recentReadings[0]?.value} mg/dL on{' '}
+                      {recentReadings[0]?.timestamp}
                     </Text>
-                  )}
+                  ) : null}
                 </View>
 
                 <MedicalDisclaimer />

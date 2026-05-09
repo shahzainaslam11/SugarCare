@@ -11,8 +11,8 @@ import {Platform} from 'react-native';
  * Products must be configured as consumables (or non-consumables) queried via getProducts.
  * Auto-renewable subscriptions belong in getSubscriptions instead — different API.
  */
-const IOS_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15'];
-const ANDROID_IAP_PRODUCT_IDS = ['food_scan_5', 'food_scan_10', 'food_scan_15'];
+const IOS_IAP_PRODUCT_IDS = ['food_scan_basic', 'food_scan_standard', 'food_scan_premium'];
+const ANDROID_IAP_PRODUCT_IDS = ['food_scan_basic', 'food_scan_standard', 'food_scan_premium'];
 
 export const FOOD_SCAN_PRODUCT_IDS = Platform.select({
   ios: IOS_IAP_PRODUCT_IDS,
@@ -22,32 +22,32 @@ export const FOOD_SCAN_PRODUCT_IDS = Platform.select({
 
 /** Credits granted per store productId (keys must match FOOD_SCAN_PRODUCT_IDS entries). */
 export const SCAN_CREDITS_BY_PRODUCT_ID = {
-  food_scan_5: 5,
-  food_scan_10: 10,
-  food_scan_15: 15,
+  food_scan_basic: 100,
+  food_scan_standard: 200,
+  food_scan_premium: 'unlimited',
 };
 
 /** UI + logical plan id (plan id === store productId when IDs align). */
 export const FOOD_SCAN_PLANS = [
   {
-    id: 'food_scan_5',
-    title: '5 Food Scans',
-    label: 'Starter',
-    scans: 5,
-    description: 'Perfect for trying food analysis.',
+    id: 'food_scan_basic',
+    title: 'Basic',
+    label: 'Basic',
+    credits: 100,
+    description: 'Start your smarter health journey.',
   },
   {
-    id: 'food_scan_10',
-    title: '10 Food Scans',
+    id: 'food_scan_standard',
+    title: 'Standard',
     label: 'Popular',
-    scans: 10,
-    description: 'Best for regular weekly tracking.',
+    credits: 200,
+    description: 'Smarter insights for daily wellness.',
   },
   {
-    id: 'food_scan_15',
-    title: '15 Food Scans',
-    label: 'Plus',
-    scans: 15,
-    description: 'More scans for steady habits.',
+    id: 'food_scan_premium',
+    title: 'Premium',
+    label: 'Premium',
+    credits: 'Unlimited',
+    description: 'Unlimited access to predictive AI insights.',
   },
 ];

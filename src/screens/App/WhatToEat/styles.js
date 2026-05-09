@@ -211,6 +211,12 @@ const styles = StyleSheet.create({
     fontFamily: family.inter_medium,
   },
 
+  // react-native-modal (bottom sheet) — keep margin: 0 for full-width sheet
+  personalizeRnModal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
@@ -251,6 +257,10 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     maxHeight: HP(58),
+  },
+  formScrollContent: {
+    flexGrow: 1,
+    paddingBottom: HP(2),
   },
   inputContainer: {
     marginBottom: HP(1.5),
@@ -420,6 +430,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: WP(4),
     paddingTop: HP(1),
     paddingBottom: HP(2),
+  },
+  fullScreenLoaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10, 15, 30, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 30,
+  },
+  fullScreenLoaderCard: {
+    backgroundColor: colors.white,
+    borderRadius: WP(5),
+    borderWidth: 1,
+    borderColor: '#E7EBFF',
+    minWidth: WP(72),
+    maxWidth: WP(84),
+    paddingVertical: HP(2.4),
+    paddingHorizontal: WP(6.5),
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.p1,
+        shadowOffset: {width: 0, height: 8},
+        shadowOpacity: 0.24,
+        shadowRadius: WP(4.5),
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  loaderAccentDot: {
+    width: WP(2.2),
+    height: WP(2.2),
+    borderRadius: WP(1.1),
+    backgroundColor: colors.p1,
+    marginBottom: HP(1),
+  },
+  fullScreenLoaderText: {
+    marginTop: HP(1),
+    fontSize: size.small,
+    fontFamily: family.inter_bold,
+    color: colors.b4,
+    textAlign: 'center',
+    lineHeight: size.small + 4,
+  },
+  fullScreenLoaderSubText: {
+    marginTop: HP(0.6),
+    fontSize: size.xtiny,
+    fontFamily: family.inter_regular,
+    color: colors.g3,
+    textAlign: 'center',
+    lineHeight: size.xtiny + 5,
   },
 });
 

@@ -21,6 +21,17 @@ const PROCESSED_PURCHASES_KEY = 'processedIapTransactions';
 
 const IAPContext = createContext(null);
 
+const PURCHASE_ERROR_MESSAGES = {
+  E_USER_CANCELLED: 'Purchase canceled.',
+  E_NETWORK_ERROR: 'No internet connection. Please try again.',
+  E_SERVICE_ERROR: 'Store is temporarily unavailable. Please try again in a moment.',
+  E_ALREADY_OWNED: 'You already own this plan. Tap Restore Purchases.',
+  E_NOT_PREPARED: 'Store is getting ready. Please try again in a few seconds.',
+};
+
+const getPurchaseErrorMessage = (error, fallback) =>
+  PURCHASE_ERROR_MESSAGES[error?.code] || error?.message || fallback;
+
 const getTransactionId = purchase =>
   purchase?.transactionId ||
   purchase?.transactionIdentifier ||
@@ -241,11 +252,16 @@ export function IAPProvider({children}) {
         await iapService.finishTransaction(currentPurchase, true);
         await markProcessed(transactionId);
         await refreshBalance();
-        showSuccess('Purchase successful 🎉');
+        showSuccess('Payment successful! Credits added.');
         afterSuccessfulPurchaseRef.current?.();
       } catch (error) {
         const resolvedMessage =
-          typeof error === 'string' ? error : error?.message || 'Unable to complete transaction';
+          typeof error === 'string'
+            ? error
+            : getPurchaseErrorMessage(
+                error,
+                'We could not confirm your payment right now. If charged, credits will update shortly.',
+              );
         showError(resolvedMessage);
       } finally {
         setIsProcessing(false);
@@ -260,37 +276,25 @@ export function IAPProvider({children}) {
       return;
     }
     setIsProcessing(false);
-    if (currentPurchaseError.code === 'E_USER_CANCELLED') {
-      showError('Purchase cancelled.');
-      return;
-    }
-    if (currentPurchaseError.code === 'E_NETWORK_ERROR') {
-      showError('Network error. Please try again.');
-      return;
-    }
-    showError(currentPurchaseError?.message || 'Purchase failed. Please try again.');
+    showError(getPurchaseErrorMessage(currentPurchaseError, 'Payment failed. Please try again.'));
   }, [currentPurchaseError]);
 
   const purchasePlan = useCallback(
     async productId => {
       if (!connected) {
-        showError('Store unavailable. Please try again later.');
+        showError('Store is unavailable right now. Please try again shortly.');
         return;
       }
       const fromStore = products?.find(
         p => p.productId === productId || p.id === productId,
       );
       if (!fromStore) {
-        showError(
-          'This product is not available from the store. Confirm the Product ID matches App Store Connect / Play Console exactly.',
-        );
+        showError('This plan is not available right now. Please refresh and try again.');
         return;
       }
       const sku = fromStore.productId || fromStore.id;
       if (!sku || !SCAN_CREDITS_BY_PRODUCT_ID[sku]) {
-        showError(
-          'Unknown product. Add this Product ID to the app configuration (SCAN_CREDITS_BY_PRODUCT_ID).',
-        );
+        showError('This plan is not available right now. Please try another plan.');
         return;
       }
       setIsProcessing(true);
@@ -298,11 +302,12 @@ export function IAPProvider({children}) {
         await iapService.requestPurchase(sku);
       } catch (error) {
         setIsProcessing(false);
-        if (error?.code === 'E_USER_CANCELLED') {
-          showError('Purchase cancelled.');
-          return;
-        }
-        showError(error?.message || 'Unable to start purchase');
+        showError(
+          getPurchaseErrorMessage(
+            error,
+            'Could not start payment. Please try again.',
+          ),
+        );
       }
     },
     [connected, products],
@@ -312,7 +317,7 @@ export function IAPProvider({children}) {
     try {
       await getProducts({skus: iapService.FOOD_SCAN_PRODUCT_IDS});
     } catch (error) {
-      showError(error?.message || 'Unable to refresh products');
+      showError(error?.message || 'Could not refresh plans. Please try again.');
     }
   }, [getProducts]);
 
@@ -320,9 +325,9 @@ export function IAPProvider({children}) {
     setIsRestoring(true);
     try {
       await iapService.restorePurchases();
-      showSuccess('Restore completed. Consumables may not be restorable on iOS.');
+      showSuccess('Restore complete. Eligible purchases have been synced.');
     } catch (error) {
-      showError(error?.message || 'Restore failed');
+      showError(error?.message || 'Restore failed. Please try again.');
     } finally {
       setIsRestoring(false);
     }

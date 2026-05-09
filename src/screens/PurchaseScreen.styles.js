@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
     fontFamily: family.inter_bold,
     color: colors.white,
     lineHeight: size.h5 + 4,
+    alignSelf: 'center',
   },
   subtitle: {
     marginTop: HP(0.5),
@@ -122,6 +123,28 @@ const styles = StyleSheet.create({
     color: colors.p1,
     fontFamily: family.inter_bold,
     fontSize: size.small,
+  },
+  fullScreenLoaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.32)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  fullScreenLoaderCard: {
+    backgroundColor: colors.white,
+    borderRadius: WP(4),
+    paddingVertical: HP(2),
+    paddingHorizontal: WP(6),
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...cardShadow,
+  },
+  fullScreenLoaderText: {
+    marginTop: HP(0.8),
+    fontSize: size.small,
+    fontFamily: family.inter_medium,
+    color: colors.g3,
   },
 });
 

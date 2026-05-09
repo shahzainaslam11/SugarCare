@@ -28,7 +28,7 @@ const PurchaseScreen = () => {
 
   useEffect(() => {
     setAfterSuccessfulPurchase(() => {
-      navigation.goBack();
+      navigation.navigate('MainTabs', {screen: 'Scan'});
     });
     return () => setAfterSuccessfulPurchase(null);
   }, [navigation, setAfterSuccessfulPurchase]);
@@ -75,10 +75,10 @@ const PurchaseScreen = () => {
           start={{x: 0, y: 0}}
           end={{x: 1, y: 1}}
           style={styles.heroCard}>
-          <Text style={styles.title}>Upgrade Your Food Scans</Text>
-          <Text style={styles.subtitle}>Analyze meals instantly</Text>
+          <Text style={styles.title}>Choose Your Credit Plan</Text>
+          <Text style={styles.subtitle}>Unlock AI-powered meal insights</Text>
           <View style={styles.creditPill}>
-            <Text style={styles.creditPillLabel}>Available scans</Text>
+            <Text style={styles.creditPillLabel}>Available Credits</Text>
             <Text style={styles.creditPillValue}>{scanCount}</Text>
           </View>
         </LinearGradient>
@@ -113,7 +113,9 @@ const PurchaseScreen = () => {
           {isProcessing ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.buyButtonText}>Buy {selectedPlan?.title || 'Plan'}</Text>
+            <Text style={styles.buyButtonText}>
+              Continue with {selectedPlan?.title || 'Plan'}
+            </Text>
           )}
         </TouchableOpacity>
 
@@ -128,6 +130,15 @@ const PurchaseScreen = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {isProcessing && (
+        <View style={styles.fullScreenLoaderOverlay}>
+          <View style={styles.fullScreenLoaderCard}>
+            <ActivityIndicator size="large" color={colors.p1} />
+            <Text style={styles.fullScreenLoaderText}>Processing your payment...</Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

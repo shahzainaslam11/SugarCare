@@ -1,6 +1,13 @@
 import {showMessage} from 'react-native-flash-message';
-import {Platform} from 'react-native';
+import {Platform, StatusBar} from 'react-native';
 import {HP} from './responsive';
+
+const getTopInset = () => {
+  if (Platform.OS === 'android') {
+    return (StatusBar.currentHeight || 0) + HP(0.4);
+  }
+  return HP(1);
+};
 
 export const showSuccess = message => {
   showMessage({
@@ -11,7 +18,7 @@ export const showSuccess = message => {
     floating: true, // ✅ Makes it float like a pop-up
     style: {
       borderRadius: 12,
-      marginTop: Platform.OS === 'ios' ? HP(1) : HP(1),
+      marginTop: getTopInset(),
       marginHorizontal: 10,
       paddingVertical: 12,
       paddingHorizontal: 16,
@@ -38,7 +45,7 @@ export const showError = message => {
     floating: true, // ✅ Floating style
     style: {
       borderRadius: 12,
-      marginTop: Platform.OS === 'ios' ? HP(1) : HP(1),
+      marginTop: getTopInset(),
       marginHorizontal: 10,
       paddingVertical: 12,
       paddingHorizontal: 16,

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, ImageBackground} from 'react-native';
+import {View, Text, TouchableOpacity, ImageBackground, BackHandler, Platform, Image} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CheckBox from '@react-native-community/checkbox';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -10,6 +10,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppButton, AppInput} from '../../../components';
 import {
   appImages,
+  appIcons,
   colors,
   loginFormFields,
   loginVS,
@@ -18,7 +19,7 @@ import {
   showSuccess,
 } from '../../../utilities';
 import styles from './styles';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {loginUser, clearAuthError} from '../../../redux/slices/authSlice';
 import {clearSugarForecastError} from '../../../redux/slices/sugarForecastSlice';
 import {registerDeviceToken} from '../../../redux/slices/notificationSlice';
@@ -60,6 +61,20 @@ export default function LogIn() {
       setLoadingCredentials(false);
     })();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (Platform.OS !== 'android') {
+        return undefined;
+      }
+      const onBackPress = () => {
+        BackHandler.exitApp();
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, []),
+  );
 
   const handleRememberMe = async (email, password, rememberMe) => {
     if (rememberMe) {
@@ -131,6 +146,7 @@ export default function LogIn() {
               setFieldValue,
             }) => (
               <View style={styles.inner}>
+                <Image source={appIcons.appIcon} style={styles.logo} resizeMode="contain" />
                 <Text style={styles.title}>Welcome Back!</Text>
                 <Text style={styles.subtitle}>Sign in to track your health</Text>
 
@@ -185,7 +201,8 @@ export default function LogIn() {
                   title="Sign In"
                   loading={loading}
                   onPress={handleSubmit}
-                  // containerStyle={styles.signInBtn}
+                  containerStyle={styles.signInBtn}
+                  titleStyle={styles.signInText}
                 />
 
                 <View style={styles.createRow}>
